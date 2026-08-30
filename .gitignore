@@ -1,0 +1,12 @@
+# Operating-system and editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*.tmp
+
+# Local-only notes and generated output
+.local/
+tmp/
