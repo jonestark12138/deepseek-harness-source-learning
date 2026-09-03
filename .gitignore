@@ -10,3 +10,10 @@ Desktop.ini
 # Local-only notes and generated output
 .local/
 tmp/
+
+# Browser QA intermediates; keep only the final review artifacts.
+output/playwright/*
+!output/playwright/lesson-01-preview.html
+!output/playwright/lesson-01-desktop-courseware.png
+!output/playwright/lesson-01-narrow-final.png
+!output/playwright/lesson-01-narrow-figure-final.png

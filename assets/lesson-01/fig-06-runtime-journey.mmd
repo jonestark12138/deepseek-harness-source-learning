@@ -1,0 +1,19 @@
+sequenceDiagram
+    participant U as User
+    participant H as Agent / Harness
+    participant S as Session
+    participant M as LLM
+    participant T as Tools / Environment
+
+    U->>H: 输入一个 step
+    H->>S: append(user input)
+    H->>M: messages + tool schemas
+    M-->>H: tool call 或 final answer
+    opt 返回 tool call
+        H->>T: 在策略边界内执行
+        T-->>H: tool result
+        H->>S: append(tool result)
+        H->>M: 带结果继续推理
+    end
+    H->>S: append(output)
+    H-->>U: 返回结果，等待下一 step
