@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 1,
+  "id": "L01-F04",
+  "style": "workshop-pastel-v1",
+  "width": 1200,
+  "height": 740,
+  "question": "先选装配方案，再逐层修改清单",
+  "description": "四张装配清单由左到右表示 bundle、profile、home 与命令行叠加补丁的顺序；下面展示装配后的工具箱。",
+  "boundary": "箭头表示配置应用顺序，不是插件激活顺序。后层按行 ID 修改；不能推断所有键递归合并。",
+  "claims": [
+    "L01-C11",
+    "L01-C12"
+  ],
+  "elements": [
+    {
+      "type": "text",
+      "text": "先选装配方案，再逐层修改清单",
+      "x": 56,
+      "y": 70,
+      "size": 39,
+      "anchor": "start",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": "这是一叠有先后的装配单，不是四个正在运行的插件",
+      "x": 58,
+      "y": 113,
+      "size": 23,
+      "anchor": "start",
+      "color": "#756A5F"
+    },
+    {
+      "type": "object",
+      "asset": "profile-blueprint-v1",
+      "x": 75,
+      "y": 160,
+      "width": 190,
+      "height": 222
+    },
+    {
+      "type": "object",
+      "asset": "profile-blueprint-v1",
+      "x": 358,
+      "y": 160,
+      "width": 190,
+      "height": 222
+    },
+    {
+      "type": "object",
+      "asset": "profile-blueprint-v1",
+      "x": 643,
+      "y": 160,
+      "width": 190,
+      "height": 222
+    },
+    {
+      "type": "object",
+      "asset": "profile-blueprint-v1",
+      "x": 926,
+      "y": 160,
+      "width": 190,
+      "height": 222
+    },
+    {
+      "type": "arrow",
+      "x": 270,
+      "y": 260,
+      "x2": 339,
+      "y2": 260,
+      "meaning": "配置应用顺序",
+      "optional": false
+    },
+    {
+      "type": "arrow",
+      "x": 555,
+      "y": 260,
+      "x2": 624,
+      "y2": 260,
+      "meaning": "配置应用顺序",
+      "optional": false
+    },
+    {
+      "type": "arrow",
+      "x": 840,
+      "y": 260,
+      "x2": 907,
+      "y2": 260,
+      "meaning": "配置应用顺序",
+      "optional": false
+    },
+    {
+      "type": "text",
+      "text": [
+        "① 套装清单",
+        "按所列顺序"
+      ],
+      "x": 167,
+      "y": 405,
+      "size": 27,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": [
+        "② 方案补丁",
+        "本方案调整"
+      ],
+      "x": 450,
+      "y": 405,
+      "size": 27,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": [
+        "③ 用户补丁",
+        "本机调整"
+      ],
+      "x": 735,
+      "y": 405,
+      "size": 27,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": [
+        "④ 命令行补丁",
+        "本次调整"
+      ],
+      "x": 1018,
+      "y": 405,
+      "size": 27,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "object",
+      "asset": "harness-toolbox-v1",
+      "x": 70,
+      "y": 490,
+      "width": 260,
+      "height": 155
+    },
+    {
+      "type": "text",
+      "text": "按行编号修改或插入 → 形成待启动的装配配置",
+      "x": 380,
+      "y": 563,
+      "size": 30,
+      "anchor": "start",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": "记住“先组装、再启动”，暂不追插件内部。",
+      "x": 380,
+      "y": 609,
+      "size": 26,
+      "anchor": "start",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": "注意：清单先后 ≠ 激活先后；依赖满足与否，还要看真实机制。",
+      "x": 600,
+      "y": 704,
+      "size": 26,
+      "anchor": "middle",
+      "color": "#50483F"
+    }
+  ]
+}

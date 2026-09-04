@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "id": "L01-F02",
+  "style": "workshop-pastel-v1",
+  "width": 1200,
+  "height": 740,
+  "question": "打开工具箱：这五样东西各做什么？",
+  "description": "扳手、操作手册、日志、资料夹与盾牌放在同一工作台，分别对应工具、技能、会话、文件系统与沙箱。",
+  "boundary": "并排只表达职责区分，不代表真实调用顺序；盾牌不是绝对安全保证。",
+  "claims": [
+    "L01-C05",
+    "L01-C07",
+    "L01-C08",
+    "L01-C09",
+    "L01-C15"
+  ],
+  "elements": [
+    {
+      "type": "text",
+      "text": "打开工具箱：这五样东西各做什么？",
+      "x": 56,
+      "y": 70,
+      "size": 39,
+      "anchor": "start",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": "故事：让助手排查一次测试失败",
+      "x": 58,
+      "y": 113,
+      "size": 23,
+      "anchor": "start",
+      "color": "#756A5F"
+    },
+    {
+      "type": "object",
+      "asset": "cordis-workbench-v1",
+      "x": 35,
+      "y": 280,
+      "width": 1130,
+      "height": 280
+    },
+    {
+      "type": "object",
+      "asset": "tool-wrench-v1",
+      "x": 58,
+      "y": 180,
+      "width": 165,
+      "height": 215
+    },
+    {
+      "type": "object",
+      "asset": "skill-manual-v1",
+      "x": 282,
+      "y": 190,
+      "width": 170,
+      "height": 205
+    },
+    {
+      "type": "object",
+      "asset": "session-journal-v1",
+      "x": 510,
+      "y": 190,
+      "width": 170,
+      "height": 205
+    },
+    {
+      "type": "object",
+      "asset": "filesystem-folder-v1",
+      "x": 735,
+      "y": 210,
+      "width": 190,
+      "height": 180
+    },
+    {
+      "type": "object",
+      "asset": "sandbox-shield-v1",
+      "x": 977,
+      "y": 188,
+      "width": 155,
+      "height": 205
+    },
+    {
+      "type": "text",
+      "text": [
+        "扳手 / 工具",
+        "执行获准的动作"
+      ],
+      "x": 142,
+      "y": 542,
+      "size": 27,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": [
+        "手册 / 技能",
+        "提示排查方法"
+      ],
+      "x": 367,
+      "y": 542,
+      "size": 27,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": [
+        "日志 / 会话",
+        "留下过程记录"
+      ],
+      "x": 595,
+      "y": 542,
+      "size": 27,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": [
+        "资料夹 / 文件系统",
+        "读取测试材料"
+      ],
+      "x": 830,
+      "y": 542,
+      "size": 27,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": [
+        "护栏 / 沙箱",
+        "约束执行范围"
+      ],
+      "x": 1055,
+      "y": 542,
+      "size": 27,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": "手册不替你拧螺丝；日志不替你思考；护栏也不保证每次操作都安全。",
+      "x": 600,
+      "y": 663,
+      "size": 27,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": "这些物件是独立素材，本图只把它们摆到同一张工作台上。",
+      "x": 600,
+      "y": 710,
+      "size": 22,
+      "anchor": "middle",
+      "color": "#756A5F"
+    }
+  ]
+}

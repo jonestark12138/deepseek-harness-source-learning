@@ -11,7 +11,7 @@ Build a source-code textbook that is accurate enough for an engineer and vivid e
 
 - **Diagnose**: inspect an existing lesson and explain why it feels difficult, repetitive, abstract, or visually flat.
 - **Plan**: create the lesson brief, source-fact matrix, teaching outline, and visual plan before rewriting.
-- **Produce**: write or refactor the five lesson documents and create the accepted visual assets.
+- **Produce**: write or refactor the six lesson documents and compose figures from reusable object assets.
 - **QA**: validate source claims, teaching sequence, files, links, and rendered output.
 - **Scaffold**: create the standard files for a later lesson with `scripts/new-lesson.ps1`.
 
@@ -23,6 +23,8 @@ For a full lesson, execute the modes in that order. For a focused request, run o
 - Read [pedagogy.md](references/pedagogy.md) when diagnosing, outlining, or writing a lesson.
 - Read [source-accuracy.md](references/source-accuracy.md) before stating architecture or source facts.
 - Read [visual-system.md](references/visual-system.md) before planning, generating, or reviewing figures.
+- Read [asset-library.md](references/asset-library.md) before searching, adding, or composing reusable objects. This is the default visual production route.
+- Read [tool-selection.md](references/tool-selection.md) when selecting an illustration provider, testing fal, or evaluating design plugins.
 - Read [workflow.md](references/workflow.md) for a full lesson or a multi-file refactor.
 - Use [lesson-brief-template.md](references/lesson-brief-template.md) when starting a new lesson or when the current lesson lacks explicit boundaries.
 
@@ -36,10 +38,10 @@ For a full lesson, execute the modes in that order. For a focused request, run o
    `real problem -> intuition -> metaphor -> visual model -> formal explanation -> source evidence -> runtime behavior -> reading route -> exercises`
 
 5. Do not start from a quota of tools or figures. Give every figure one question and one teaching job. Remove figures that do not lower understanding cost.
-6. Prefer custom editorial diagrams or hand-drawn spatial explanations for relationships and intuition. Use Mermaid mainly for sequence, state, or a genuinely simple flow.
-7. Keep editable visual sources beside exports. Technical exports default to SVG; avoid remote fonts, remote images, and runtime network dependencies.
+6. Search the asset catalog first. Reuse independent robot, brain, empty toolbox, wrench, manual, journal, folder, shield and assembly objects. Add a missing object only after search, preserving the cream-paper, pastel, hand-drawn language. Objects, Chinese labels and meaningful arrows are separate layers; a prettier box diagram is not an illustration.
+7. Keep editable native object SVGs, source provenance and scene recipes. Figma is the default vector authoring/refinement surface; deterministic local composition makes reuse reproducible. Use a bundled handwriting font with its license, never runtime remote fonts. A raster image wrapped in SVG is still raster.
 8. Use Playwright to inspect accepted visual assets and the final rendered lesson. A raw Markdown file is not a valid final preview when Mermaid is present; use a deterministic preview page.
-9. Preserve the existing five-document lesson convention unless the user asks to change it. Do not rewrite later lessons while establishing the current lesson's template.
+9. Preserve the five core documents and add `05-术语与比喻词典.md` for terms introduced in the lesson. Explain a term where first needed; the glossary is a lookup aid, not prerequisite memorization. Do not rewrite later lessons while establishing the current lesson's template.
 10. Do not publish, commit, push, or modify upstream source unless the user separately requests that action.
 
 ## Quality gates
@@ -56,6 +58,8 @@ The lesson must answer its driving question without requiring readers to memoriz
 
 For each candidate figure, record its question, claim, evidence, tool choice, element budget, editable source, export, insertion point, and QA status. Use consistent semantic colors and shapes across tools.
 
+Use the sample and provenance gates in [tool-selection.md](references/tool-selection.md). Hide labels during review: if the important objects or relationship disappear, improve the drawing rather than adding more text. Record machine validation, author visual review and user acceptance separately.
+
 ### Final gate
 
 Run:
@@ -70,10 +74,10 @@ Then render the complete lesson and inspect it with Playwright at desktop and na
 
 ## Tool routing
 
-- Use `diagram-design` for editorial comparisons, component relationships, source maps, and layered technical concepts.
-- Use `excalidraw-skill` for memorable spatial metaphors and whiteboard intuition.
-- Use `drawio` for the formal, long-lived architecture source that later lessons will extend.
-- Use Mermaid for sequence/state/simple flow when text-based maintenance is the clearest choice.
+- Default: search the local object library, refine or create missing native vectors in Figma, save each object separately, then compose local scene recipes. Follow the Figma skill before connected writes. Do not confuse native vector drawing with a model-generated image.
+- Use `excalidraw-skill` only for an explicitly requested whiteboard variant or manual annotation; do not round-trip all objects through it merely to simulate handwriting. Keep its accepted earlier samples intact.
+- Use fal or other image-generation routes only for a pictorial need the library cannot cover and with an authorized, successful sample. Canva is optional page/slides layout, not a mandatory intermediate.
+- Use `drawio`, `diagram-design` or Mermaid only when a precise graph/sequence genuinely teaches a relation better than objects. Explain the exception and retain the same colors and Chinese terminology; no tool quota.
 - Use `playwright-cli` or the available Playwright workflow for screenshots and rendered-page QA.
 
 Tool availability never overrides teaching value or source accuracy.

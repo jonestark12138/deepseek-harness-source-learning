@@ -19,6 +19,7 @@
 | L01-C12 | CLI profile 路径从 `parseDshArgs()` 进入 `runProfile()`；`composeProfile()`/`allPatches()` 组合 layers；`runProfile()` 调用 `boot()` | [`apps/cli/src/bin.ts`](https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/bin.ts)；[`apps/cli/src/profile-boot.ts`](https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/profile-boot.ts) | Implementation | Confirmed | 第一讲压缩为 `bin -> profile -> bundle -> boot` | 不在第一讲继续追 Loader/Fiber 内部 |
 | L01-C13 | 一个 step 包含一次模型请求及其工具调用；一个 turn 包含零个或多个 step | [`docs/architecture.md#turn-flow`](https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/architecture.md#turn-flow) | Maintained architecture | Confirmed | Runtime 图只展示输入、请求、工具、记录、继续 | 不展开 waterfall、retry、continuation 和 durable event 细节 |
 | L01-C14 | “只有 Model 不能独立完成文件访问、命令执行、持续状态和安全策略”是对 package 职责分离的教学归纳 | L01-C01、L01-C05、L01-C07、L01-C09 | Cross-evidence inference | Teaching inference | 用 Model Only vs Model + Harness 建立第一直觉 | 不是上游源码中的正式等式或类型定义 |
+| L01-C15 | 文件能力组区分 ctx.fs 服务契约、实现、策略和面向模型的文件工具 | [packages/fs/README.md](https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/README.md#summary) | Package group contract | Confirmed | 资料夹代表可访问的真实文件材料 | 不代表模型内置知识；不同后端仍需遵守契约与执行环境约束 |
 
 ## Configuration evidence for “core is plugin”
 
@@ -34,3 +35,11 @@
 | `agent-loop` | 486 | 默认 driver 本身也是可组合插件 |
 
 这些行不能单独证明真实激活顺序、依赖已经满足、插件加载成功或内部算法已经理解。
+
+## 本轮边界复核
+
+- C12 的压缩链只作为阅读导航：读者去翻 bundle 清单，再回到 runProfile 中的 boot 调用；不能画成 YAML 被函数调用。
+- allPatches() 是 bundlePatches → profile.patches → homePatches → overlays；overlays 除命令行补丁外还包含代码合成的调整。
+- 架构文档指出 sdk-minimal 不继承 base，因此不把“所有方案共享 base”作为结论。
+- C13 的 Step 定义是一次模型请求及其工具调用，输入接收不在定义内；Turn 可以有零个 Step。
+- 图中的工作室与测试排查均为教学表达，不是一次实测运行报告。Session 派生模型消息，不承诺每次全量传入或已经持久化。

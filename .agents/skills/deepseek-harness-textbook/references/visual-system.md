@@ -1,84 +1,31 @@
-# Visual system
+# Workshop visual system
 
-## Visual objective
-
-Use a modern technical-textbook style with a friendly teaching layer. The diagrams should feel calm, intentional, and memorable—not like an enterprise slide, marketing poster, sci-fi HUD, or a wall of flowchart boxes.
+Use [asset-library.md](asset-library.md) for production and the repository STYLE_GUIDE.md for exact tokens. The default is one coherent illustration family, not one mandatory vendor.
 
 ## Figure contract
 
-Every figure begins as a row in the visual plan:
+Record question, Claim IDs, one teaching job, main objects, metaphor boundary, recipe/export paths, reuse IDs and separate machine/author/user review status. Prefer 4–7 strong figures for an overview, not a quota. Keep at most seven primary objects or clearly grouped scenes visible at once; do not count decorative paths as concepts.
 
-| Field | Meaning |
-|---|---|
-| Figure ID | Stable lesson-local identifier such as `L01-F01` |
-| Question | The one question the figure answers |
-| Claim IDs | Source-fact rows it visualizes |
-| Teaching job | Intuition, comparison, formal map, sequence, or reading route |
-| Tool | Why this tool is better than the alternatives |
-| Main elements | Keep the primary visual vocabulary bounded |
-| Metaphor boundary | Required for analogy figures |
-| Editable source | HTML, `.excalidraw`, `.drawio`, or `.mmd` |
-| Export | Prefer SVG |
-| Insert position | Exact document and section |
-| QA status | Draft, rendered, reviewed, accepted |
+## Grammar
 
-## Tool choice
+- Cream paper #FFF9EE, warm ink #50483F, muted ink #756A5F.
+- Pastel mint toolbox/workbench; peach brain/shield; blue wrench/journal; purple manual/module; yellow folder.
+- Meaning comes from silhouette plus Chinese label, never color alone.
+- Brain is the reasoning focus. Toolbox represents the broader runtime arrangement, not merely a tool list.
+- A manual teaches, wrench acts, journal records, folder provides materials, shield signals constraints.
+- Workbench and plug modules visualize organization, not hardware or literal runtime wiring.
+- Keep labels, relationships and object SVGs separate. Reuse exact silhouettes via catalog IDs.
 
-- `diagram-design`: editorial concept diagrams, before/after comparisons, layered relationships, source maps, dependency concepts.
-- `excalidraw-skill`: a spatial metaphor, memorable whiteboard, or first intuition. Do not recreate a formal architecture diagram in hand-drawn form.
-- `drawio`: the maintained formal architecture source. Keep it shallow enough for the current lesson.
-- Mermaid: a compact sequence, state transition, or simple flow whose text source is genuinely easier to maintain.
-- Playwright: visual inspection only; it does not decide whether a technical relationship is true.
+## Text
 
-For an overview lesson, four to seven strong figures are usually enough. Prefer at most one or two Mermaid figures unless the lesson is inherently sequence/state heavy. This is a decision heuristic, not a quota.
+Use the bundled, renamed LXGW WenKai TC handwriting subset (Workshop Hand) for figure labels and reading prose. Keep code monospace. Retain OFL.txt and source metadata. Do not use generic cursive as proof of Chinese handwriting. Native SVG text remains editable; outlines stay native vector paths.
 
-## Semantic colors
+At 1200 px artwork width, main labels should be at least 24–28 px; evaluate at the actual reading width too. Explanatory prose belongs outside the picture. Do not put unintroduced English/API lists inside illustrations.
 
-Use these defaults across tools unless contrast testing or an established asset requires a justified adjustment:
+## Semantics and accessibility
 
-| Concept | Color | Role |
-|---|---|---|
-| Model | `#EB6C36` | reasoning/generation focus |
-| Harness | `#2D3142` | containing runtime/system boundary |
-| Cordis | `#4F5D75` | coordinating framework layer |
-| Plugin | `#6C63A8` | modular contribution |
-| Tool / external capability | `#2A9D8F` | action and environment access |
-| Context | `#577590` | scoped capability access |
-| Session / durable data | `#3A7CA5` | record and continuity |
-| Highlight | `#F4A261` | one key teaching emphasis |
-| Muted | `#E9ECEF` | background/supporting structure |
-| Warning | `#C94C4C` | misconception or unsafe inference |
+Every SVG requires title, desc, role=img and matching aria-labelledby. Every Markdown figure requires descriptive alt and a takeaway/boundary caption. Composition arrows need explicit meaning. Configuration order, source-reading order, runtime sequence and metaphor association must never silently substitute for each other. Optional tool paths must be visibly optional.
 
-Color must not be the only carrier of meaning. Pair it with labels, shape, or line style.
+## Visual gate
 
-## Shape language
-
-- Model: one compact focal core; do not draw it as the whole system.
-- Harness: a boundary, workspace, or organizing field—not another peer box.
-- Cordis: shared foundation/context and lifecycle organizer; avoid an OS/server icon.
-- Plugin: visibly mountable modules with a shared grammar.
-- Tool: action port or capability endpoint.
-- Skill: instruction card/manual, not a wrench.
-- Session: ordered record/timeline.
-- Sandbox: visibly bounded execution area with policy edges.
-
-## Text and accessibility
-
-- Put keywords and short labels in the figure; keep paragraphs in Markdown.
-- Use a self-contained font stack such as `"Noto Sans SC", "Microsoft YaHei", sans-serif`; do not import Google Fonts into committed SVG.
-- Every SVG requires `<title>` and `<desc>`.
-- Avoid text below 14 px at the asset's intended Markdown width.
-- Do not let arrows cross labels or nodes.
-- Use descriptive Markdown alt text and a caption that states the takeaway.
-
-## Visual QA
-
-Inspect assets independently and inside the rendered lesson.
-
-- Desktop viewport: approximately 1440 × 900.
-- Narrow viewport: approximately 390 × 844.
-- Run 3-second, 10-second, and 30-second teaching checks.
-- Verify Chinese glyphs, overflow, contrast, hierarchy, arrow meaning, external dependencies, and cross-figure semantic consistency.
-- Keep screenshots under a local QA directory or ignored output directory unless the user requests them as deliverables.
-
-If the first render already passes, record that result; do not manufacture a revision.
+Review standalone figures and whole lesson at 1440×900 and 390×844. Narrow screens keep readable artwork width in a labeled local scroll container; no page-wide overflow. Verify all edges of the image by scrolling, not only its left side. Check glyphs, collisions, contrast, whitespace, recognizable objects without labels and cross-scene reuse. Automated bounding checks do not replace looking at screenshots. Do not label new work user-approved before feedback.

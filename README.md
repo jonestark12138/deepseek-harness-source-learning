@@ -1,48 +1,50 @@
-# DeepSeek Harness 源码学习笔记
+# DeepSeek Harness · 图文源码教材
 
-这是一个面向源码和实现原理的个人学习仓库，不是 DeepSeek Harness 使用手册，也不是官方仓库的镜像。
+用一个“模块化智能工作室”，理解模型、运行支撑和真实源码。面向有 Java 后端经验的工程师；先遇到问题，再用比喻和物件图建立直觉，最后核对代码。
 
-学习资料与上游源码相互隔离：本仓库只保存学习计划、逐步讲解、练习答案和分享材料，不复制完整的 DeepSeek Harness 源码。涉及源码的位置会链接到官方 GitHub 仓库。
+这不是产品使用教程，也不是官方仓库的镜像。本仓库不复制完整上游源码，与 DeepSeek 官方无隶属或背书关系。
 
-## 上游项目与学习基线
+## 从这里开始
 
-- 官方项目：[deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)
-- 当前教材基于的源码版本：[`cd5ef8148158c3a752a658978873241fdf8e2bbc`](https://github.com/deepseek-ai/deepseek-harness/tree/cd5ef8148158c3a752a658978873241fdf8e2bbc)
-- 本地学习时，上游源码与本仓库应放在相互独立的目录中，避免把官方源码和个人教材混在一起提交。
+| 入口 | 适合什么时候 |
+|---|---|
+| [第一讲：学习导航](第01次-项目全景与源码阅读地图/00-学习导航.md) | 第一次阅读 |
+| [第一讲：逐步讲解](第01次-项目全景与源码阅读地图/02-逐步讲解.md) | 跟着故事理解源码 |
+| [第一讲：完整 HTML](previews/lesson-01.html) | 下载仓库后，用浏览器阅读六份材料 |
+| [术语与比喻词典](第01次-项目全景与源码阅读地图/05-术语与比喻词典.md) | 忘记英文名或概念边界时 |
+| [可搜索的物件素材库](assets/library/index.html) | 找机器人、大脑、工具箱等独立 SVG |
+| [20 周源码学习计划](plan/DeepSeek-Harness源码学习计划.md) | 查看长期路线 |
 
-> 本仓库是个人学习记录，与 DeepSeek 官方无隶属或背书关系。项目名称及上游源码版权归其各自权利人所有。
+GitHub 的文件页不直接运行 HTML。下载或克隆后打开 previews/lesson-01.html，或按 [构建说明](BUILD_TEXTBOOK.md) 启动本地浏览服务。
 
-## 总计划
+![第一讲统一物件风格：机器人、大脑、工具箱](assets/lesson-01/v2/fig-01-brain-and-workshop.svg)
 
-- [DeepSeek Harness 源码与原理：20 周学习计划](plan/DeepSeek-Harness源码学习计划.md)
+## 目录：阅读、素材、制作记录分开
 
-## 每次学习的固定结构
+~~~text
+第01次-项目全景与源码阅读地图/  六份正式教材
+assets/library/                  独立物件、索引、来源与检索页面
+assets/fonts/                    离线手写字体及授权
+assets/lesson-01/v2/              六张插图与可重复组合的场景配方
+previews/                        可直接浏览的整讲 HTML
+production/lesson-01/             事实矩阵、教学设计和 QA
+.agents/skills/                   生成后续教材的 Skill 与脚本
+plan/                            学习计划与归档需求
+archive/lesson-01-v1/             旧版图源，仅供追溯
+~~~
 
-```text
-第NN次-主题/
-├─ 00-学习导航.md
-├─ 01-课件.md
-├─ 02-逐步讲解.md
-├─ 03-练习与答案.md
-└─ 04-分享稿.md
-```
+实验截图、浏览器配置、下载字体与构建缓存只留在本地忽略目录，不属于正式教材。
 
-`01-课件` 用于预习和复习，`02-逐步讲解` 是主教材。先独立完成 `03-练习与答案` 的题目部分，再查看答案；最后通过 `04-分享稿` 把知识重新组织成可以讲给别人的内容。
+## 怎样继续生成下一讲
 
-## 教材生成工程
+使用 [教材 Skill](.agents/skills/deepseek-harness-textbook/SKILL.md)，遵循“查素材 → 复用物件 → 按教学问题组合 → 核对源码 → 浏览器验收”。没有合适素材时，再在 Figma 中补画并登记。文字、箭头与物件分开；不把截图包装成可编辑矢量。
 
-本仓库不只保存成品，还保留一套可复用的生产与检查流程：
+具体命令见 [BUILD_TEXTBOOK.md](BUILD_TEXTBOOK.md)，视觉规则见 [STYLE_GUIDE.md](STYLE_GUIDE.md)。
 
-- [DeepSeek Harness 教材 Skill](.agents/skills/deepseek-harness-textbook/SKILL.md)：约束比喻教学、源码证据、图文配合和 QA 流程。
-- [共享视觉规范](STYLE_GUIDE.md)：定义颜色、形状语义、制图工具分工、响应式和可访问性要求。
-- `assets/lesson-NN/`：保存可编辑图源和最终 SVG，不把图片当作一次性截图。
-- `lesson-NN-brief.md`、`lesson-NN-source-facts.md`、`lesson-NN-visual-plan.md`、`lesson-NN-qa-report.md`：记录教学设计、事实基线、视觉计划和验收证据。
-- `new-lesson.ps1`、`render-lesson.cjs`、`validate-lesson.ps1`：负责课程脚手架、浏览器预览和发布前检查。
+## 源码基线与验证
 
-第一讲提供了可直接打开的 [完整 HTML 预览](output/playwright/lesson-01-preview.html)，同时保留原始 Markdown 作为可维护内容源。
+上游项目：[deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)。第一讲固定于 [cd5ef8148158c3a752a658978873241fdf8e2bbc](https://github.com/deepseek-ai/deepseek-harness/tree/cd5ef8148158c3a752a658978873241fdf8e2bbc)。
 
-## 课程目录
+教材与上游检出目录物理分离。比喻不是类型定义；配置顺序不是激活顺序；图片中的教学故事不是实际执行记录。
 
-| 次数 | 主题 | 当前状态 | 入口 |
-|---|---|---|---|
-| 第 1 次 | 项目全景与源码阅读地图 | 已按图文教材工程重构 | [开始学习](第01次-项目全景与源码阅读地图/00-学习导航.md) |
+核对 [源码事实矩阵](production/lesson-01/lesson-01-source-facts.md) 和 [QA 报告](production/lesson-01/lesson-01-qa-report.md)。

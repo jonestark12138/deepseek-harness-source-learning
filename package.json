@@ -1,0 +1,12 @@
+{
+  "name": "deepseek-harness-source-learning",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Asset-first Chinese source-learning textbook",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "test": "node --test .agents/skills/deepseek-harness-textbook/scripts/asset-pipeline.test.cjs",
+    "build:lesson01": "node .agents/skills/deepseek-harness-textbook/scripts/build-lesson-01.cjs"
+  },
+  "devDependencies": { "marked": "17.0.5" }
+}

@@ -6,14 +6,17 @@ Desktop.ini
 .vscode/
 *.swp
 *.tmp
+.playwright-cli/
+node_modules/
 
 # Local-only notes and generated output
 .local/
 tmp/
+output/font-source/
+output/python-deps/
+output/pip-cache/
+output/scaffold-test/
+output/qa/
 
-# Browser QA intermediates; keep only the final review artifacts.
-output/playwright/*
-!output/playwright/lesson-01-preview.html
-!output/playwright/lesson-01-desktop-courseware.png
-!output/playwright/lesson-01-narrow-final.png
-!output/playwright/lesson-01-narrow-figure-final.png
+# Generated caches and browser intermediates stay local. Published previews live in previews/.
+output/

@@ -30,36 +30,28 @@ Create or update `lesson-NN-brief.md` from the template. State the one driving q
 
 Create `lesson-NN-visual-plan.md`. Begin with candidate figures; reject or merge overlaps. Each accepted figure must reference fact IDs and have one teaching job.
 
-For Lesson 01, prefer this six-figure set unless diagnosis proves a better set:
-
-1. Model Only vs Model + Harness — diagram-design.
-2. Modular intelligent workshop — Excalidraw.
-3. Everything is a Plugin — diagram-design.
-4. First-layer formal architecture — draw.io.
-5. First source-reading route — diagram-design.
-6. One runtime journey — Mermaid sequence.
-
-Integrate Cordis position into the plugin/formal architecture figures rather than creating a redundant standalone diagram.
+For Lesson 01, six worked examples are robot/brain/toolbox, workshop objects, pluggable equipment, assembly sheets, source-reading trail, and a four-scene runtime story. This is not a quota. Search the asset library before each scene; reuse exact object IDs. Move package mappings into prose/tables instead of filling drawings with API names.
 
 ## 6. Prototype the visual language
 
-Produce one editorial diagram, one metaphor diagram, and the formal architecture diagram first. Render and inspect them before producing the rest. Update `STYLE_GUIDE.md` only with choices that survived real use.
+Start from the accepted robot/brain/toolbox sample. With a new provider, render one sample and a second consistency scene before producing the set. Check recognizable objects and label placement; preserve the same vocabulary. Update `STYLE_GUIDE.md` only with choices that survived real use. On authorization or balance failure stop generation, report the gate and preserve accepted lesson assets.
 
 ## 7. Rewrite the lesson
 
-Preserve the five-document responsibilities:
+Preserve the six-document responsibilities:
 
 - navigation: sequence, time, outcomes, and completion criteria;
 - courseware: fast visual map;
 - step-by-step explanation: continuous teaching narrative with source evidence;
 - exercises and answers: active recall, prediction, diagram, and source location;
 - sharing script: compressed explanation, not a duplicate textbook.
+- glossary: Chinese-first lookup, object analogy, actual meaning, boundary and source link; define terms in the main narrative too.
 
 Reuse accepted figures by reference rather than duplicating similar diagrams in every document.
 
 ## 8. Render and validate
 
-Run `scripts/validate-lesson.ps1`. Build a deterministic local HTML preview that renders Markdown, code, images, and Mermaid. Use Playwright to inspect the important sections and both viewports.
+Run the asset tests, font coverage check, scene composer and `scripts/validate-lesson.ps1`. Build a deterministic local HTML preview of Markdown, code and exported SVGs; this renderer does not execute Mermaid. Use Playwright to inspect every new figure, the gallery and both lesson viewports. Keep working records in `production/lesson-NN/`, reader documents in the lesson folder, published previews in `previews/`, and caches/experiments under ignored `output/` or `.local/` paths.
 
 ## 9. Re-check source and teaching
 

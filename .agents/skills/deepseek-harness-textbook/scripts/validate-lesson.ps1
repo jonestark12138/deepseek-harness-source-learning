@@ -19,7 +19,7 @@ if (-not (Test-Path -LiteralPath $lessonPath -PathType Container)) {
 
 $errors = [Collections.Generic.List[string]]::new()
 $warnings = [Collections.Generic.List[string]]::new()
-$requiredLessonFiles = @('00-学习导航.md', '01-课件.md', '02-逐步讲解.md', '03-练习与答案.md', '04-分享稿.md')
+$requiredLessonFiles = @('00-学习导航.md', '01-课件.md', '02-逐步讲解.md', '03-练习与答案.md', '04-分享稿.md', '05-术语与比喻词典.md')
 foreach ($name in $requiredLessonFiles) {
   if (-not (Test-Path -LiteralPath (Join-Path $lessonPath $name) -PathType Leaf)) {
     $errors.Add("Missing required lesson file: $name")
@@ -34,7 +34,7 @@ $linkPattern = '(?<!!)\[[^\]]+\]\((?<target>[^)]+)\)'
 $imagePattern = '!\[(?<alt>[^\]]*)\]\((?<target>[^)]+)\)'
 foreach ($file in $markdownFiles) {
   $text = Get-Content -LiteralPath $file.FullName -Raw
-  $fenceCount = @([regex]::Matches($text, '(?m)^\s*```')).Count
+  $fenceCount = @([regex]::Matches($text, '(?m)^\s*(?:```|~~~)')).Count
   if (($fenceCount % 2) -ne 0) {
     $errors.Add("Unbalanced fenced code block: $($file.FullName)")
   }
@@ -60,7 +60,7 @@ foreach ($file in $markdownFiles) {
   }
 }
 
-$svgFiles = @(Get-ChildItem -LiteralPath $docsRootPath -File -Filter '*.svg' -Recurse -Force | Where-Object { $_.FullName -notmatch '\\(?:\.git|output|node_modules)\\' })
+$svgFiles = @(Get-ChildItem -LiteralPath $docsRootPath -File -Filter '*.svg' -Recurse -Force | Where-Object { $_.FullName -notmatch '\\(?:\.git|output|\.local|node_modules)\\' })
 foreach ($svg in $svgFiles) {
   $svgText = Get-Content -LiteralPath $svg.FullName -Raw
   try { $xml = [xml]$svgText } catch { $errors.Add("Invalid SVG XML: $($svg.FullName)"); continue }
@@ -71,12 +71,13 @@ foreach ($svg in $svgFiles) {
     $errors.Add("SVG requires title and desc: $($svg.FullName)")
   }
   $base = [IO.Path]::Combine($svg.DirectoryName, [IO.Path]::GetFileNameWithoutExtension($svg.Name))
-  if (-not ((Test-Path -LiteralPath ($base + '.html')) -or (Test-Path -LiteralPath ($base + '.drawio')) -or (Test-Path -LiteralPath ($base + '.excalidraw')) -or (Test-Path -LiteralPath ($base + '.mmd')))) {
+  $nativeObject = $svg.FullName -match '\\assets\\library\\objects\\'
+  if (-not ($nativeObject -or (Test-Path -LiteralPath ($base + '.scene.json')) -or (Test-Path -LiteralPath ($base + '.html')) -or (Test-Path -LiteralPath ($base + '.drawio')) -or (Test-Path -LiteralPath ($base + '.excalidraw')) -or (Test-Path -LiteralPath ($base + '.mmd')))) {
     $warnings.Add("SVG has no same-basename editable source: $($svg.FullName)")
   }
 }
 
-foreach ($source in @(Get-ChildItem -LiteralPath $docsRootPath -File -Recurse -Force | Where-Object { $_.Extension -in @('.drawio', '.excalidraw', '.html', '.mmd') -and $_.FullName -notmatch '\\(?:\.git|output|node_modules)\\' })) {
+foreach ($source in @(Get-ChildItem -LiteralPath $docsRootPath -File -Recurse -Force | Where-Object { $_.Extension -in @('.drawio', '.excalidraw', '.html', '.mmd') -and $_.FullName -notmatch '\\(?:\.git|output|\.local|node_modules|previews)\\' -and $_.FullName -notmatch '\\assets\\library\\index\.html$' })) {
   $base = [IO.Path]::Combine($source.DirectoryName, [IO.Path]::GetFileNameWithoutExtension($source.Name))
   if (-not ((Test-Path -LiteralPath ($base + '.svg')) -or (Test-Path -LiteralPath ($base + '.png')))) {
     $warnings.Add("Editable visual source has no same-basename export: $($source.FullName)")

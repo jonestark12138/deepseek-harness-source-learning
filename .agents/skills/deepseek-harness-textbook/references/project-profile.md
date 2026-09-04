@@ -32,6 +32,9 @@ Each lesson normally contains:
 ├── 02-逐步讲解.md
 ├── 03-练习与答案.md
 ├── 04-分享稿.md
+└── 05-术语与比喻词典.md
+
+production/lesson-NN/
 ├── lesson-NN-brief.md
 ├── lesson-NN-diagnosis.md
 ├── lesson-NN-source-facts.md
@@ -39,7 +42,7 @@ Each lesson normally contains:
 └── lesson-NN-qa-report.md
 ```
 
-Shared visual assets live under `assets/lesson-NN/`. Keep the lesson Markdown readable without opening the editable visual source.
+Shared objects live under `assets/library/`; scene recipes and exports live under `assets/lesson-NN/`. Keep the lesson Markdown readable without opening the editable source. Published HTML goes in `previews/`; local experiments/caches stay in ignored directories.
 
 Do not split exercises and answers merely to satisfy a generic convention. The existing repository deliberately keeps them together, with answers in collapsible sections.
 

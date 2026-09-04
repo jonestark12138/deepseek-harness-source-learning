@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 1,
+  "id": "L01-F06",
+  "style": "workshop-pastel-v1",
+  "width": 1200,
+  "height": 740,
+  "question": "让工作台动起来：先看结果，再决定下一步",
+  "description": "四幅连续场景表示接到任务、大脑提出工具请求、工具在策略范围内尝试动作并形成记录、模型读结果后回答或继续。",
+  "boundary": "这是可能调用工具的教学故事；输入接收在 step 之外，工具可被拒绝，模型也可直接回答。",
+  "claims": [
+    "L01-C05",
+    "L01-C07",
+    "L01-C13"
+  ],
+  "elements": [
+    {
+      "type": "text",
+      "text": "让工作台动起来：先看结果，再决定下一步",
+      "x": 56,
+      "y": 70,
+      "size": 39,
+      "anchor": "start",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": "教学示例，不是本轮真实测试执行记录",
+      "x": 58,
+      "y": 113,
+      "size": 23,
+      "anchor": "start",
+      "color": "#756A5F"
+    },
+    {
+      "type": "object",
+      "asset": "agent-robot-v1",
+      "x": 64,
+      "y": 170,
+      "width": 145,
+      "height": 168
+    },
+    {
+      "type": "text",
+      "text": [
+        "① 接到任务",
+        "“为什么测试失败？”"
+      ],
+      "x": 244,
+      "y": 220,
+      "size": 26,
+      "anchor": "start",
+      "color": "#50483F"
+    },
+    {
+      "type": "object",
+      "asset": "model-brain-v1",
+      "x": 641,
+      "y": 170,
+      "width": 185,
+      "height": 169
+    },
+    {
+      "type": "text",
+      "text": [
+        "② 看已有信息",
+        "“还需要读这份报告”"
+      ],
+      "x": 875,
+      "y": 218,
+      "size": 26,
+      "anchor": "start",
+      "color": "#50483F"
+    },
+    {
+      "type": "object",
+      "asset": "tool-wrench-v1",
+      "x": 80,
+      "y": 405,
+      "width": 135,
+      "height": 173
+    },
+    {
+      "type": "object",
+      "asset": "sandbox-shield-v1",
+      "x": 185,
+      "y": 476,
+      "width": 68,
+      "height": 84
+    },
+    {
+      "type": "object",
+      "asset": "session-journal-v1",
+      "x": 258,
+      "y": 432,
+      "width": 95,
+      "height": 130
+    },
+    {
+      "type": "text",
+      "text": [
+        "③ 尝试获准动作",
+        "结果 / 拒绝也要看"
+      ],
+      "x": 391,
+      "y": 461,
+      "size": 24,
+      "anchor": "start",
+      "color": "#50483F"
+    },
+    {
+      "type": "object",
+      "asset": "model-brain-v1",
+      "x": 665,
+      "y": 408,
+      "width": 185,
+      "height": 177
+    },
+    {
+      "type": "text",
+      "text": [
+        "④ 带着结果再判断",
+        "继续查，或作答"
+      ],
+      "x": 899,
+      "y": 461,
+      "size": 25,
+      "anchor": "start",
+      "color": "#50483F"
+    },
+    {
+      "type": "arrow",
+      "x": 485,
+      "y": 281,
+      "x2": 607,
+      "y2": 281,
+      "meaning": "教学情节前进",
+      "optional": false
+    },
+    {
+      "type": "arrow",
+      "x": 732,
+      "y": 342,
+      "x2": 540,
+      "y2": 397,
+      "meaning": "仅示例：模型请求工具，运行支撑尝试执行",
+      "optional": true
+    },
+    {
+      "type": "arrow",
+      "x": 548,
+      "y": 548,
+      "x2": 643,
+      "y2": 548,
+      "meaning": "教学情节：取得本次动作结果",
+      "optional": false
+    },
+    {
+      "type": "text",
+      "text": "不需要工具时，可以直接作答；需要继续时，才进入后续模型请求。",
+      "x": 600,
+      "y": 655,
+      "size": 27,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": "一步：一次模型请求及其工具调用。一轮：零个或多个步骤。",
+      "x": 600,
+      "y": 706,
+      "size": 25,
+      "anchor": "middle",
+      "color": "#50483F"
+    }
+  ]
+}

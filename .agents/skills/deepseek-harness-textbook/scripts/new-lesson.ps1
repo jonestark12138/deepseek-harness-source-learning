@@ -17,10 +17,11 @@ if ($Title.IndexOfAny($invalidChars) -ge 0) {
   throw 'Title contains characters that are invalid in a directory name.'
 }
 
-$docsRootPath = [IO.Path]::GetFullPath($DocsRoot)
+$docsRootPath = [IO.Path]::GetFullPath($DocsRoot).TrimEnd('\')
 $lessonName = "第${LessonNumber}次-$Title"
 $lessonDir = [IO.Path]::GetFullPath((Join-Path $docsRootPath $lessonName))
 $assetDir = [IO.Path]::GetFullPath((Join-Path $docsRootPath "assets\lesson-$LessonNumber"))
+$productionDir = [IO.Path]::GetFullPath((Join-Path $docsRootPath "production\lesson-$LessonNumber"))
 
 if (-not $lessonDir.StartsWith($docsRootPath + '\', [StringComparison]::OrdinalIgnoreCase)) {
   throw "Lesson directory escaped DocsRoot: $lessonDir"
@@ -28,7 +29,7 @@ if (-not $lessonDir.StartsWith($docsRootPath + '\', [StringComparison]::OrdinalI
 if (-not $assetDir.StartsWith($docsRootPath + '\', [StringComparison]::OrdinalIgnoreCase)) {
   throw "Asset directory escaped DocsRoot: $assetDir"
 }
-if ((Test-Path -LiteralPath $lessonDir) -or (Test-Path -LiteralPath $assetDir)) {
+if ((Test-Path -LiteralPath $lessonDir) -or (Test-Path -LiteralPath $assetDir) -or (Test-Path -LiteralPath $productionDir)) {
   throw 'Lesson or asset directory already exists; refusing to overwrite it.'
 }
 
@@ -38,7 +39,7 @@ function Write-Utf8File([string]$Path, [string]$Content) {
 }
 
 if ($PSCmdlet.ShouldProcess($lessonDir, 'Create lesson scaffold')) {
-  New-Item -ItemType Directory -Path $lessonDir, $assetDir -Force | Out-Null
+  New-Item -ItemType Directory -Path $lessonDir, $assetDir, $productionDir -Force | Out-Null
 
   $lessonIndex = [int]$LessonNumber
   $files = [ordered]@{
@@ -47,6 +48,7 @@ if ($PSCmdlet.ShouldProcess($lessonDir, 'Create lesson scaffold')) {
     '02-逐步讲解.md' = "# 第 $lessonIndex 次逐步讲解：$Title`n`n> 源码快照：待填写`n`n## 我们只追一个问题`n`n待填写。"
     '03-练习与答案.md' = "# 第 $lessonIndex 次练习与答案：$Title`n`n> 源码快照：待填写`n`n## 练习`n`n待填写。`n`n## 参考答案`n`n<details>`n<summary>展开答案</summary>`n`n待填写。`n`n</details>"
     '04-分享稿.md' = "# 第 $lessonIndex 次分享稿：$Title`n`n> 源码快照：待填写`n`n## 听众应带走什么`n`n待填写。"
+    '05-术语与比喻词典.md' = "# 第 $lessonIndex 次术语与比喻词典`n`n> 源码快照：待填写`n`n按需查阅，不要求预先背诵。`n`n| 中文 / 英文 | 物件比喻 | 实际职责 | 边界 | 源码证据 |`n|---|---|---|---|---|"
     "lesson-$LessonNumber-brief.md" = "# Lesson $LessonNumber Brief — $Title`n`n请按 Skill 的 lesson-brief-template.md 填写。"
     "lesson-$LessonNumber-diagnosis.md" = "# Lesson $LessonNumber 教学诊断`n`n## 结论`n`n待填写。"
     "lesson-$LessonNumber-source-facts.md" = "# Lesson $LessonNumber Source Fact Matrix`n`n| Claim ID | Claim | Exact evidence | Evidence type | Commit | Confidence | Teaching simplification | Boundary / uncertainty |`n|---|---|---|---|---|---|---|---|"
@@ -55,12 +57,14 @@ if ($PSCmdlet.ShouldProcess($lessonDir, 'Create lesson scaffold')) {
   }
 
   foreach ($entry in $files.GetEnumerator()) {
-    Write-Utf8File (Join-Path $lessonDir $entry.Key) $entry.Value
+    $targetDir = if ($entry.Key.StartsWith('lesson-')) { $productionDir } else { $lessonDir }
+    Write-Utf8File (Join-Path $targetDir $entry.Key) $entry.Value
   }
 }
 
 [pscustomobject]@{
   LessonDirectory = $lessonDir
   AssetDirectory = $assetDir
+  ProductionDirectory = $productionDir
   Created = Test-Path -LiteralPath $lessonDir
 }

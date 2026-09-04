@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "id": "L01-F01",
+  "style": "workshop-pastel-v1",
+  "width": 1200,
+  "height": 740,
+  "question": "聪明的大脑，怎样变成能干活的助手？",
+  "description": "机器人约等于大脑加工具箱。大脑负责推理生成，工具箱代表连接动作、记录和规则的运行支撑。",
+  "boundary": "整体助手是教学近似，不是源码 Agent 类型的定义；工具箱也不只是工具集合。",
+  "claims": [
+    "L01-C01",
+    "L01-C06",
+    "L01-C14"
+  ],
+  "elements": [
+    {
+      "type": "text",
+      "text": "聪明的大脑，怎样变成能干活的助手？",
+      "x": 56,
+      "y": 70,
+      "size": 39,
+      "anchor": "start",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": "先看三个物件，再记三个名字",
+      "x": 58,
+      "y": 113,
+      "size": 23,
+      "anchor": "start",
+      "color": "#756A5F"
+    },
+    {
+      "type": "object",
+      "asset": "agent-robot-v1",
+      "x": 70,
+      "y": 176,
+      "width": 270,
+      "height": 310
+    },
+    {
+      "type": "text",
+      "text": "≈",
+      "x": 395,
+      "y": 340,
+      "size": 62,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "object",
+      "asset": "model-brain-v1",
+      "x": 456,
+      "y": 185,
+      "width": 295,
+      "height": 285
+    },
+    {
+      "type": "text",
+      "text": "+",
+      "x": 805,
+      "y": 340,
+      "size": 60,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "object",
+      "asset": "harness-toolbox-v1",
+      "x": 863,
+      "y": 223,
+      "width": 295,
+      "height": 220
+    },
+    {
+      "type": "text",
+      "text": "能工作的助手",
+      "x": 205,
+      "y": 535,
+      "size": 31,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": "大脑：负责想",
+      "x": 605,
+      "y": 535,
+      "size": 31,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": "工具箱：支撑做",
+      "x": 1000,
+      "y": 535,
+      "size": 31,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": "整体智能体系统",
+      "x": 205,
+      "y": 575,
+      "size": 24,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": "推理、生成下一步",
+      "x": 605,
+      "y": 575,
+      "size": 24,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": "连接能力、记录和规则",
+      "x": 1000,
+      "y": 575,
+      "size": 24,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": "有一把好扳手，不等于知道怎么修；知道怎么修，也不等于已经动手。",
+      "x": 600,
+      "y": 653,
+      "size": 28,
+      "anchor": "middle",
+      "color": "#50483F"
+    },
+    {
+      "type": "text",
+      "text": "比喻不是源码等式：模型输出工具请求，由运行支撑组织实际执行。",
+      "x": 600,
+      "y": 702,
+      "size": 22,
+      "anchor": "middle",
+      "color": "#756A5F"
+    }
+  ]
+}

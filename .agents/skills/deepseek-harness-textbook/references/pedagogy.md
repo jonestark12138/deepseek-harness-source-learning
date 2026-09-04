@@ -35,7 +35,7 @@ For the recurring “modular intelligent workshop” metaphor:
 - Plugin: a mounted contribution, not merely a downloadable IDE extension.
 - Tool: a model-facing action definition and guarded execution path.
 - Skill: reusable instructions discovered from providers and loaded through a catalog/tool; not executable capability by itself.
-- Session: durable event history and derived model-visible record; not just chat text.
+- Session: append-only event history and derived model-visible record; persistence is provided separately, not guaranteed by the notebook metaphor.
 - Sandbox: process confinement or an execution capability seam, not a synonym for workspace.
 
 ## Use the reader's backend knowledge
@@ -59,6 +59,12 @@ For each concept, choose one level:
 - **后续深入**: intentionally deferred, with the later lesson named when known.
 
 Do not introduce more than five to seven new primary concepts in one uninterrupted section. Use short paragraphs, whitespace, captions, and visual pauses; do not turn the entire lesson into bullets or slides.
+
+## Chinese-first terminology
+
+At first use: Chinese name + English spelling + one plain-language sentence. Introduce the object before the technical definition, then return to the exact source symbol. Keep English package/API names in source-navigation blocks, not as unexplained figure labels. Add each new core term to `05-术语与比喻词典.md` with its object, actual responsibility, Java bridge when useful, misconception and source evidence. Do not make the reader study a long glossary before the opening scene.
+
+Prefer one running story (a workshop diagnosing a failed test) over unrelated glass-room, railway and airport metaphors in one lesson. When the source-reading map uses a path, say it is reading order, not program execution.
 
 ## Source excerpt pattern
 
