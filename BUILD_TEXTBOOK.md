@@ -17,7 +17,7 @@ npm run build:lesson01
 python -m http.server 8765 --bind 127.0.0.1
 ~~~
 
-访问 http://127.0.0.1:8765/previews/lesson-01.html 。这不会自动发布网站，GitHub 文件页也不直接运行 HTML。
+访问 http://127.0.0.1:8765/previews/lesson-01.html 。这条本地命令不会发布网站；推送 main 后的自动 Pages 发布、首页构建与离线打包见 [发布指南](PUBLISHING.md)。
 
 ## 找素材、组合场景
 

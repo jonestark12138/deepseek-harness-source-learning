@@ -77,7 +77,7 @@ foreach ($svg in $svgFiles) {
   }
 }
 
-foreach ($source in @(Get-ChildItem -LiteralPath $docsRootPath -File -Recurse -Force | Where-Object { $_.Extension -in @('.drawio', '.excalidraw', '.html', '.mmd') -and $_.FullName -notmatch '\\(?:\.git|output|\.local|node_modules|previews)\\' -and $_.FullName -notmatch '\\assets\\library\\index\.html$' })) {
+foreach ($source in @(Get-ChildItem -LiteralPath $docsRootPath -File -Recurse -Force | Where-Object { $_.Extension -in @('.drawio', '.excalidraw', '.html', '.mmd') -and $_.FullName -notmatch '\\(?:\.git|output|\.local|node_modules|previews|site)\\' -and $_.FullName -notmatch '\\assets\\library\\index\.html$' })) {
   $base = [IO.Path]::Combine($source.DirectoryName, [IO.Path]::GetFileNameWithoutExtension($source.Name))
   if (-not ((Test-Path -LiteralPath ($base + '.svg')) -or (Test-Path -LiteralPath ($base + '.png')))) {
     $warnings.Add("Editable visual source has no same-basename export: $($source.FullName)")

@@ -17,7 +17,7 @@ for(const file of files.filter(f=>f.endsWith('.md'))){
     if(!fs.existsSync(resolved))failures.push(`${path.relative(ROOT,file)}: broken link ${target}`)
   }
 }
-for(const file of files.filter(f=>/\.(md|json|cjs|js|ps1|html|svg|yaml)$/.test(f))){
+for(const file of files.filter(f=>/\.(md|json|cjs|js|ps1|html|svg|ya?ml|css|py)$/.test(f))){
   const text=fs.readFileSync(file,'utf8')
   if(/(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{25,}|sk-[A-Za-z0-9_-]{24,}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----)/.test(text))failures.push(`${path.relative(ROOT,file)}: possible credential`)
 }

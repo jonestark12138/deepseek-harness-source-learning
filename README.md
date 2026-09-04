@@ -6,6 +6,10 @@
 
 ## 从这里开始
 
+**[在线阅读首页](https://jonestark12138.github.io/deepseek-harness-source-learning/) · [直接读第一讲](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/lesson-01.html) · [第一讲离线下载](https://github.com/jonestark12138/deepseek-harness-source-learning/releases/tag/lesson-01-v1.0.0)**
+
+目前第一讲已完成，后续章节持续建设中。无需安装开发环境即可在线阅读。
+
 | 入口 | 适合什么时候 |
 |---|---|
 | [第一讲：学习导航](第01次-项目全景与源码阅读地图/00-学习导航.md) | 第一次阅读 |
@@ -15,7 +19,7 @@
 | [可搜索的物件素材库](assets/library/index.html) | 找机器人、大脑、工具箱等独立 SVG |
 | [20 周源码学习计划](plan/DeepSeek-Harness源码学习计划.md) | 查看长期路线 |
 
-GitHub 的文件页不直接运行 HTML。下载或克隆后打开 previews/lesson-01.html，或按 [构建说明](BUILD_TEXTBOOK.md) 启动本地浏览服务。
+GitHub 的文件页不直接运行 HTML，请使用上面的在线入口。离线阅读推荐下载 Release 中的阅读 ZIP，完整解压后打开 index.html；源码引用与反馈链接仍需联网。
 
 ![第一讲统一物件风格：机器人、大脑、工具箱](assets/lesson-01/v2/fig-01-brain-and-workshop.svg)
 
@@ -27,6 +31,8 @@ assets/library/                  独立物件、索引、来源与检索页面
 assets/fonts/                    离线手写字体及授权
 assets/lesson-01/v2/              六张插图与可重复组合的场景配方
 previews/                        可直接浏览的整讲 HTML
+site/                            在线阅读首页与样式源文件
+.github/workflows/pages.yml       main 推送后测试、构建并发布 Pages
 production/lesson-01/             事实矩阵、教学设计和 QA
 .agents/skills/                   生成后续教材的 Skill 与脚本
 plan/                            学习计划与归档需求
@@ -48,3 +54,5 @@ archive/lesson-01-v1/             旧版图源，仅供追溯
 教材与上游检出目录物理分离。比喻不是类型定义；配置顺序不是激活顺序；图片中的教学故事不是实际执行记录。
 
 核对 [源码事实矩阵](production/lesson-01/lesson-01-source-facts.md) 和 [QA 报告](production/lesson-01/lesson-01-qa-report.md)。
+
+在线网站持续更新，Release 保存对应标签的阅读快照。发布方法与回滚说明见 [发布指南](PUBLISHING.md)。字体遵循随附 OFL；教材正文和插图尚未指定统一开放许可，请勿将公开可读理解为已授权任意再分发。
