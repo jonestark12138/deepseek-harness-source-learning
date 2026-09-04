@@ -6,7 +6,8 @@ async page => {
   const onError=e=>failures.push(String(e))
   page.on('pageerror',onError)
   async function check(label){
-    await page.evaluate(()=>document.fonts.ready)
+    await page.waitForLoadState('load')
+    await page.evaluate(async()=>{await document.fonts.ready;await Promise.all([...document.images].map(img=>img.decode().catch(()=>{})))})
     const state=await page.evaluate(()=>({title:document.title,width:innerWidth,scrollWidth:document.documentElement.scrollWidth,images:[...document.images].length,brokenImages:[...document.images].filter(i=>!i.complete||!i.naturalWidth).map(i=>i.getAttribute('src')),font:[...document.fonts].some(f=>f.family.includes('Workshop Hand')&&f.status==='loaded')}))
     if(state.scrollWidth>state.width+1||state.brokenImages.length||!state.font)failures.push({label,...state})
     metrics.push({label,...state})
