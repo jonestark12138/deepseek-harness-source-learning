@@ -1,0 +1,242 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第一讲 · 源码事实矩阵</title><link rel="icon" href="data:,"><style>
+    @font-face { font-family:"Workshop Hand"; src:url('assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style><nav><a href="index.html">← 阅读首页</a><a href="previews/lesson-01.html">第一讲</a></nav><main><article><h1>Lesson 01 Source Fact Matrix</h1>
+<blockquote>
+<p>Upstream commit：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>
+Confidence：<code>Confirmed</code> 表示当前源码或维护文档直接支持；<code>Teaching inference</code> 表示为了教学组织而归纳，不是源码定义。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Claim ID</th>
+<th>Claim</th>
+<th>Exact evidence</th>
+<th>Evidence type</th>
+<th>Confidence</th>
+<th>Teaching simplification</th>
+<th>Boundary / uncertainty</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>L01-C01</td>
+<td>Model 调用能力与 Tool、Session、Agent Loop 等职责由不同 package 所有，Model 本身不是完整 Harness</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/llm/llm/README.md"><code>packages/llm/llm/README.md</code></a>；<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/architecture.md#core-packages"><code>docs/architecture.md#core-packages</code></a></td>
+<td>Package docs + architecture</td>
+<td>Confirmed</td>
+<td>“Model 是大脑”只表达推理/生成中心</td>
+<td>不把 provider-neutral LLM service 等同于某个具体模型</td>
+</tr>
+<tr>
+<td>L01-C02</td>
+<td>DeepSeek Harness 的 model adapter、tool registry、session log、agent loop 本身都是 Cordis 插件</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/architecture.md#cordis"><code>docs/architecture.md#cordis</code></a></td>
+<td>Maintained architecture</td>
+<td>Confirmed</td>
+<td>“核心也是插件”</td>
+<td>插件化不意味着所有模块可无约束互换</td>
+</tr>
+<tr>
+<td>L01-C03</td>
+<td>Cordis 插件向共享 Context 贡献 services、typed events 和 reversible effects；依赖可通过 <code>inject</code> 等待 service</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/cordis-primer.md#cordis-in-five-ideas"><code>docs/cordis-primer.md#cordis-in-five-ideas</code></a></td>
+<td>Maintained framework primer</td>
+<td>Confirmed</td>
+<td>“模块轨道与能力登记”</td>
+<td>Cordis 不是 OS、容器或 Sandbox</td>
+</tr>
+<tr>
+<td>L01-C04</td>
+<td><code>dsh-llm</code> 是 provider-neutral model-call service，拥有共享消息/流式词汇和 adapter seam</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/llm/llm/README.md#summary"><code>packages/llm/llm/README.md#summary</code></a></td>
+<td>Package contract</td>
+<td>Confirmed</td>
+<td>图中统一称为 Model/LLM 能力</td>
+<td>具体 provider wire logic 位于 adapters，不在该 service 内</td>
+</tr>
+<tr>
+<td>L01-C05</td>
+<td><code>dsh-tools</code> 拥有模型可见工具注册与 guarded execution pipeline</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/tools/README.md#summary"><code>packages/core/tools/README.md#summary</code></a></td>
+<td>Package contract</td>
+<td>Confirmed</td>
+<td>Tool 是动作端口</td>
+<td>看到工具 schema 不等于调用一定获准或安全完成</td>
+</tr>
+<tr>
+<td>L01-C06</td>
+<td><code>dsh-agent</code> 拥有 Agent handle、live registry 与 <code>agent/*</code> 事件；具体创建和驱动由 <code>dsh-agent-loop</code> 提供</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent/README.md#summary"><code>packages/core/agent/README.md#summary</code></a></td>
+<td>Package contract</td>
+<td>Confirmed</td>
+<td>“Agentic System ≈ Model + Harness”只作开场近似</td>
+<td>不能把源码 <code>Agent</code> 接口直接定义为 Model + Harness</td>
+</tr>
+<tr>
+<td>L01-C07</td>
+<td>Session 是 append-only 事件日志，模型历史由日志派生；持久化是独立关注点</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/README.md#summary"><code>packages/core/session/README.md#summary</code></a></td>
+<td>Package contract</td>
+<td>Confirmed</td>
+<td>Session 比喻为工作日志/黑匣子</td>
+<td>不是简单聊天消息数组，也不等于持久化后端</td>
+</tr>
+<tr>
+<td>L01-C08</td>
+<td>Skill 是 provider 提供的可复用指令；registry 合并 catalog，consumer 提供 session catalog 与 model-facing loader tool</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/skill/README.md#summary"><code>packages/skill/README.md#summary</code></a></td>
+<td>Package group contract</td>
+<td>Confirmed</td>
+<td>Skill 比喻为说明书/SOP</td>
+<td>Skill 本身不是执行能力；加载 Skill 依赖 registry/provider/consumer 组合</td>
+</tr>
+<tr>
+<td>L01-C09</td>
+<td>Sandbox group 对 subprocess 执行施加文件影响策略，并支持平台后端和授权升级</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/sandbox/README.md#summary"><code>packages/sandbox/README.md#summary</code></a></td>
+<td>Package group contract</td>
+<td>Confirmed</td>
+<td>Sandbox 是受控执行区</td>
+<td>同一世界 confinement 不等于容器、microVM 或远程执行器</td>
+</tr>
+<tr>
+<td>L01-C10</td>
+<td>完整 capability seam 包括 Service Definition、Provider、Consumer；Service Definition 不只是 TypeScript interface</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/glossary.md#capability-seam"><code>docs/glossary.md#capability-seam</code></a></td>
+<td>Maintained glossary</td>
+<td>Confirmed</td>
+<td>第一讲只展示“能力定义/实现/使用者”三角</td>
+<td>完整源码与替换语义后续课程展开</td>
+</tr>
+<tr>
+<td>L01-C11</td>
+<td>运行中的 <code>dsh</code> 是按有序 layers 在 boot 时组成的 plugin tree</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/architecture.md#profiles-and-bundles"><code>docs/architecture.md#profiles-and-bundles</code></a></td>
+<td>Architecture + configuration</td>
+<td>Confirmed</td>
+<td>“按方案装配工作室”</td>
+<td>patch 应用顺序不等于插件激活顺序</td>
+</tr>
+<tr>
+<td>L01-C12</td>
+<td>CLI profile 路径从 <code>parseDshArgs()</code> 进入 <code>runProfile()</code>；<code>composeProfile()</code>/<code>allPatches()</code> 组合 layers；<code>runProfile()</code> 调用 <code>boot()</code></td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/bin.ts"><code>apps/cli/src/bin.ts</code></a>；<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/profile-boot.ts"><code>apps/cli/src/profile-boot.ts</code></a></td>
+<td>Implementation</td>
+<td>Confirmed</td>
+<td>第一讲压缩为 <code>bin -&gt; profile -&gt; bundle -&gt; boot</code></td>
+<td>不在第一讲继续追 Loader/Fiber 内部</td>
+</tr>
+<tr>
+<td>L01-C13</td>
+<td>一个 step 包含一次模型请求及其工具调用；一个 turn 包含零个或多个 step</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/architecture.md#turn-flow"><code>docs/architecture.md#turn-flow</code></a></td>
+<td>Maintained architecture</td>
+<td>Confirmed</td>
+<td>Runtime 图只展示输入、请求、工具、记录、继续</td>
+<td>不展开 waterfall、retry、continuation 和 durable event 细节</td>
+</tr>
+<tr>
+<td>L01-C14</td>
+<td>“只有 Model 不能独立完成文件访问、命令执行、持续状态和安全策略”是对 package 职责分离的教学归纳</td>
+<td>L01-C01、L01-C05、L01-C07、L01-C09</td>
+<td>Cross-evidence inference</td>
+<td>Teaching inference</td>
+<td>用 Model Only vs Model + Harness 建立第一直觉</td>
+<td>不是上游源码中的正式等式或类型定义</td>
+</tr>
+<tr>
+<td>L01-C15</td>
+<td>文件能力组区分 ctx.fs 服务契约、实现、策略和面向模型的文件工具</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/README.md#summary">packages/fs/README.md</a></td>
+<td>Package group contract</td>
+<td>Confirmed</td>
+<td>资料夹代表可访问的真实文件材料</td>
+<td>不代表模型内置知识；不同后端仍需遵守契约与执行环境约束</td>
+</tr>
+</tbody></table>
+<h2>Configuration evidence for “core is plugin”</h2>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/bundle/base/cordis.patch.yml"><code>packages/bundle/base/cordis.patch.yml</code></a> 在当前提交中声明了这些核心行：</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th align="right">当前快照行号</th>
+<th>本讲允许得出的结论</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>llm</code></td>
+<td align="right">27</td>
+<td>base bundle 声明挂载 LLM 相关插件行</td>
+</tr>
+<tr>
+<td><code>session</code></td>
+<td align="right">33</td>
+<td>Session 通过配置进入组合</td>
+</tr>
+<tr>
+<td><code>agent</code></td>
+<td align="right">67</td>
+<td>Agent registry/接口能力通过配置进入组合</td>
+</tr>
+<tr>
+<td><code>tools</code></td>
+<td align="right">474</td>
+<td>Tools registry/pipeline 通过配置进入组合</td>
+</tr>
+<tr>
+<td><code>system-prompt</code></td>
+<td align="right">479</td>
+<td>Prompt 组装不是 Agent Loop 内部的固定代码</td>
+</tr>
+<tr>
+<td><code>agent-loop</code></td>
+<td align="right">486</td>
+<td>默认 driver 本身也是可组合插件</td>
+</tr>
+</tbody></table>
+<p>这些行不能单独证明真实激活顺序、依赖已经满足、插件加载成功或内部算法已经理解。</p>
+<h2>本轮边界复核</h2>
+<ul>
+<li>C12 的压缩链只作为阅读导航：读者去翻 bundle 清单，再回到 runProfile 中的 boot 调用；不能画成 YAML 被函数调用。</li>
+<li>allPatches() 是 bundlePatches → profile.patches → homePatches → overlays；overlays 除命令行补丁外还包含代码合成的调整。</li>
+<li>架构文档指出 sdk-minimal 不继承 base，因此不把“所有方案共享 base”作为结论。</li>
+<li>C13 的 Step 定义是一次模型请求及其工具调用，输入接收不在定义内；Turn 可以有零个 Step。</li>
+<li>图中的工作室与测试排查均为教学表达，不是一次实测运行报告。Session 派生模型消息，不承诺每次全量传入或已经持久化。</li>
+</ul>
+</article></main></html>

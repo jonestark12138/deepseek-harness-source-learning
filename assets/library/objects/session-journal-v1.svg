@@ -1,8 +1,0 @@
-<svg role="img" aria-labelledby="title desc" width="210" height="210" viewBox="0 0 210 210" fill="none" xmlns="http://www.w3.org/2000/svg">
-<title id="title">工作日志</title>
-<desc id="desc">会话是事件日志；给模型的消息由其派生，持久化由独立后端提供。</desc>
-<path d="M42 177.13L45.6522 34.6956C45.6522 26.1738 49.9124 21.913 58.4348 21.913L153.391 27.3913C163.13 28.6088 167.392 34.087 166.174 43.8261L158.87 188.087L42 177.13Z" fill="#C5DCE7" stroke="#50483F" stroke-width="6.02609" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M63.9129 38.3478L142.435 42L136.956 158.87L60.2607 155.217L63.9129 38.3478Z" fill="#FFFBF0" stroke="#50483F" stroke-width="3.65217" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M74.8695 65.7391L122.348 67.5652M74.8695 89.4783L113.217 91.3044M73.0435 113.217L122.348 115.043M73.0435 135.13L111.391 136.957" stroke="#859BA0" stroke-width="3.65217" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M51.1303 40.1739H69.3912M51.1303 63.9131H69.3912M51.1303 87.6522H69.3912M49.3042 111.391H67.5651M49.3042 135.13H67.5651M49.3042 157.043H67.5651" stroke="#50483F" stroke-width="4.01739" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>

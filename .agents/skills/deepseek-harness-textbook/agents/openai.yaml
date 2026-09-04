@@ -1,4 +1,0 @@
-interface:
-  display_name: "DeepSeek Harness 图文教材"
-  short_description: "为 DeepSeek Harness 生成比喻驱动、图文结合且有源码证据的中文教材"
-  default_prompt: "Use $deepseek-harness-textbook to design or refactor a vivid, source-accurate DeepSeek Harness lesson."

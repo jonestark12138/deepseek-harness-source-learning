@@ -1,17 +1,11 @@
-# Deterministic SVG hashes and generated files across Windows/Linux checkouts.
 * text=auto
-*.svg text eol=lf
-*.json text eol=lf
-*.md text eol=lf
 *.html text eol=lf
 *.css text eol=lf
-*.yml text eol=lf
-*.yaml text eol=lf
 *.cjs text eol=lf
-*.js text eol=lf
-*.py text eol=lf
-*.ps1 text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.txt text eol=lf
 *.png binary
 *.woff2 binary
-# Retain the upstream font license verbatim, including its original whitespace.
-assets/fonts/OFL.txt text eol=lf -whitespace
+reader/assets/fonts/OFL.txt -whitespace
