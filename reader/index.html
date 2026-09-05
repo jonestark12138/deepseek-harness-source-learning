@@ -3,28 +3,31 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="面向 Java 后端工程师的 DeepSeek Harness 图文源码教材。前五讲从项目全景走到 package 证据阅读法。">
+  <meta name="description" content="面向 Java 后端工程师的 DeepSeek Harness 图文源码教材。前八讲从项目全景走到 Cordis 服务与事件机制。">
   <title>DeepSeek Harness · 图文源码教材</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="site.css">
 </head>
 <body>
   <a class="skip" href="#main">跳到正文</a>
-  <header class="top"><a class="brand" href="index.html">DeepSeek Harness <span>图文源码教材</span></a><nav aria-label="首页导航"><a href="#chapters">阅读目录</a><a href="previews/lesson-05.html#doc-5">术语词典</a><a href="https://github.com/jonestark12138/deepseek-harness-source-learning">GitHub ↗</a></nav></header>
+  <header class="top"><a class="brand" href="index.html">DeepSeek Harness <span>图文源码教材</span></a><nav aria-label="首页导航"><a href="#chapters">阅读目录</a><a href="previews/lesson-08.html#doc-5">术语词典</a><a href="https://github.com/jonestark12138/deepseek-harness-source-learning">GitHub ↗</a></nav></header>
   <main id="main">
     <section class="hero" aria-labelledby="title">
-      <div class="intro"><p class="eyebrow">写给 Java 后端工程师的源码学习笔记</p><h1 id="title">先建立直觉，<br>再让源码校准。</h1><p class="lead">前五讲从模块化智能工作室出发，经过 TypeScript 防错工装与 monorepo 三张地图，最终形成一套可迁移的 package 六站验货法。</p><div class="actions"><a class="button" href="previews/lesson-05.html">开始阅读第五讲 →</a><a class="secondary" href="https://github.com/jonestark12138/deepseek-harness-source-learning/releases/tag/lessons-01-05-v1.2.0">下载前五讲离线阅读版 ↗</a></div><p class="small">无需安装 · 中文手写风格 · 配套练习与事实矩阵</p></div>
-      <figure><img src="assets/lesson-05/reader/fig-01-six-stations.png" width="1200" height="740" alt="读一个陌生 package 的六站验货法：README、manifest、入口、实现、测试和调用方"><figcaption>第五讲插图 · 六站验货法<br>README 是路牌，证据链才是地图。</figcaption></figure>
+      <div class="intro"><p class="eyebrow">写给 Java 后端工程师的源码学习笔记</p><h1 id="title">先建立直觉，<br>再让源码校准。</h1><p class="lead">前八讲从模块化智能工作室出发，经过 TypeScript、monorepo 与 package 证据链，进入 Cordis 的插件生命周期、服务注入与事件调度。</p><div class="actions"><a class="button" href="previews/lesson-08.html">开始阅读第八讲 →</a><a class="secondary" href="https://github.com/jonestark12138/deepseek-harness-source-learning/releases/tag/lessons-01-08-v1.3.0">下载前八讲离线阅读版 ↗</a></div><p class="small">无需安装 · 中文手写风格 · 配套练习与事实矩阵</p></div>
+      <figure><img src="assets/lesson-08/reader/fig-01-five-modes.png" width="1200" height="740" alt="车间事件调度台的五个按钮：广播、并发、顺序、抢答和层层门卫"><figcaption>第八讲插图 · 五种事件调度<br>先问规则，再按按钮。</figcaption></figure>
     </section>
-    <section id="chapters" class="chapters" aria-labelledby="chapters-title"><div class="section-head"><p class="eyebrow">阅读目录</p><h2 id="chapters-title">从系统地图走到 package 证据链</h2><p>前五讲已经完成，建议按顺序阅读。</p></div>
+    <section id="chapters" class="chapters" aria-labelledby="chapters-title"><div class="section-head"><p class="eyebrow">阅读目录</p><h2 id="chapters-title">从系统地图走进 Cordis 运行机制</h2><p>前八讲已经完成，建议按顺序阅读。</p></div>
       <div class="lesson"><div class="number" aria-hidden="true">01</div><div><p class="status">已发布 · 第一讲</p><h3>项目全景与源码阅读地图</h3><p>模型与 Harness 有什么关系？先认识大脑、工具箱与模块工作台。</p><div class="links"><a href="previews/lesson-01.html#doc-0">学习导航 →</a><a href="previews/lesson-01.html#doc-2">逐步读源码 →</a><a href="evidence/lesson-01.html">事实矩阵 →</a></div></div></div>
       <div class="lesson"><div class="number" aria-hidden="true">02</div><div><p class="status">新增 · 第二讲</p><h3>TypeScript 最小语法 I</h3><p>把类型当成标签、验货单和分拣码，读懂函数签名、interface、联合类型与 async。</p><div class="links"><a href="previews/lesson-02.html#doc-0">学习导航 →</a><a href="previews/lesson-02.html#doc-1">看图建立直觉 →</a><a href="previews/lesson-02.html#doc-2">逐步讲解 →</a><a href="previews/lesson-02.html#doc-3">练习与答案 →</a></div></div></div>
       <div class="lesson"><div class="number" aria-hidden="true">03</div><div><p class="status">新增 · 第三讲</p><h3>TypeScript 最小语法 II</h3><p>用夹具、登记册和工牌理解泛型、声明合并、品牌类型、穷尽检查与 ESM。</p><div class="links"><a href="previews/lesson-03.html#doc-0">学习导航 →</a><a href="previews/lesson-03.html#doc-1">看图建立直觉 →</a><a href="previews/lesson-03.html#doc-2">逐步讲解 →</a><a href="previews/lesson-03.html#doc-3">练习与答案 →</a></div></div></div>
       <div class="lesson"><div class="number" aria-hidden="true">04</div><div><p class="status">新增 · 第四讲</p><h3>monorepo、workspace 与构建图</h3><p>把 264 个 package 看成工业园，用三张地图区分成员、类型检查和运行产物。</p><div class="links"><a href="previews/lesson-04.html#doc-0">学习导航 →</a><a href="previews/lesson-04.html#doc-1">看图建立直觉 →</a><a href="previews/lesson-04.html#doc-2">逐步讲解 →</a><a href="evidence/lesson-04.html">事实矩阵 →</a></div></div></div>
       <div class="lesson"><div class="number" aria-hidden="true">05</div><div><p class="status">新增 · 第五讲</p><h3>怎样读懂一个 package</h3><p>用 README、manifest、入口、实现、测试和调用方六站验货，完整拆读 Session。</p><div class="links"><a href="previews/lesson-05.html#doc-0">学习导航 →</a><a href="previews/lesson-05.html#doc-1">看图建立直觉 →</a><a href="previews/lesson-05.html#doc-2">逐步讲解 →</a><a href="previews/lesson-05.html#doc-3">练习与答案 →</a></div></div></div>
+      <div class="lesson"><div class="number" aria-hidden="true">06</div><div><p class="status">新增 · 第六讲</p><h3>Context、Plugin、Fiber 与 effect</h3><p>用带工单和总电闸的插件工位，理解一次安装如何拥有状态与清理责任。</p><div class="links"><a href="previews/lesson-06.html#doc-0">学习导航 →</a><a href="previews/lesson-06.html#doc-1">看图建立直觉 →</a><a href="previews/lesson-06.html#doc-2">逐步讲解 →</a><a href="evidence/lesson-06.html">事实矩阵 →</a></div></div></div>
+      <div class="lesson"><div class="number" aria-hidden="true">07</div><div><p class="status">新增 · 第七讲</p><h3>Service、依赖注入与 scope</h3><p>用标准插座理解 Definition、Provider、Consumer，以及依赖等待、替换与隔离。</p><div class="links"><a href="previews/lesson-07.html#doc-0">学习导航 →</a><a href="previews/lesson-07.html#doc-1">看图建立直觉 →</a><a href="previews/lesson-07.html#doc-2">逐步讲解 →</a><a href="evidence/lesson-07.html">事实矩阵 →</a></div></div></div>
+      <div class="lesson"><div class="number" aria-hidden="true">08</div><div><p class="status">新增 · 第八讲</p><h3>事件与 waterfall</h3><p>用车间调度台分清 emit、parallel、serial、bail 与 waterfall 的调度契约。</p><div class="links"><a href="previews/lesson-08.html#doc-0">学习导航 →</a><a href="previews/lesson-08.html#doc-1">看图建立直觉 →</a><a href="previews/lesson-08.html#doc-2">逐步讲解 →</a><a href="previews/lesson-08.html#doc-3">练习与答案 →</a></div></div></div>
     </section>
-    <section class="tools" aria-label="阅读辅助"><a href="previews/lesson-05.html#doc-5"><div><h2>术语与比喻词典</h2><p>先用中文物件建立直觉，再核对正式含义与失效边界。</p><span>查一个概念 →</span></div></a><a href="previews/lesson-05.html#doc-3"><div><h2>用练习检验理解</h2><p>围绕主张找证据，把看懂变成能验证、能解释。</p><span>开始练习 →</span></div></a></section>
-    <aside class="note"><h2>比喻帮你入门，证据帮你站稳</h2><p>这是一份个人源码学习教材，不是产品使用教程，与 DeepSeek 官方无隶属或背书关系。五讲均依据固定源码版本编写；图中的工作室场景不是实际执行记录。</p><a href="evidence/lesson-05.html">查看第五讲源码事实矩阵 →</a></aside>
+    <section class="tools" aria-label="阅读辅助"><a href="previews/lesson-08.html#doc-5"><div><h2>术语与比喻词典</h2><p>先用中文物件建立直觉，再核对正式含义与失效边界。</p><span>查一个概念 →</span></div></a><a href="previews/lesson-08.html#doc-3"><div><h2>用练习检验理解</h2><p>围绕主张找证据，把看懂变成能验证、能解释。</p><span>开始练习 →</span></div></a></section>
+    <aside class="note"><h2>比喻帮你入门，证据帮你站稳</h2><p>这是一份个人源码学习教材，不是产品使用教程，与 DeepSeek 官方无隶属或背书关系。八讲均依据固定源码版本编写；图中的工作室场景不是实际执行记录。</p><a href="evidence/lesson-08.html">查看第八讲源码事实矩阵 →</a></aside>
   </main>
   <footer><p>源码基线 <a href="https://github.com/deepseek-ai/deepseek-harness/tree/cd5ef8148158c3a752a658978873241fdf8e2bbc"><code>cd5ef8148158</code> ↗</a> · <a href="assets/fonts/OFL.txt">手写字体授权</a></p><p>发现问题？<a href="https://github.com/jonestark12138/deepseek-harness-source-learning/issues">在 GitHub 提交反馈 ↗</a>。离线版中的源码、反馈与下载链接需要联网。</p></footer>
 </body>

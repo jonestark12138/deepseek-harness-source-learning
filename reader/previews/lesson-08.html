@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>DeepSeek Harness · 第08次-Cordis-事件与waterfall</title>
+  <style>
+    @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-08.html#doc-0">学习导航</a><a href="../previews/lesson-08.html#doc-1">视觉课件</a><a href="../previews/lesson-08.html#doc-2">逐步讲解</a><a href="../previews/lesson-08.html#doc-3">练习与答案</a><a href="../previews/lesson-08.html#doc-4">分享稿</a><a href="../previews/lesson-08.html#doc-5">术语词典</a></nav>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第 8 次学习导航：车间调度台的五个按钮</h1>
+<blockquote>
+<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
+</blockquote>
+<p>本讲追问：<strong>同样叫“发事件”，什么时候是广播、并发、会签、抢答，什么时候又必须让监听器决定是否 <code>next()</code>？</strong></p>
+<h2>学习路径</h2>
+<ol>
+<li><a href="../previews/lesson-08.html#doc-1">视觉课件</a>：先记五个按钮的动作。</li>
+<li><a href="../previews/lesson-08.html#doc-2">逐步讲解</a>：对照 <code>events.ts</code> 的真实算法。</li>
+<li>跟读 <code>user-questions/request</code>：声明 → waterfall → answerer/fallback。</li>
+<li><a href="../previews/lesson-08.html#doc-3">练习与答案</a>：做事件模式选型。</li>
+</ol>
+<h2>完成标准</h2>
+<ul>
+<li><p>说清五种模式是否等待、何时停止。</p>
+</li>
+<li><p>记住 Cordis 的 bail 值规则。</p>
+</li>
+<li><p>解释 waterfall 不调用 <code>next()</code> 的后果。</p>
+</li>
+<li><p>从事件名定位声明、分发点和 listener。</p>
+</li>
+<li><p><a href="../previews/lesson-08.html">整讲浏览版</a></p>
+</li>
+<li><p><a href="../evidence/lesson-08.html">源码事实矩阵</a></p>
+</li>
+</ul>
+</article>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第八讲视觉课件 · 同是发事件，调度规则完全不同</h1>
+<h2>1. 五个按钮先按意图选</h2>
+<p><img src="../assets/lesson-08/reader/fig-01-five-modes.png" alt="车间调度台用五个按钮表示 emit、parallel、serial、bail 和 waterfall"></p>
+<blockquote>
+<p>先问“要不要等、能否并发、谁有权停止、是否需要包裹下一层”，再选 API。</p>
+</blockquote>
+<h2>2. emit 只响铃，parallel 等全部回执</h2>
+<p><img src="../assets/lesson-08/reader/fig-02-emit-parallel.png" alt="emit 发出后立即返回，而 parallel 并发并等待全部监听器"></p>
+<blockquote>
+<p>parallel 收集所有 settled 结果；一个失败不会让其他监听器自动取消。</p>
+</blockquote>
+<h2>3. serial 会等，bail 不等；两者都可抢先结束</h2>
+<p><img src="../assets/lesson-08/reader/fig-03-serial-bail.png" alt="serial 顺序等待而 bail 同步抢答"></p>
+<blockquote>
+<p><code>0</code> 和空字符串也算 bail 值；<code>false</code>、<code>null</code>、<code>undefined</code> 才继续。</p>
+</blockquote>
+<h2>4. waterfall 是层层门卫，不是普通数据流水线</h2>
+<p><img src="../assets/lesson-08/reader/fig-04-waterfall-gates.png" alt="请求从外层 listener 经 next 进入内层，再把结果逐层带回"></p>
+<blockquote>
+<p>不调用 <code>next()</code>，后续 listener 和默认 inner 都不会执行。</p>
+</blockquote>
+<h2>5. 用户提问用 waterfall 选择回答者</h2>
+<p><img src="../assets/lesson-08/reader/fig-05-user-question-chain.png" alt="userQuestions 请求经过作用域内回答者，没人接单则进入 NO_PROVIDER 兜底"></p>
+<blockquote>
+<p>回答者可以直接接单，也可以调用 <code>next()</code> 让下一位尝试。</p>
+</blockquote>
+</article>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第八讲逐步讲解 · 五种分发模式不是五个近义词</h1>
+<blockquote>
+<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
+</blockquote>
+<h2>一、用四个问题选模式</h2>
+<p><img src="../assets/lesson-08/reader/fig-01-five-modes.png" alt="五模式总览"></p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th align="right">等待异步</th>
+<th align="right">并发</th>
+<th align="right">提前停止</th>
+<th>主要用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>emit</td>
+<td align="right">否</td>
+<td align="right">否，调用本身同步遍历</td>
+<td align="right">否</td>
+<td>只观察通知</td>
+</tr>
+<tr>
+<td>parallel</td>
+<td align="right">是</td>
+<td align="right">是</td>
+<td align="right">否</td>
+<td>独立任务全部完成</td>
+</tr>
+<tr>
+<td>serial</td>
+<td align="right">是</td>
+<td align="right">否</td>
+<td align="right">遇 bail 值</td>
+<td>有顺序的异步裁决</td>
+</tr>
+<tr>
+<td>bail</td>
+<td align="right">否</td>
+<td align="right">否</td>
+<td align="right">遇 bail 值</td>
+<td>同步找第一个答案</td>
+</tr>
+<tr>
+<td>waterfall</td>
+<td align="right">由链决定</td>
+<td align="right">嵌套</td>
+<td align="right">不调用 next 即截断</td>
+<td>包裹、接管、fallback</td>
+</tr>
+</tbody></table>
+<h2>二、emit 与 parallel：都通知所有人，但完成语义不同</h2>
+<p><img src="../assets/lesson-08/reader/fig-02-emit-parallel.png" alt="emit 与 parallel"></p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L189-L196"><code>emit</code></a> 同步调用 listener，却不等待 listener 返回的 Promise。函数返回只表示“通知动作已发出”，不表示异步工作完成。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L177-L187"><code>parallel</code></a> 用 <code>Promise.allSettled</code> 等全部 listener。若有失败，它在所有工作 settled 后抛 <code>AggregateError</code>；并不会因为第一个失败就自动取消其他任务。</p>
+<h2>三、serial 与 bail：停止规则相同，时钟不同</h2>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L7-L15"><code>isBailed</code></a> 把除 <code>null</code>、<code>false</code>、<code>undefined</code> 之外的值都视为“已有结论”。因此 <code>0</code>、<code>&#39;&#39;</code>、对象和 Promise 都会停止链。</p>
+<p><img src="../assets/lesson-08/reader/fig-03-serial-bail.png" alt="serial 与 bail"></p>
+<ul>
+<li><code>serial</code> 对每个结果 <code>await</code>，适合异步会签；</li>
+<li><code>bail</code> 同步检查返回值，不会展开 Promise。监听器返回 Promise 时，Promise 对象本身已经是 bail 值。</li>
+</ul>
+<h2>四、waterfall 的核心是 around middleware</h2>
+<p><img src="../assets/lesson-08/reader/fig-04-waterfall-gates.png" alt="waterfall 门卫"></p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L224-L243"><code>waterfall</code></a> 把最后一个参数取作默认 <code>inner</code>，再从后往前包装 listener。最先注册的 listener 位于最外层，因此最先进入：</p>
+<pre><code class="language-ts">ctx.on(&#39;request&#39;, async (input, next) =&gt; {
+  const checked = validate(input)
+  const result = await next(checked)
+  return audit(result)
+})
+</code></pre>
+<p>调用 <code>next()</code> 才进入下一层；返回时结果再向外冒。监听器可以：</p>
+<ul>
+<li>前置修改参数；</li>
+<li>后置处理结果；</li>
+<li>直接返回并接管；</li>
+<li>拒绝请求且不调用 <code>next()</code>。</li>
+</ul>
+<p>所以它不是简单的“把 value 依次传给数组函数”。</p>
+<h2>五、真实案例：谁来回答用户问题</h2>
+<p><img src="../assets/lesson-08/reader/fig-05-user-question-chain.png" alt="用户问题回答链"></p>
+<p><code>user-questions</code> 在类型中声明 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/interaction/user-questions/src/types.ts#L85-L90"><code>user-questions/request</code></a>，listener 获得 request 和 next。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/interaction/user-questions/src/index.ts#L130-L142"><code>UserQuestionService.ask()</code></a> 把 <code>noAnswerer</code> 作为最终 inner：</p>
+<ol>
+<li>作用域内 answerer 先收到请求；</li>
+<li>能回答就直接返回；</li>
+<li>不负责则调用 <code>next()</code>；</li>
+<li>全部放行后，<code>noAnswerer</code> 抛 <code>NO_PROVIDER</code>。</li>
+</ol>
+<p>这比集中写一个 <code>if (uiA) else if (uiB)</code> 更可组合，answerer 又会作为 Fiber effect 自动清理。</p>
+<h2>六、从事件名读源码的三站法</h2>
+<ol>
+<li>搜索类型声明：参数、返回值、是否带 <code>next</code>；</li>
+<li>搜索 dispatch：用的是 emit/parallel/serial/bail/waterfall 哪一个；</li>
+<li>搜索 <code>ctx.on</code>：谁监听、是否 scope 过滤、是否调用 <code>next()</code>。</li>
+</ol>
+<p>只找到声明不能证明运行路径；只找到 listener 也不能证明它何时被触发。</p>
+<h2>七、一句话总结</h2>
+<p>事件 API 的差别不在名字，而在调度契约：是否等待、是否并发、何时停止，以及 listener 能否包裹下一层。</p>
+</article>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第八讲练习与答案</h1>
+<h2>练习 1：只通知，不等待</h2>
+<p>缓存刷新后只想通知观察者，调用者不需要等待异步工作完成，应选什么？</p>
+<details><summary>展开答案</summary>
+
+<p><code>emit</code>。它同步调用监听器，但不等待监听器返回的 Promise。</p>
+</details>
+
+<h2>练习 2：独立任务全部完成</h2>
+<p>三个持久化后端都要收到 flush，最后再汇总失败，应选什么？</p>
+<details><summary>展开答案</summary>
+
+<p><code>parallel</code>。它并发执行并等待全部 settled，失败汇总为 AggregateError。</p>
+</details>
+
+<h2>练习 3：0 会不会停止</h2>
+<p>serial listener 返回 <code>0</code>，后续 listener 会继续吗？</p>
+<details><summary>展开答案</summary>
+
+<p>不会。Cordis 只有 <code>false</code>、<code>null</code>、<code>undefined</code> 视为未 bail；<code>0</code> 也是有效停止值。</p>
+</details>
+
+<h2>练习 4：Promise 与 bail</h2>
+<p>bail listener 返回一个 Promise，Cordis 会等待它解析后再判断吗？</p>
+<details><summary>展开答案</summary>
+
+<p>不会。bail 是同步模式，Promise 对象本身已经是非空返回值，因此立即停止并返回这个 Promise。</p>
+</details>
+
+<h2>练习 5：next</h2>
+<p>user-question answerer 不负责当前请求，却直接 <code>return undefined</code>，会自动进入下一位吗？</p>
+<details><summary>展开答案</summary>
+
+<p>不会。waterfall 是否继续由 <code>next()</code> 决定；不调用就截断后续链。应显式 <code>return next()</code>。</p>
+</details>
+</article>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第八讲分享稿 · 五种事件不是五个近义词</h1>
+<h2>三分钟主线</h2>
+<ol>
+<li>emit 像广播铃：叫到所有人，但不等异步工作。</li>
+<li>parallel 像并发派工：全部开工，全部 settled 后汇总失败。</li>
+<li>serial 像顺序会签：逐个 await，遇有效答案停止。</li>
+<li>bail 像同步抢答：不 await，第一份有效返回立即获胜。</li>
+<li>waterfall 像层层门卫：<code>next()</code> 向里，结果向外；不 next 就接管。</li>
+</ol>
+<h2>真实例子</h2>
+<p><code>userQuestions.ask()</code> 通过 scoped waterfall 找回答者，最后以 <code>NO_PROVIDER</code> 作为默认 inner。回答者能处理就返回，不能处理就 <code>next()</code>。</p>
+<h2>收尾</h2>
+<p>读事件源码先找三处：类型声明、dispatch 方式、listener。只看到事件名，仍不知道调度契约。</p>
+</article>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第八讲术语与比喻词典</h1>
+<table>
+<thead>
+<tr>
+<th>中文 / 英文</th>
+<th>比喻</th>
+<th>实际职责</th>
+<th>边界</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>emit</td>
+<td>广播铃</td>
+<td>同步调用全部 listener，不等待 Promise</td>
+<td>不代表异步工作完成</td>
+</tr>
+<tr>
+<td>parallel</td>
+<td>并发派工</td>
+<td>并发等待全部 settled，汇总失败</td>
+<td>不自动取消其他任务</td>
+</tr>
+<tr>
+<td>serial</td>
+<td>顺序会签</td>
+<td>逐个 await，遇 bail 值停止</td>
+<td>有明确顺序</td>
+</tr>
+<tr>
+<td>bail</td>
+<td>同步抢答</td>
+<td>同步寻找第一个有效返回</td>
+<td>不 await Promise</td>
+</tr>
+<tr>
+<td>bail value</td>
+<td>已有结论</td>
+<td>非 null、false、undefined 的返回值</td>
+<td><code>0</code>、空字符串也算</td>
+</tr>
+<tr>
+<td>waterfall</td>
+<td>层层门卫</td>
+<td>around middleware 组合</td>
+<td>不是普通流水线数组</td>
+</tr>
+<tr>
+<td>next</td>
+<td>放行按钮</td>
+<td>调用内层 listener 或默认处理</td>
+<td>不调用即截断</td>
+</tr>
+<tr>
+<td>inner</td>
+<td>最里层柜台</td>
+<td>全部 listener 放行后的默认处理</td>
+<td>可以抛兜底错误</td>
+</tr>
+</tbody></table>
+</article></main>
+</body>
+</html>

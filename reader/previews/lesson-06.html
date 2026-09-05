@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>DeepSeek Harness · 第06次-Cordis-Context-Plugin-Fiber与effect</title>
+  <style>
+    @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-06.html#doc-0">学习导航</a><a href="../previews/lesson-06.html#doc-1">视觉课件</a><a href="../previews/lesson-06.html#doc-2">逐步讲解</a><a href="../previews/lesson-06.html#doc-3">练习与答案</a><a href="../previews/lesson-06.html#doc-4">分享稿</a><a href="../previews/lesson-06.html#doc-5">术语词典</a></nav>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第 6 次学习导航：Cordis 的可撤销插件工位</h1>
+<blockquote>
+<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
+</blockquote>
+<p>这一讲只追一个问题：<strong>插件装上以后留下的服务、监听器和异步资源，卸载时由谁负责收回？</strong></p>
+<p>把 Cordis 想成模块化工坊：Plugin 是机器蓝图，Fiber 是一次安装的工单，Context 是这张工单能看见的工位，effect 把“借出资源”和“归还动作”订在一起。</p>
+<h2>建议顺序</h2>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>做什么</th>
+<th>带走什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>10 分钟</td>
+<td>看 <a href="../previews/lesson-06.html#doc-1">视觉课件</a></td>
+<td>记住四个角色和一条生命周期</td>
+</tr>
+<tr>
+<td>35 分钟</td>
+<td>读 <a href="../previews/lesson-06.html#doc-2">逐步讲解</a></td>
+<td>从 <code>ctx.plugin()</code> 追到 <code>_unload()</code></td>
+</tr>
+<tr>
+<td>15 分钟</td>
+<td>做 <a href="../previews/lesson-06.html#doc-3">练习</a></td>
+<td>判断谁拥有清理责任</td>
+</tr>
+<tr>
+<td>5 分钟</td>
+<td>试讲 <a href="../previews/lesson-06.html#doc-4">分享稿</a></td>
+<td>用工位比喻讲给别人</td>
+</tr>
+</tbody></table>
+<h2>完成标准</h2>
+<ol>
+<li>分清 Plugin 与 Fiber。</li>
+<li>解释 child Context 为何不会改坏父 Context。</li>
+<li>写出一个 setup 返回 disposer 的 effect。</li>
+<li>解释依赖消失时为什么先 UNLOADING，之后才可能重新 LOADING。</li>
+</ol>
+<ul>
+<li><a href="../previews/lesson-06.html">整讲浏览版</a></li>
+<li><a href="../evidence/lesson-06.html">源码事实矩阵</a></li>
+</ul>
+</article>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第六讲视觉课件 · 给每次插件安装发一张可撤销工单</h1>
+<h2>1. 四个词其实是一条装配链</h2>
+<p><img src="../assets/lesson-06/reader/fig-01-four-roles.png" alt="Context、Plugin、Fiber 与 effect 组成一次可撤销插件安装"></p>
+<blockquote>
+<p>Plugin 是可复用蓝图；Fiber 才是这一次安装。Fiber 拿到 child Context，并拥有这次安装产生的 effects。</p>
+</blockquote>
+<h2>2. 子 Context 是新工位视野，不是复制整个工坊</h2>
+<p><img src="../assets/lesson-06/reader/fig-02-child-context.png" alt="子 Context 继承父工位服务，同时可以拥有自己的局部设置"></p>
+<blockquote>
+<p><code>extend()</code> 通过原型继承创建 child，父 Context 不被修改。</p>
+</blockquote>
+<h2>3. effect 是借用与归还的成对协议</h2>
+<p><img src="../assets/lesson-06/reader/fig-03-effect-pair.png" alt="effect setup 借出资源并立即登记 disposer 归还动作"></p>
+<blockquote>
+<p>只做 setup 不交 disposer，等于借走钥匙却没留下归还办法。</p>
+</blockquote>
+<h2>4. 后借先还，避免拆掉地基后再拆上层</h2>
+<p><img src="../assets/lesson-06/reader/fig-04-reverse-cleanup.png" alt="三项资源按 C、B、A 的相反顺序归还"></p>
+<blockquote>
+<p>倒序规则适用于同一 effect 收集的 disposers；Fiber 的多个顶层 effect 卸载时可并行清理。</p>
+</blockquote>
+<h2>5. Fiber 状态牌描述一次安装的生命</h2>
+<p><img src="../assets/lesson-06/reader/fig-05-fiber-lifecycle.png" alt="Fiber 从等待依赖到加载、工作、卸载和结束"></p>
+<blockquote>
+<p>依赖重新可用时，已卸载的有效 Fiber 还能再次 LOADING；Fiber 不是线程。</p>
+</blockquote>
+</article>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第六讲逐步讲解 · 从装上模块到收回最后一把钥匙</h1>
+<blockquote>
+<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
+</blockquote>
+<h2>一、先看一条完整装配链</h2>
+<p><img src="../assets/lesson-06/reader/fig-01-four-roles.png" alt="四个角色的装配链"></p>
+<p>调用 <code>ctx.plugin(plugin, config)</code> 时，Registry 先把函数、类或 <code>{ apply }</code> 形态归一化，再创建 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/registry.ts#L316-L335"><code>new Fiber(...)</code></a>。因此：</p>
+<ul>
+<li><strong>Plugin</strong>：可以反复使用的定义或蓝图；</li>
+<li><strong>Fiber</strong>：某个 Context 上的一次安装实例；</li>
+<li><strong>Context</strong>：该实例解析服务、事件和局部配置的视野；</li>
+<li><strong>effect</strong>：Fiber 拥有的可撤销副作用。</li>
+</ul>
+<p>同一 Plugin 可以在不同 Context 上产生多个 Fiber，就像同一型号机器能装到多个工位。</p>
+<h2>二、Context 不是全局大口袋</h2>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/context.ts#L35-L41"><code>Context</code></a> 是根/子依赖容器，属性读取通过服务解析器。它看起来像 <code>ctx.fs</code> 这样的普通属性，背后却要按当前 Fiber、inject 与 scope 找实现。</p>
+<p><img src="../assets/lesson-06/reader/fig-02-child-context.png" alt="父子 Context"></p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/context.ts#L90-L107"><code>extend(meta)</code></a> 用原型继承创建 child：子工位默认看见父工位提供的能力，却能挂自己的 fiber、isolate 或 intercept 信息。它不是把所有服务复制一份，也不会反向修改父对象。</p>
+<h2>三、Fiber 是责任边界，不是线程</h2>
+<p>Fiber 记录这次安装的配置、依赖快照、状态、effects 和清理动作。它与 Java Thread、协程或 CPU 调度没有关系。</p>
+<p>Fiber 构造时会给插件一个带 <code>{ fiber: this }</code> 的 child Context。插件执行期间通过 <code>ctx.on()</code>、<code>ctx.provide()</code> 或 <code>ctx.effect()</code> 创建的资源，最终都能归到这张工单名下。</p>
+<h2>四、effect 为什么必须返回 disposer</h2>
+<pre><code class="language-ts">ctx.effect(() =&gt; {
+  const timer = setInterval(tick, 1000)
+  return () =&gt; clearInterval(timer)
+}, &#39;heartbeat&#39;)
+</code></pre>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L402-L418"><code>effect()</code></a> 立即执行 setup，并收集它产出的 disposer。返回值还可以是 Promise、同步或异步迭代器，但核心契约不变：<strong>创建一项外部影响时，同时交出撤销办法。</strong></p>
+<p><img src="../assets/lesson-06/reader/fig-03-effect-pair.png" alt="effect 配对"></p>
+<p>这和 Java 的 <code>try-with-resources</code> 很像：不是等忘记资源以后再想办法关，而是在获得资源时就把关闭责任绑定到明确的生命周期。</p>
+<h2>五、为什么倒序清理</h2>
+<p>若 setup 依次建立 A=连接、B=订阅、C=定时任务，C 往往依赖 B，B 又依赖 A。卸载应先停 C，再退订 B，最后断 A。</p>
+<p><img src="../assets/lesson-06/reader/fig-04-reverse-cleanup.png" alt="倒序归还"></p>
+<p>源码在 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L424-L441"><code>fiber.ts#L424-L441</code></a> 对同一 effect 内收集的 disposers 使用 <code>reverse()</code>。边界要说清：<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L675-L695"><code>_unload()</code></a> 对 Fiber 的多个顶层 effect 使用 <code>Promise.all</code>；不能把“所有清理全局严格倒序”当成事实。</p>
+<h2>六、状态机是依赖变化的结果</h2>
+<p><img src="../assets/lesson-06/reader/fig-05-fiber-lifecycle.png" alt="Fiber 生命周期"></p>
+<ul>
+<li><code>PENDING</code>：依赖还没齐；</li>
+<li><code>LOADING</code>：正在执行插件 setup；</li>
+<li><code>ACTIVE</code>：已加载且依赖有效；</li>
+<li><code>UNLOADING</code>：正在运行清理；</li>
+<li><code>DISPOSED</code>：永久结束；</li>
+<li><code>FAILED</code>：启动失败的可观察状态。</li>
+</ul>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L611-L638"><code>_refresh()</code></a> 把当前依赖实现的 uid 拼成 epoch。依赖消失或换成另一实现，epoch 改变，Fiber 会卸载旧 effects；依赖重新满足时再加载。</p>
+<h2>七、一句话总结</h2>
+<p>Cordis 的关键不是“能加载插件”，而是让每次插件安装都有明确的可见范围、依赖快照和清理责任：蓝图可复用，工单可追踪，副作用可撤销。</p>
+</article>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第六讲练习与答案</h1>
+<h2>练习 1：Plugin 还是 Fiber</h2>
+<p>同一个插件在两个 isolate Context 中各加载一次，是一个 Fiber 还是两个？</p>
+<details><summary>展开答案</summary>
+
+<p>两个。Plugin 是可复用定义，每次 <code>ctx.plugin()</code> 安装产生自己的 Fiber、child Context、配置与 effects。</p>
+</details>
+
+<h2>练习 2：识别泄漏</h2>
+<p>下面的 effect 有什么问题？</p>
+<pre><code class="language-ts">ctx.effect(() =&gt; setInterval(tick, 1000))
+</code></pre>
+<details><summary>展开答案</summary>
+
+<p><code>setInterval</code> 返回数字或对象，不是合法 disposer；代码既会触发 Invalid effect，也没有表达如何 <code>clearInterval</code>。应在 setup 中保存 timer，并返回清理函数。</p>
+</details>
+
+<h2>练习 3：清理顺序</h2>
+<p>连接 A、订阅 B、定时器 C 在同一 effect 内依次登记，卸载顺序是什么？</p>
+<details><summary>展开答案</summary>
+
+<p>C → B → A，后登记的 disposer 先执行。</p>
+</details>
+
+<h2>练习 4：Context 边界</h2>
+<p><code>child = ctx.extend(meta)</code> 是否复制了一份所有服务？</p>
+<details><summary>展开答案</summary>
+
+<p>不是。child 原型继承父 Context；服务读取仍经过 resolver。它获得新的局部元信息，但默认共享未隔离的服务视野。</p>
+</details>
+
+<h2>练习 5：依赖替换</h2>
+<p>一个 ACTIVE Fiber 注入了 <code>fs</code>，当前 <code>fs</code> provider 被卸载并换成另一个实现，为什么不能原地继续？</p>
+<details><summary>展开答案</summary>
+
+<p>依赖实现 uid 组成的 epoch 变了。Fiber 先卸载旧 effects，避免旧资源继续绑定原 provider，再在依赖满足后重新加载。</p>
+</details>
+</article>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第六讲分享稿 · Cordis 怎样让插件可撤销</h1>
+<h2>开场</h2>
+<p>很多插件系统只回答“怎样装上”，Cordis 还追问“谁负责拆干净”。把它想成带总电闸的模块工位。</p>
+<h2>三分钟主线</h2>
+<ol>
+<li>Plugin 是机器蓝图，Fiber 是一次真实安装的工单。</li>
+<li>Fiber 获得 child Context，因此服务视野和局部配置有边界。</li>
+<li>插件产生的外部影响登记为 effect；setup 同时返回 disposer。</li>
+<li>同一 effect 内后借先还，避免先拆地基。</li>
+<li>依赖实现变化时，Fiber 先卸载旧 effects，再按新 epoch 重载。</li>
+</ol>
+<h2>必须提醒的边界</h2>
+<ul>
+<li>Fiber 不是线程。</li>
+<li>Context 不是随便读写的全局 Map。</li>
+<li>倒序规则不能夸大为所有顶层 effect 的全局串行清理。</li>
+</ul>
+<h2>收尾</h2>
+<p>真正可靠的插件化，不只靠“插得进去”，更靠“拔得干净、换得安全”。</p>
+</article>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第六讲术语与比喻词典</h1>
+<table>
+<thead>
+<tr>
+<th>中文 / 英文</th>
+<th>物件比喻</th>
+<th>实际职责</th>
+<th>边界</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>上下文 Context</td>
+<td>工位视野</td>
+<td>解析当前 scope 可见的服务、事件和元信息</td>
+<td>不是无边界全局变量</td>
+</tr>
+<tr>
+<td>插件 Plugin</td>
+<td>机器蓝图</td>
+<td>定义如何加载能力</td>
+<td>不是某次安装实例</td>
+</tr>
+<tr>
+<td>Fiber</td>
+<td>安装工单</td>
+<td>代表一次插件应用，拥有依赖、状态和 effects</td>
+<td>不是线程或协程</td>
+</tr>
+<tr>
+<td>effect</td>
+<td>借用单</td>
+<td>执行 setup 并登记清理</td>
+<td>不只是“产生效果”</td>
+</tr>
+<tr>
+<td>disposer</td>
+<td>归还条</td>
+<td>撤销监听器、服务、计时器等外部影响</td>
+<td>可能异步；重复调用无效果</td>
+</tr>
+<tr>
+<td>epoch</td>
+<td>插座组合编号</td>
+<td>标识当前依赖实现组合</td>
+<td>不是时间戳</td>
+</tr>
+<tr>
+<td>unload</td>
+<td>拉闸清台</td>
+<td>执行清理并撤下旧依赖状态</td>
+<td>不一定永久 disposed</td>
+</tr>
+</tbody></table>
+</article></main>
+</body>
+</html>

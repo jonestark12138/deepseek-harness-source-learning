@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>DeepSeek Harness · 第07次-Cordis-Service依赖注入与scope</title>
+  <style>
+    @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-07.html#doc-0">学习导航</a><a href="../previews/lesson-07.html#doc-1">视觉课件</a><a href="../previews/lesson-07.html#doc-2">逐步讲解</a><a href="../previews/lesson-07.html#doc-3">练习与答案</a><a href="../previews/lesson-07.html#doc-4">分享稿</a><a href="../previews/lesson-07.html#doc-5">术语词典</a></nav>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第 7 次学习导航：只认插座，不焊死机器</h1>
+<blockquote>
+<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
+</blockquote>
+<p>本讲追问：<strong><code>tool-fs</code> 为什么只依赖 <code>fs</code>，就能在本地、沙箱或远程后端之间替换？</strong></p>
+<p>主比喻是标准插座：Definition 规定插口，Provider 供电，Consumer 用电，inject 是通电联锁，scope 是房间门牌。</p>
+<h2>学习路径</h2>
+<ol>
+<li><a href="../previews/lesson-07.html#doc-1">视觉课件</a>：先建立三角色与 scope 图像。</li>
+<li><a href="../previews/lesson-07.html#doc-2">逐步讲解</a>：跟读真实文件系统链。</li>
+<li><a href="../previews/lesson-07.html#doc-3">练习与答案</a>：判断服务加载与替换行为。</li>
+<li><a href="../previews/lesson-07.html#doc-5">术语词典</a>：按需查英文词。</li>
+</ol>
+<h2>完成标准</h2>
+<ul>
+<li><p>区分 Definition、Provider、Consumer。</p>
+</li>
+<li><p>解释 <code>inject</code> 既是依赖声明，也是生命周期联锁。</p>
+</li>
+<li><p>解释 isolate 为什么允许同名服务有局部实现。</p>
+</li>
+<li><p>明确 isolate 不是安全沙箱。</p>
+</li>
+<li><p><a href="../previews/lesson-07.html">整讲浏览版</a></p>
+</li>
+<li><p><a href="../evidence/lesson-07.html">源码事实矩阵</a></p>
+</li>
+</ul>
+</article>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第七讲视觉课件 · 服务名像标准插座</h1>
+<h2>1. Consumer 认名字，不焊死具体实现</h2>
+<p><img src="../assets/lesson-07/reader/fig-01-stable-socket.png" alt="工具只连接 fs 服务名，后方可以接入不同实现"></p>
+<blockquote>
+<p>稳定的是 <code>fs</code> 契约；Local、Sandbox、E2B 等实现可以替换。</p>
+</blockquote>
+<h2>2. 文件系统的三角色是真实源码链</h2>
+<p><img src="../assets/lesson-07/reader/fig-02-fs-three-roles.png" alt="FileSystem 定义、LocalFileSystem 提供和 tool-fs 消费组成三段链"></p>
+<blockquote>
+<p>Definition 说“必须会什么”，Provider 说“具体怎么做”，Consumer 说“我要用什么”。</p>
+</blockquote>
+<h2>3. inject 是通电联锁，不只是拿参数</h2>
+<p><img src="../assets/lesson-07/reader/fig-03-inject-waits.png" alt="消费插件等待所有必需服务出现后才进入 ACTIVE"></p>
+<blockquote>
+<p>依赖没齐，Fiber 等待；依赖齐了，插件主体才运行。</p>
+</blockquote>
+<h2>4. 换电源时，旧工单先清理再重装</h2>
+<p><img src="../assets/lesson-07/reader/fig-04-provider-swap.png" alt="旧 provider 被新 provider 替换时消费 Fiber 先卸载再加载"></p>
+<blockquote>
+<p><code>inject</code> 还订阅服务实现变化，因此依赖替换不是静默改指针。</p>
+</blockquote>
+<h2>5. scope 是门牌：同名插座可接不同机器</h2>
+<p><img src="../assets/lesson-07/reader/fig-05-isolated-rooms.png" alt="两个隔离工位中的 fs 同名插座分别连接不同 provider"></p>
+<blockquote>
+<p>isolate 改变服务解析范围，不提供文件权限或进程隔离。</p>
+</blockquote>
+</article>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第七讲逐步讲解 · 从 <code>ctx.fs</code> 看服务为何可替换</h1>
+<blockquote>
+<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
+</blockquote>
+<h2>一、先分清三种角色</h2>
+<p><img src="../assets/lesson-07/reader/fig-01-stable-socket.png" alt="服务标准插座"></p>
+<ul>
+<li><strong>Definition</strong>：公开名字、类型和方法契约；</li>
+<li><strong>Provider</strong>：按契约注册一个可用实现；</li>
+<li><strong>Consumer</strong>：声明依赖并通过 <code>ctx.&lt;name&gt;</code> 使用。</li>
+</ul>
+<p>这类似 Java 的接口、实现 Bean 与注入点，但 Cordis 进一步把可用性、scope 和插件生命周期绑在一起。</p>
+<h2>二、真实案例：文件系统三段链</h2>
+<p><img src="../assets/lesson-07/reader/fig-02-fs-three-roles.png" alt="文件系统三角色"></p>
+<ol>
+<li><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/fs/src/index.ts#L44-L89"><code>packages/fs/fs</code></a> 扩展 <code>Context</code>，声明 <code>fs: FileSystem</code>，抽象类列出解析、读取、写入等契约。</li>
+<li><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/fs-local/src/index.ts#L64-L80"><code>LocalFileSystem</code></a> 继承该定义，构造时通过基类注册到 <code>fs</code>。</li>
+<li><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/tool-fs/src/index.ts#L1-L22"><code>tool-fs</code></a> 声明 <code>inject = [&#39;tools&#39;, &#39;fs&#39;, &#39;systemPrompt&#39;]</code>，具体读写代码调用 <code>ctx.fs</code>，不依赖 <code>LocalFileSystem</code> 类名。</li>
+</ol>
+<p>所以换成 <code>fs-sandbox</code> 或 E2B provider 时，工具层不必改写自己的读写业务。</p>
+<h2>三、Service 构造函数做了什么</h2>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/service.ts#L32-L58"><code>Service</code> 构造函数</a> 最终调用 <code>ctx.reflect.provide(name, self, check)</code>。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/reflect.ts#L267-L305"><code>provide()</code></a> 记录服务名、对象和提供它的 Fiber，并把“撤销注册”登记成 effect。Provider 卸载，服务随之从当前 scope 消失。</p>
+<h2>四、inject 是生命周期联锁</h2>
+<p><img src="../assets/lesson-07/reader/fig-03-inject-waits.png" alt="inject 等待依赖"></p>
+<p><code>inject</code> 不是把对象塞进构造函数那么简单。它先声明必需服务名；Fiber 的 <code>_refresh()</code> 检查这些名字是否都能解析：</p>
+<ul>
+<li>缺一个：保持 inactive/PENDING，不运行插件主体；</li>
+<li>全部出现：进入 LOADING，执行插件；</li>
+<li>某个实现变化：epoch 变化，先 UNLOADING 再按新组合加载。</li>
+</ul>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/registry.ts#L164-L176"><code>ctx.inject(deps, callback)</code></a> 本质是带 inject 声明的小插件，因此 callback 也获得完整的清理与重载语义。</p>
+<p><img src="../assets/lesson-07/reader/fig-04-provider-swap.png" alt="替换 provider"></p>
+<h2>五、为什么 <code>ctx.fs</code> 看似普通属性却受控</h2>
+<p>Context 是 Proxy。读取 <code>ctx.fs</code> 时，<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/reflect.ts#L133-L170">resolver</a> 会检查当前 Fiber 的 inject 和可见 store。如果插件未声明必需服务，直接读取可能抛出 <code>cannot get property ... without inject</code>。</p>
+<p><code>ctx.get(&#39;name&#39;)</code> 是显式可选查询，语义不同：它可能返回 <code>undefined</code>，不要用它伪装必需依赖。</p>
+<h2>六、scope：同名但不串线</h2>
+<p><img src="../assets/lesson-07/reader/fig-05-isolated-rooms.png" alt="隔离房间"></p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/context.ts#L109-L125"><code>isolate(&#39;fs&#39;, label)</code></a> 给 child Context 的 <code>fs</code> 分配独立 isolation label。Reflect store 按这个 symbol 查实现，因此 A 房的 <code>fs</code> 与 B 房的 <code>fs</code> 可以同名却连接不同 provider。</p>
+<p>边界：这是依赖解析隔离，不是权限隔离。它不会像 OS 沙箱那样阻止 provider 访问磁盘。</p>
+<h2>七、一句话总结</h2>
+<p>Service 名称把“我要什么”与“谁来实现”分开；inject 把依赖可用性接入 Fiber 生命周期；scope 决定当前名字通向哪一个实现。</p>
+</article>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第七讲练习与答案</h1>
+<h2>练习 1：三角色归类</h2>
+<p>把 <code>FileSystem</code>、<code>LocalFileSystem</code>、<code>tool-fs</code> 分别归类。</p>
+<details><summary>展开答案</summary>
+
+<p><code>FileSystem</code> 是 Definition，<code>LocalFileSystem</code> 是 Provider，<code>tool-fs</code> 是 Consumer。</p>
+</details>
+
+<h2>练习 2：缺少依赖</h2>
+<p><code>tool-fs</code> 已安装但 <code>fs</code> provider 尚未加载，插件主体应立即执行并等第一次调用再报错吗？</p>
+<details><summary>展开答案</summary>
+
+<p>不是。<code>fs</code> 是必需 inject；缺失时 Fiber 不激活，直到依赖满足。</p>
+</details>
+
+<h2>练习 3：可选依赖</h2>
+<p>若某服务只是锦上添花，为什么不应偷偷从 <code>ctx.fs</code> 直接读取？</p>
+<details><summary>展开答案</summary>
+
+<p>普通服务属性读取受 inject 约束。可选能力应显式采用 <code>ctx.get()</code> 或项目既有的可选组合方式，并处理 <code>undefined</code>，让语义清楚。</p>
+</details>
+
+<h2>练习 4：scope</h2>
+<p>两个 child Context 都 <code>isolate(&#39;fs&#39;)</code>，未给相同 label，它们能看到彼此的 provider 吗？</p>
+<details><summary>展开答案</summary>
+
+<p>不能。它们获得不同 isolation symbol；只有显式使用相同 label 才加入同一 scope。</p>
+</details>
+
+<h2>练习 5：安全边界</h2>
+<p>把 <code>fs</code> isolate 后，是否就能防止本地 provider 访问工作区外文件？</p>
+<details><summary>展开答案</summary>
+
+<p>不能。isolate 只控制服务解析。路径与权限约束必须由 <code>fs-sandbox</code>、策略插件或更底层执行边界实现。</p>
+</details>
+</article>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第七讲分享稿 · 只认插座，不焊死机器</h1>
+<h2>三分钟主线</h2>
+<ol>
+<li>Definition 规定稳定的服务名与契约。</li>
+<li>Provider 通过 Service 基类把实例注册到当前 Fiber 和 scope。</li>
+<li>Consumer 用 inject 声明必需名字，通过 <code>ctx.fs</code> 使用。</li>
+<li>缺依赖时不加载；provider 改变时先清理再重载。</li>
+<li>isolate 让不同房间的同名插座连接不同机器。</li>
+</ol>
+<h2>文件系统例子</h2>
+<p><code>FileSystem</code> → <code>LocalFileSystem</code> → <code>tool-fs</code> 是完整的定义、提供、消费链。工具无需知道后端类名，所以沙箱或远程后端可替换。</p>
+<h2>边界</h2>
+<p>Cordis scope 是依赖解析范围，不是网络服务发现，也不是安全沙箱。</p>
+</article>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第七讲术语与比喻词典</h1>
+<table>
+<thead>
+<tr>
+<th>中文 / 英文</th>
+<th>比喻</th>
+<th>实际职责</th>
+<th>边界</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>服务定义 Service Definition</td>
+<td>插座标准</td>
+<td>声明名字、类型与能力契约</td>
+<td>本身未必可运行</td>
+</tr>
+<tr>
+<td>提供方 Provider</td>
+<td>真实电源</td>
+<td>注册某服务名的实现</td>
+<td>受提供 Fiber 生命周期约束</td>
+</tr>
+<tr>
+<td>消费方 Consumer</td>
+<td>用电设备</td>
+<td>声明并调用所需服务</td>
+<td>不应依赖具体实现类</td>
+</tr>
+<tr>
+<td>依赖注入 inject</td>
+<td>通电联锁</td>
+<td>声明必需服务，并控制激活/重载</td>
+<td>不只是参数传递</td>
+</tr>
+<tr>
+<td>scope</td>
+<td>房间门牌</td>
+<td>决定当前服务名解析范围</td>
+<td>不是安全隔离</td>
+</tr>
+<tr>
+<td>isolate</td>
+<td>独立线路</td>
+<td>为指定服务创建独立 scope label</td>
+<td>同 label 可重新汇合</td>
+</tr>
+<tr>
+<td>optional lookup</td>
+<td>备用插座探测</td>
+<td><code>ctx.get()</code> 查询可能不存在的服务</td>
+<td>必须处理 <code>undefined</code></td>
+</tr>
+</tbody></table>
+</article></main>
+</body>
+</html>
