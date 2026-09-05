@@ -1,6 +1,6 @@
 # DeepSeek Harness · 图文源码教材
 
-用模块化智能工作室建立直觉，再沿真实源码确认比喻的边界。面向有 Java 后端经验的工程师。
+这是一套面向 Java 后端工程师的 DeepSeek Harness 中文图文源码教程，围绕 Agent Harness 原理、AI Agent 工程、TypeScript monorepo 与 Cordis 源码分析展开。先用模块化智能工作室等手绘比喻建立直觉，再沿真实源码确认比喻的边界。
 
 **[在线阅读](https://jonestark12138.github.io/deepseek-harness-source-learning/) · [直接读第八讲](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/lesson-08.html) · [前八讲离线阅读包](https://github.com/jonestark12138/deepseek-harness-source-learning/releases/tag/lessons-01-08-v1.3.0)**
 
