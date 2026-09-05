@@ -1,0 +1,146 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第04讲 · 源码事实矩阵</title><link rel="icon" href="data:,"><style>
+    @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style><nav><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-04.html">第04讲</a></nav><main><article><h1>Lesson 04 Source Fact Matrix</h1>
+<blockquote>
+<p>Upstream commit：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Claim ID</th>
+<th>Claim</th>
+<th>Exact evidence</th>
+<th>Evidence type</th>
+<th>Confidence</th>
+<th>Teaching simplification</th>
+<th>Boundary / uncertainty</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>L04-C01</td>
+<td>pnpm workspace 由 vendor、packages、native、apps、website、python 六组路径构成</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/pnpm-workspace.yaml#L1-L17"><code>pnpm-workspace.yaml#L1-L17</code></a></td>
+<td>Configuration</td>
+<td>Confirmed</td>
+<td>园区围栏与分区</td>
+<td>glob 只定义成员范围</td>
+</tr>
+<tr>
+<td>L04-C02</td>
+<td>在固定提交展开上述 glob，可得到 264 个含 package.json 的成员</td>
+<td>同一配置 + 固定提交文件清单；分组 9+247+2+4+1+1</td>
+<td>Reproducible inventory</td>
+<td>Confirmed</td>
+<td>264 间工坊</td>
+<td>数量随提交变化；根 package 不计入</td>
+</tr>
+<tr>
+<td>L04-C03</td>
+<td>根 package 也声明 workspaces，但没有列出 python/sdk-runtime</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/package.json#L11-L18"><code>package.json#L11-L18</code></a></td>
+<td>Configuration</td>
+<td>Confirmed</td>
+<td>另一份园区目录</td>
+<td>以 pnpm-workspace.yaml 为 pnpm 的主清单</td>
+</tr>
+<tr>
+<td>L04-C04</td>
+<td>根 tsconfig 是无源码的 solution，只引用 host/client 两个聚合项目</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/tsconfig.json#L1-L14"><code>tsconfig.json#L1-L14</code></a></td>
+<td>Configuration</td>
+<td>Confirmed</td>
+<td>施工总图</td>
+<td>references 不是运行时调用</td>
+</tr>
+<tr>
+<td>L04-C05</td>
+<td>tsdown 的 workspace 和 entry 决定普通运行时构建选择及输出位置</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/tsdown.config.ts#L10-L29"><code>tsdown.config.ts#L10-L29</code></a></td>
+<td>Build config</td>
+<td>Confirmed</td>
+<td>出货路线</td>
+<td>不覆盖所有 package-local bundle 细节</td>
+</tr>
+<tr>
+<td>L04-C06</td>
+<td>根 build 入口是 <code>tsx scripts/build.ts</code></td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/package.json#L19-L25"><code>package.json#L19-L25</code></a></td>
+<td>Script declaration</td>
+<td>Confirmed</td>
+<td>总调度按钮</td>
+<td>脚本名本身不证明实现</td>
+</tr>
+<tr>
+<td>L04-C07</td>
+<td>build.ts 依次清旧记录、运行 build:lib、运行 build:web、写新记录</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/scripts/build.ts#L31-L49"><code>scripts/build.ts#L31-L49</code></a></td>
+<td>Implementation</td>
+<td>Confirmed</td>
+<td>总调度员</td>
+<td>子脚本内部仍有各自规则</td>
+</tr>
+<tr>
+<td>L04-C08</td>
+<td>host/client 分开是为了避免同名 Cordis Context 服务的不同声明进入同一 program</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/tsconfig.json#L2-L8"><code>tsconfig.json#L2-L8</code></a>, <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/tsconfig.client.json#L1-L14"><code>tsconfig.client.json#L1-L14</code></a></td>
+<td>Configuration comments</td>
+<td>Confirmed</td>
+<td>两条质检车道</td>
+<td>不是把系统拆成两个仓库</td>
+</tr>
+<tr>
+<td>L04-C09</td>
+<td>host/client 聚合配置均 <code>noEmit: true</code></td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/tsconfig.host.json#L1-L9"><code>tsconfig.host.json#L1-L9</code></a>, <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/tsconfig.client.json#L7-L14"><code>tsconfig.client.json#L7-L14</code></a></td>
+<td>Configuration</td>
+<td>Confirmed</td>
+<td>只质检不出货</td>
+<td>package 自身构建仍会产生文件</td>
+</tr>
+<tr>
+<td>L04-C10</td>
+<td>Session package 的 tsconfig 把源码、类型输出目录和七个 project references 写在一起</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/tsconfig.json#L1-L32"><code>packages/core/session/tsconfig.json#L1-L32</code></a></td>
+<td>Package config</td>
+<td>Confirmed</td>
+<td>单间工坊的接线单</td>
+<td>只表示 TypeScript 项目关系</td>
+</tr>
+</tbody></table>
+</article></main></html>

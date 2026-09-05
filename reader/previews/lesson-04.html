@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>DeepSeek Harness · 第04次-monorepo-workspace与构建图</title>
+  <style>
+    @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-04.html#doc-0">学习导航</a><a href="../previews/lesson-04.html#doc-1">视觉课件</a><a href="../previews/lesson-04.html#doc-2">逐步讲解</a><a href="../previews/lesson-04.html#doc-3">练习与答案</a><a href="../previews/lesson-04.html#doc-4">分享稿</a><a href="../previews/lesson-04.html#doc-5">术语词典</a></nav>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第四讲 · 走进 264 间工坊的工业园</h1>
+<blockquote>
+<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。旧计划里的“254 个 package”已经过期；按本提交的 workspace glob 实测是 <strong>264 个</strong>。</p>
+</blockquote>
+<p>这一讲只追一个问题：<strong>这么多 package，究竟怎样成为一个可检查、可构建的系统？</strong></p>
+<p>主比喻是一座工业园。园区目录回答“谁住在这里”，施工依赖图回答“质检前要先看谁”，出货路线回答“哪些文件怎样变成运行产物”。三张图都画 package，却绝不是一张图。</p>
+<h2>建议顺序</h2>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>做什么</th>
+<th>带走什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>10 分钟</td>
+<td>看 <a href="../previews/lesson-04.html#doc-1">视觉课件</a></td>
+<td>记住工业园与三张地图</td>
+</tr>
+<tr>
+<td>35 分钟</td>
+<td>读 <a href="../previews/lesson-04.html#doc-2">逐步讲解</a></td>
+<td>从 workspace 走到 build.ts 和 tsdown</td>
+</tr>
+<tr>
+<td>20 分钟</td>
+<td>跟读五个源码站点</td>
+<td>workspace → scripts → solution → package node</td>
+</tr>
+<tr>
+<td>15 分钟</td>
+<td>做 <a href="../previews/lesson-04.html#doc-3">练习与答案</a></td>
+<td>识别每一种“箭头”的含义</td>
+</tr>
+<tr>
+<td>5 分钟</td>
+<td>试讲 <a href="../previews/lesson-04.html#doc-4">分享稿</a></td>
+<td>用 Java 多模块工程类比但不误套</td>
+</tr>
+</tbody></table>
+<h2>完成标准</h2>
+<ol>
+<li>说出 264 的复核口径，并知道它只绑定本次提交。</li>
+<li>区分 workspace 成员图、TypeScript project-reference 图、运行时产物图。</li>
+<li>从根 <code>build</code> 追到 <code>build:lib</code>、<code>build:web</code> 和构建记录。</li>
+<li>解释 host/client 分开是类型可见性隔离，不是两个仓库。</li>
+<li>打开任一 package 的 tsconfig，读出源码目录、类型输出目录和 project references。</li>
+</ol>
+<h2>可直接打开的成品</h2>
+<ul>
+<li><a href="../previews/lesson-04.html">整讲浏览版</a></li>
+<li><a href="../evidence/lesson-04.html">源码事实矩阵</a></li>
+<li><a href="../assets/lesson-04/reader/fig-02-three-maps.png">代表插图：工业园三张地图</a></li>
+</ul>
+</article>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第四讲视觉课件 · 同一座园区，三张不同地图</h1>
+<h2>1. Workspace 先圈出谁属于园区</h2>
+<p><img src="../assets/lesson-04/reader/fig-01-workspace-park.png" alt="六组 workspace 路径像工业园的六个片区，共有 264 个 package"></p>
+<blockquote>
+<p>264 是把固定提交中的 glob 展开后，统计含 <code>package.json</code> 的成员。它不是永恒常数，也不含根 package。</p>
+</blockquote>
+<h2>2. 园区目录、施工图、出货图不能混用</h2>
+<p><img src="../assets/lesson-04/reader/fig-02-three-maps.png" alt="三张装配清单分别表示成员图、类型检查图和运行时产物图"></p>
+<blockquote>
+<p>“在一个 workspace”不等于“运行时互相调用”；<code>references</code> 也不等于网络请求或进程通信。</p>
+</blockquote>
+<h2>3. 根 build 像总调度员</h2>
+<p><img src="../assets/lesson-04/reader/fig-03-build-foreman.png" alt="机器人按 build ts 的顺序调度库构建、Web 构建并写入构建记录"></p>
+<blockquote>
+<p><code>package.json</code> 只给出按钮标签，真正顺序要到 <code>scripts/build.ts</code> 中确认。</p>
+</blockquote>
+<h2>4. Host 与 Client 是两条质检车道</h2>
+<p><img src="../assets/lesson-04/reader/fig-04-host-client-lanes.png" alt="共享模块进入 host 与 client 两条类型检查车道，但同名 Context 扩展不混进一个 program"></p>
+<blockquote>
+<p>两个聚合项目都 <code>noEmit</code>：它们的核心工作是检查，不是直接出货。</p>
+</blockquote>
+<h2>5. 单个 package 有自己的接线单</h2>
+<p><img src="../assets/lesson-04/reader/fig-05-package-wiring.png" alt="Session 源码资料夹通过 package tsconfig 接到七个引用并指向类型输出目录"></p>
+<blockquote>
+<p>从全景落到一个节点，先读 <code>rootDir</code>、<code>outDir</code>、<code>include</code>、<code>references</code>，不要一上来钻进数千行实现。</p>
+</blockquote>
+</article>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第四讲逐步讲解 · 别把三张地图叠成一团线</h1>
+<blockquote>
+<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。</p>
+</blockquote>
+<p>如果把 monorepo 想成“一大堆 package 放在一个 Git 仓库”，你只看到了围墙。真正决定工程如何工作的是几份用途不同的地图。</p>
+<h2>一、第一张图：谁属于 workspace</h2>
+<p><img src="../assets/lesson-04/reader/fig-01-workspace-park.png" alt="workspace 工业园分区"></p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/pnpm-workspace.yaml#L1-L17"><code>pnpm-workspace.yaml#L1-L17</code></a> 列出六组路径：</p>
+<ul>
+<li><code>vendor/*</code>：9 个；</li>
+<li><code>packages/*/*</code>：247 个；</li>
+<li><code>apps/*</code>：2 个；</li>
+<li><code>native/landlock-run</code> 及其 <code>packages/*</code>：4 个；</li>
+<li><code>python/sdk-runtime</code>：1 个；</li>
+<li><code>website</code>：1 个。</li>
+</ul>
+<p>合计 264。统计口径是：在固定提交中展开这些 glob，只计算实际含 <code>package.json</code> 的目录，不把根 <code>package.json</code> 自己算进去。</p>
+<p>旧规划写 254，为什么这里必须改？因为成员数是快照事实，不是项目名称的一部分。源码学习材料若不固定 commit 和复核口径，很快就会把昨天的正确数字讲成今天的错误事实。</p>
+<p><code>linkWorkspacePackages: true</code> 让匹配名称的本地包优先链接到 workspace 源；但“住在同一园区”仍不表示两个包一定相依。</p>
+<h2>二、第二张图：TypeScript 怎样检查关系</h2>
+<p>根 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/tsconfig.json#L1-L14"><code>tsconfig.json#L1-L14</code></a> 是一个 solution file：</p>
+<pre><code class="language-json">{
+  &quot;files&quot;: [],
+  &quot;references&quot;: [
+    { &quot;path&quot;: &quot;./tsconfig.host.json&quot; },
+    { &quot;path&quot;: &quot;./tsconfig.client.json&quot; }
+  ]
+}
+</code></pre>
+<p><code>files: []</code> 很关键：根项目不把全仓库源码硬塞进一个 TypeScript program，而是把工作交给 host/client 两个聚合检查单元。</p>
+<p>这里的 <code>references</code> 像施工前置关系。TypeScript 需要知道当前项目引用了哪些项目以及它们的类型产物边界。它不表示 A 在运行时一定调用 B，更不表示两个服务通过网络通信。</p>
+<h2>三、第三张图：运行文件怎样出货</h2>
+<p><img src="../assets/lesson-04/reader/fig-02-three-maps.png" alt="三张地图回答三种问题"></p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/tsdown.config.ts#L10-L29"><code>tsdown.config.ts#L10-L29</code></a> 又是另一张图。它选择普通 workspace 构建范围、入口模式、<code>lib</code> 输出目录、ESM 格式和 host 侧 Typert 插件。</p>
+<p>于是同一个 package 至少可能出现在三种关系里：</p>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>去哪看</th>
+<th>箭头表示什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>它属于本仓库的 workspace 吗</td>
+<td><code>pnpm-workspace.yaml</code></td>
+<td>成员归属</td>
+</tr>
+<tr>
+<td>类型检查前要看哪些项目</td>
+<td><code>tsconfig*.json</code> references</td>
+<td>TypeScript 项目引用</td>
+</tr>
+<tr>
+<td>怎样得到运行时文件</td>
+<td>根脚本、tsdown、package-local config</td>
+<td>构建调度与产物</td>
+</tr>
+</tbody></table>
+<p>读图时先问“这条箭头的动词是什么”，比盯着箭头方向更重要。</p>
+<h2>四、根 build：从按钮追到调度员</h2>
+<p>根 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/package.json#L19-L25"><code>package.json#L19-L25</code></a> 写着：</p>
+<pre><code class="language-json">&quot;build&quot;: &quot;tsx scripts/build.ts&quot;,
+&quot;build:lib&quot;: &quot;npm run build:lib:host &amp;&amp; npm run build:lib:client&quot;,
+&quot;build:web&quot;: &quot;pnpm --filter @deepseek-ai/dsh-web-frontend run build&quot;
+</code></pre>
+<p>这像控制台上的三个按钮。要知道总按钮按下后做什么，继续读 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/scripts/build.ts#L31-L49"><code>scripts/build.ts#L31-L49</code></a>：</p>
+<ol>
+<li>解析 client build profile 与环境；</li>
+<li>删除旧构建记录；</li>
+<li>调用 <code>build:lib</code>；</li>
+<li>调用 <code>build:web</code>；</li>
+<li>写入新的 client build record，并报告产物数量。</li>
+</ol>
+<p><img src="../assets/lesson-04/reader/fig-03-build-foreman.png" alt="根 build 总调度"></p>
+<p>注意 <code>runScript()</code> 会检查子进程退出状态；任何子脚本非零退出都会使总构建失败。这才是“build 顺序”的实现证据，不是脚本名字带来的想象。</p>
+<h2>五、为什么 host/client 要分开</h2>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/tsconfig.client.json#L1-L14"><code>tsconfig.client.json#L1-L14</code></a> 的注释直接说明：host 与 client 都会给 Cordis <code>Context</code> 的同名 key 合并声明，但对应服务不同；若放进同一个 program，两个世界会在类型层面撞车。</p>
+<p><img src="../assets/lesson-04/reader/fig-04-host-client-lanes.png" alt="host 与 client 两条检查车道"></p>
+<p>所以根 solution 把它们分开。共享的 session、llm、tools 等叶子项目可以被两边引用，但各自的 Context 扩展保持在自己的检查单元里。</p>
+<p>两份聚合配置都写 <code>noEmit: true</code>。可把它理解成“总质检站只检查，不从这里直接装箱”；真正产物仍由 package 编译和 tsdown 等构建步骤生成。</p>
+<h2>六、落到一间工坊：Session package 的接线单</h2>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/tsconfig.json#L1-L32"><code>packages/core/session/tsconfig.json#L1-L32</code></a> 很短，却能回答四个问题：</p>
+<ul>
+<li><code>rootDir: src</code>：源码从哪里进入；</li>
+<li><code>outDir: lib/types</code>：TypeScript 产物边界在哪里；</li>
+<li><code>include: [&quot;src&quot;]</code>：本项目检查哪些自身文件；</li>
+<li><code>references</code>：它在类型项目图中依赖 cordis、brand、llm、scope 等七个项目。</li>
+</ul>
+<p><img src="../assets/lesson-04/reader/fig-05-package-wiring.png" alt="单个 package 接回构建图"></p>
+<p>这还没告诉你 Session 做什么业务，只帮你定位它在构建与类型网络中的位置。下一讲才用一套固定方法拆读这个 package。</p>
+<h2>七、五站源码路线</h2>
+<ol>
+<li><code>pnpm-workspace.yaml</code>：只回答成员边界。</li>
+<li>根 <code>package.json</code> scripts：找到构建入口名。</li>
+<li><code>scripts/build.ts</code>：确认真实顺序与失败传播。</li>
+<li><code>tsconfig.json</code>、<code>tsconfig.host.json</code>、<code>tsconfig.client.json</code>：辨认类型检查图。</li>
+<li><code>packages/core/session/tsconfig.json</code>：把全景落到一个节点。</li>
+</ol>
+<h2>八、一句话总结</h2>
+<p>Monorepo 是园区，workspace 清单圈成员，project references 组织类型检查，构建脚本与 tsdown 生成运行产物。先分清地图的用途，再追一条真实脚本链，就不会被几百个 package 和几千条线吓住。</p>
+</article>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第四讲练习与答案</h1>
+<h2>练习 1：264 是什么数字</h2>
+<p>判断：“DeepSeek Harness 永远有 264 个 package。”</p>
+<details><summary>展开答案</summary>
+
+<p>错误。264 是固定提交 <code>cd5ef814…</code> 中展开 <code>pnpm-workspace.yaml</code> 路径后，命中含 package.json 目录的数量。换提交后必须重新统计。</p>
+</details>
+
+<h2>练习 2：成员关系是不是调用关系</h2>
+<p>两个 package 都匹配 <code>packages/*/*</code>，能否推出 A 会在运行时调用 B？</p>
+<details><summary>展开答案</summary>
+
+<p>不能。只能确认二者都是 workspace 成员。运行时调用要继续看 import、依赖声明、实现或追踪证据。</p>
+</details>
+
+<h2>练习 3：追根 build</h2>
+<p>根 <code>npm run build</code> 的可观察顺序是什么？</p>
+<details><summary>展开答案</summary>
+
+<p>进入 <code>scripts/build.ts</code>，解析构建环境，删除旧记录，运行 <code>build:lib</code>，再运行 <code>build:web</code>，最后写新构建记录。任何子脚本非零退出会让总构建失败。</p>
+</details>
+
+<h2>练习 4：noEmit 的误区</h2>
+<p>判断：“host/client tsconfig 都 noEmit，所以仓库不会生成 JavaScript。”</p>
+<details><summary>展开答案</summary>
+
+<p>错误。它只说明这两个聚合检查项目本身不发出文件。package 构建、tsdown 和 Web 构建仍负责生成运行产物。</p>
+</details>
+
+<h2>练习 5：为什么不合成一个 program</h2>
+<details><summary>展开答案</summary>
+
+<p>host/client 会给 Cordis Context 的相同 key 合并不同服务声明。放进同一个 TypeScript program 会让两个类型世界碰撞，因此用两个聚合项目隔离；共享叶子项目仍可被两边引用。</p>
+</details>
+
+<h2>练习 6：给箭头命名</h2>
+<p>看到 <code>packages/core/session/tsconfig.json</code> 引用 <code>packages/llm/llm</code>，最稳妥的表述是什么？</p>
+<details><summary>展开答案</summary>
+
+<p>“Session TypeScript 项目引用 LLM TypeScript 项目。”不要直接升级成“Session 运行时调用 LLM”；要证明后者还需看 manifest、值 import 与调用实现。</p>
+</details>
+</article>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第四讲分享稿 · 一座园区需要三张地图</h1>
+<p>DeepSeek Harness 固定源码快照里有 264 个 workspace package。这个数字不是背诵题，而是一次证据训练：它来自展开 workspace glob，换提交就要重算。</p>
+<p>我会把 monorepo 比作工业园。第一张园区目录来自 <code>pnpm-workspace.yaml</code>，只说明谁是成员；第二张施工依赖图来自 TypeScript project references，说明类型检查项目如何连接；第三张出货图来自根构建脚本、tsdown 和 package-local 配置，说明怎样产生运行文件。</p>
+<p>根 build 不是一个神秘黑盒。<code>package.json</code> 把它指向 <code>scripts/build.ts</code>，实现先清旧记录，再跑 library、Web，最后写构建记录。</p>
+<p>Host 与 Client 分成两条检查车道，是因为它们给同一个 Cordis Context key 合并不同服务声明；共享叶子仍可复用。两个聚合 tsconfig 的 <code>noEmit</code> 表示总质检站只检查，不表示整个仓库不出 JavaScript。</p>
+<p>面对几百个 package，不要画全量蜘蛛网。先问当前看的是哪张地图，再从根脚本追一条链，最后落到一个 package 的 tsconfig。</p>
+</article>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第四讲术语与比喻词典</h1>
+<table>
+<thead>
+<tr>
+<th>英文 / 配置</th>
+<th>先这样理解</th>
+<th>技术含义</th>
+<th>比喻边界</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Monorepo 单仓多包</td>
+<td>一座工业园</td>
+<td>多个相关 package 放在同一版本库协作</td>
+<td>不等于一个部署单元</td>
+</tr>
+<tr>
+<td>Workspace</td>
+<td>园区成员名册</td>
+<td>包管理器共同安装、链接和执行脚本的成员集合</td>
+<td>不自动形成运行时依赖</td>
+</tr>
+<tr>
+<td>Glob</td>
+<td>分区圈选规则</td>
+<td>用通配模式匹配目录</td>
+<td>需要展开后才知道当前数量</td>
+</tr>
+<tr>
+<td>Package</td>
+<td>一间工坊</td>
+<td>有 package manifest 和边界的模块单元</td>
+<td>不等于独立进程或微服务</td>
+</tr>
+<tr>
+<td>Project reference</td>
+<td>施工接线</td>
+<td>TypeScript 项目级引用关系</td>
+<td>不是运行时调用链</td>
+</tr>
+<tr>
+<td>Solution tsconfig</td>
+<td>施工总图</td>
+<td>无自身源码、聚合子项目的 tsconfig</td>
+<td>不直接表示打包策略</td>
+</tr>
+<tr>
+<td>Host</td>
+<td>后场工作区</td>
+<td>Node/本地运行侧的类型与实现面</td>
+<td>不等于物理服务器</td>
+</tr>
+<tr>
+<td>Client</td>
+<td>前场工作区</td>
+<td>浏览器/UI 侧的类型与实现面</td>
+<td>不等于某一个用户设备</td>
+</tr>
+<tr>
+<td><code>noEmit</code></td>
+<td>只质检不装箱</td>
+<td>当前 TypeScript program 不写输出文件</td>
+<td>其他构建步骤仍可出产物</td>
+</tr>
+<tr>
+<td>Build graph</td>
+<td>出货调度图</td>
+<td>脚本、工具与产物之间的构建关系</td>
+<td>要区分声明与实际执行</td>
+</tr>
+<tr>
+<td>tsdown</td>
+<td>装箱线</td>
+<td>本仓库使用的 TypeScript/ESM 构建工具</td>
+<td>不是所有包的唯一构建入口</td>
+</tr>
+<tr>
+<td>Artifact</td>
+<td>出货成品</td>
+<td>构建生成的 JS、网页或记录等文件</td>
+<td>不等于源码本身</td>
+</tr>
+</tbody></table>
+</article></main>
+</body>
+</html>
