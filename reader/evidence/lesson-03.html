@@ -1,0 +1,146 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第03讲 · 源码事实矩阵</title><link rel="icon" href="data:,"><style>
+    @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style><nav><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-03.html">第03讲</a></nav><main><article><h1>Lesson 03 Source Fact Matrix</h1>
+<blockquote>
+<p>Upstream commit：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Claim ID</th>
+<th>Claim</th>
+<th>Exact evidence</th>
+<th>Evidence type</th>
+<th>Confidence</th>
+<th>Teaching simplification</th>
+<th>Boundary / uncertainty</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>L03-C01</td>
+<td>Cordis 事件方法以 <code>K extends keyof Events</code> 限制事件名</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L34-L63"><code>events.ts#L34-L63</code></a></td>
+<td>Type declarations</td>
+<td>Confirmed</td>
+<td>泛型夹具</td>
+<td>不提供运行时输入校验</td>
+</tr>
+<tr>
+<td>L03-C02</td>
+<td><code>Parameters&lt;Events[K]&gt;</code> 保持事件名与参数元组对应</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L10-L63"><code>events.ts#L10-L63</code></a></td>
+<td>Type declarations</td>
+<td>Confirmed</td>
+<td>调整槽位</td>
+<td>条件类型细节暂不展开</td>
+</tr>
+<tr>
+<td>L03-C03</td>
+<td>Workspace 用模块扩展给 Context 增加 workspaceRegistry</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/workspace/workspace/src/index.ts#L67-L71"><code>workspace/src/index.ts#L67-L71</code></a></td>
+<td>Type declaration</td>
+<td>Confirmed</td>
+<td>扩展登记册</td>
+<td>声明本身不注册服务</td>
+</tr>
+<tr>
+<td>L03-C04</td>
+<td>Cordis Context 本身由 interface/class 合并并由 proxy 提供运行时行为</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/context.ts#L11-L39"><code>vendor/cordis/src/context.ts#L11-L39</code></a></td>
+<td>Types + implementation</td>
+<td>Confirmed</td>
+<td>共同目录</td>
+<td>具体服务生命周期后续讲</td>
+</tr>
+<tr>
+<td>L03-C05</td>
+<td><code>import type</code> 用于纯类型依赖与声明扩展可见性</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/workspace/workspace/src/index.ts#L8-L22"><code>workspace/src/index.ts#L8-L22</code></a></td>
+<td>Imports</td>
+<td>Confirmed</td>
+<td>只借说明书</td>
+<td>不证明目标包没有运行时角色</td>
+</tr>
+<tr>
+<td>L03-C06</td>
+<td>Branded 用 unique symbol 交叉类型区分字符串</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/util/brand/src/index.ts#L24-L27"><code>brand/src/index.ts#L24-L27</code></a></td>
+<td>Type primitive</td>
+<td>Confirmed</td>
+<td>同形工牌</td>
+<td>无格式校验和权限能力</td>
+</tr>
+<tr>
+<td>L03-C07</td>
+<td>WorkspaceId 工厂返回同一个字符串的类型断言</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/workspace/workspace/src/index.ts#L29-L39"><code>workspace/src/index.ts#L29-L39</code></a></td>
+<td>Implementation</td>
+<td>Confirmed</td>
+<td>发工牌</td>
+<td>强制断言可绕过保护</td>
+</tr>
+<tr>
+<td>L03-C08</td>
+<td><code>satisfies never</code> 用于 stopReason switch 的穷尽性检查</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/workflow/tool-workflow/src/index.ts#L178-L190"><code>tool-workflow/src/index.ts#L178-L190</code></a></td>
+<td>Implementation</td>
+<td>Confirmed</td>
+<td>关门点名</td>
+<td>defensive default 仍有运行时价值</td>
+</tr>
+<tr>
+<td>L03-C09</td>
+<td>仓库允许 <code>.ts</code> 扩展名并重写相对导入扩展</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/tsconfig.base.json#L6-L18"><code>tsconfig.base.json#L6-L18</code></a></td>
+<td>Configuration</td>
+<td>Confirmed</td>
+<td>货架地址重写</td>
+<td>不是所有项目默认配置</td>
+</tr>
+<tr>
+<td>L03-C10</td>
+<td>Workspace 源码实际使用 <code>.ts</code> 相对导入</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/workspace/workspace/src/index.ts#L15-L27"><code>workspace/src/index.ts#L15-L27</code></a></td>
+<td>Implementation</td>
+<td>Confirmed</td>
+<td>地址实例</td>
+<td>最终输出由构建链决定</td>
+</tr>
+</tbody></table>
+</article></main></html>

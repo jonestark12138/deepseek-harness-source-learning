@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>DeepSeek Harness · 第03次-TypeScript最小语法II</title>
+  <style>
+    @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-03.html#doc-0">学习导航</a><a href="../previews/lesson-03.html#doc-1">视觉课件</a><a href="../previews/lesson-03.html#doc-2">逐步讲解</a><a href="../previews/lesson-03.html#doc-3">练习与答案</a><a href="../previews/lesson-03.html#doc-4">分享稿</a><a href="../previews/lesson-03.html#doc-5">术语词典</a></nav>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第三讲 · 让类型成为架构的防错工装</h1>
+<blockquote>
+<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。第二讲先学会看标签，本讲再看大型工程为什么需要更高级的类型工具。</p>
+</blockquote>
+<p>这一讲只追一个问题：<strong>泛型、声明合并、品牌类型和 ESM 写法，为什么会反复出现在 Harness 这类架构代码中？</strong></p>
+<p>主比喻是一间有标准夹具、扩展登记册和门禁工牌的工作室：泛型保持“放进去什么、取出来还是什么”的关系；声明合并让插件把自己的栏位登记到共同目录；品牌类型给外形相同的字符串加上不可混用的工牌；<code>satisfies never</code> 检查分支清单有没有漏项。</p>
+<h2>建议顺序</h2>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>做什么</th>
+<th>带走什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>10 分钟</td>
+<td>看 <a href="../previews/lesson-03.html#doc-1">视觉课件</a></td>
+<td>记住夹具、登记册、工牌、关门检查</td>
+</tr>
+<tr>
+<td>35 分钟</td>
+<td>读 <a href="../previews/lesson-03.html#doc-2">逐步讲解</a></td>
+<td>把五种语法翻译成架构用途</td>
+</tr>
+<tr>
+<td>20 分钟</td>
+<td>跟读四个源码站点</td>
+<td>Cordis events → workspace → brand → tsconfig</td>
+</tr>
+<tr>
+<td>15 分钟</td>
+<td>做 <a href="../previews/lesson-03.html#doc-3">练习与答案</a></td>
+<td>预测类型错误与架构边界</td>
+</tr>
+<tr>
+<td>5 分钟</td>
+<td>试讲 <a href="../previews/lesson-03.html#doc-4">分享稿</a></td>
+<td>用 Java 类比但不误套</td>
+</tr>
+</tbody></table>
+<h2>前置与边界</h2>
+<p>建议先完成第二讲。现在不要求手写复杂条件类型，也不要求理解 Cordis 生命周期实现；只要能识别类型工具在保护什么关系。</p>
+<h2>完成标准</h2>
+<ol>
+<li>用“标准夹具”解释泛型为什么保存类型之间的对应关系。</li>
+<li>说明 <code>declare module</code> 扩展的是编译期可见形状，不会在运行时自动注册服务。</li>
+<li>说明 <code>WorkspaceId</code> 与普通 string 在运行时相同，但编译期不能随意互换。</li>
+<li>看到 <code>satisfies never</code> 能判断它在做穷尽性检查。</li>
+<li>解释 <code>.ts</code> 相对导入能成立是仓库编译配置的一部分，不是所有 Node 项目的默认规则。</li>
+</ol>
+<h2>可直接打开的成品</h2>
+<ul>
+<li><a href="../previews/lesson-03.html">整讲浏览版</a></li>
+<li><a href="../evidence/lesson-03.html">源码事实矩阵</a></li>
+<li><a href="../assets/lesson-03/reader/fig-01-generic-jig.png">代表插图：泛型是标准夹具</a></li>
+</ul>
+</article>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第三讲视觉课件 · 五种架构型语法</h1>
+<h2>1. 泛型是可调尺寸的标准夹具</h2>
+<p><img src="../assets/lesson-03/reader/fig-01-generic-jig.png" alt="同一工作台夹具保持不同输入与输出的类型对应关系"></p>
+<blockquote>
+<p><code>K extends keyof Events</code> 不是“任何 K”，而是事件名集合中的某一个 K；参数和返回值继续跟着这个 K 关联。</p>
+</blockquote>
+<h2>2. 声明合并是扩展登记册</h2>
+<p><img src="../assets/lesson-03/reader/fig-02-module-augmentation.png" alt="插件模块把 workspaceRegistry 一栏登记到共同 Context 目录"></p>
+<blockquote>
+<p><code>declare module</code> 让 TypeScript 知道 <code>ctx</code> 多了什么；真正的运行时提供还要有服务构造与注册代码。</p>
+</blockquote>
+<h2>3. 品牌类型是同形工牌</h2>
+<p><img src="../assets/lesson-03/reader/fig-03-branded-badges.png" alt="两张外形相同但用途不同的工牌不能刷错门"></p>
+<blockquote>
+<p><code>SessionId</code>、<code>WorkspaceId</code> 都是字符串，却在编译期不应互换。序列化时仍是普通字符串。</p>
+</blockquote>
+<h2>4. satisfies never 是关门前点名</h2>
+<p><img src="../assets/lesson-03/reader/fig-04-exhaustive-check.png" alt="三个已知状态逐一打勾，新增状态若未处理就卡在最后检查位"></p>
+<blockquote>
+<p>当联合类型已经被所有 case 排除，default 中理应只剩 <code>never</code>；未来新增成员会让编译失败，提醒补分支。</p>
+</blockquote>
+<h2>5. ESM 导入像货架地址</h2>
+<p><img src="../assets/lesson-03/reader/fig-05-esm-addresses.png" alt="源码中的点 ts 地址经编译配置重写到输出模块地址，类型专用货物不进入运行包"></p>
+<blockquote>
+<p>本仓库允许源码写 <code>.ts</code> 相对导入，并配置输出重写。<code>import type</code> 只带来类型依赖；具体行为取决于项目 tsconfig 和构建链。</p>
+</blockquote>
+</article>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第三讲逐步讲解 · 类型不只是标签，还是防错工装</h1>
+<blockquote>
+<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。</p>
+</blockquote>
+<p>第二讲把类型当成行李牌。本讲向前一步：大型插件系统里，类型还要表达“哪个事件配哪些参数”“哪个插件给 Context 增加什么”“哪些字符串虽然长得一样却不能混用”。</p>
+<h2>一、泛型：保存对应关系，不是把类型变模糊</h2>
+<p><img src="../assets/lesson-03/reader/fig-01-generic-jig.png" alt="泛型夹具保持输入输出对应关系"></p>
+<p>Java 工程师可以先把 <code>&lt;T&gt;</code> 理解成“给类型留一个参数位”，但 TypeScript 泛型常与 <code>keyof</code>、索引访问一起使用。Cordis 的事件方法就是好例子：</p>
+<pre><code class="language-ts">emit&lt;K extends keyof Events&gt;(
+  name: K,
+  ...args: Parameters&lt;Events[K]&gt;
+): void
+</code></pre>
+<p>证据在 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L34-L63"><code>vendor/cordis/src/events.ts#L34-L63</code></a>。逐段翻译：</p>
+<ul>
+<li><code>keyof Events</code> 是 Events 所有键名组成的集合；</li>
+<li><code>K extends ...</code> 表示本次调用的 K 必须来自这个集合；</li>
+<li><code>Events[K]</code> 取出该事件名对应的监听函数类型；</li>
+<li><code>Parameters&lt;...&gt;</code> 再取出它的参数元组。</li>
+</ul>
+<p>泛型在这里像可调尺寸的夹具：选定事件名后，参数槽位跟着调整。若只写成 <code>name: string, ...args: any[]</code>，语法更短，却丢失了事件名与参数之间的对应关系。</p>
+<p>边界：这些泛型约束主要在编译期工作，不能替代运行时收到陌生事件名时的防御。</p>
+<h2>二、声明合并：给共同目录加一栏</h2>
+<p>Cordis 的 <code>Context</code> 是插件共享服务入口。Workspace 包中出现：</p>
+<pre><code class="language-ts">declare module &#39;@deepseek-ai/cordis&#39; {
+  interface Context {
+    workspaceRegistry: WorkspaceRegistry
+  }
+}
+</code></pre>
+<p>见 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/workspace/workspace/src/index.ts#L67-L71"><code>packages/workspace/workspace/src/index.ts#L67-L71</code></a>。</p>
+<p><img src="../assets/lesson-03/reader/fig-02-module-augmentation.png" alt="模块扩展登记到 Context"></p>
+<p>这叫模块扩展（module augmentation）：它告诉 TypeScript，“当你看 <code>@deepseek-ai/cordis</code> 的 Context 时，还要把这一栏合进去。”多个插件可以各自扩展同一个接口，读者仍能得到统一的 <code>ctx.xxx</code> 提示。</p>
+<p>但登记册不是设备本身。运行时还需要真实的 <code>WorkspaceRegistry</code> 服务被创建、提供并满足生命周期。只有 <code>declare module</code>，不会凭空出现 <code>ctx.workspaceRegistry</code>。</p>
+<p>它和 Java 的感觉类似于多个模块共同丰富一份编译期契约，但机制不是修改某个已编译 class，也不是 Spring Bean 自动注册。</p>
+<h2>三、import type：只借说明书，不搬设备</h2>
+<p>同一个文件顶部既有普通 import，也有 type-only import：</p>
+<pre><code class="language-ts">import { Context, Service } from &#39;@deepseek-ai/cordis&#39;
+import type { SessionHeader, SessionId } from &#39;@deepseek-ai/dsh-session&#39;
+import type {} from &#39;@deepseek-ai/dsh-session-persistence&#39;
+</code></pre>
+<p>见 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/workspace/workspace/src/index.ts#L8-L16"><code>workspace/src/index.ts#L8-L16</code></a>。</p>
+<p><code>import type { X }</code> 明确 X 只用于类型位置，发出的 JavaScript 不需要这条值导入。<code>import type {}</code> 则常用于引入声明扩展：它让 TypeScript 看见另一个模块提供的类型补充，却不制造运行时 import。</p>
+<p>注意：这解释的是编译产物依赖，不等于“被提到的包在系统架构上没有运行时角色”。它可能由其他配置或插件路径在运行时加载。</p>
+<h2>四、品牌类型：给相同字符串发不同工牌</h2>
+<p><img src="../assets/lesson-03/reader/fig-03-branded-badges.png" alt="品牌工牌防止相同字符串混用"></p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/util/brand/src/index.ts#L24-L27"><code>packages/util/brand/src/index.ts#L24-L27</code></a> 定义：</p>
+<pre><code class="language-ts">declare const BRAND: unique symbol
+export type Branded&lt;B extends string&gt; =
+  string &amp; { readonly [BRAND]: B }
+</code></pre>
+<p>随后 Workspace 声明：</p>
+<pre><code class="language-ts">export type WorkspaceId = Branded&lt;&#39;WorkspaceId&#39;&gt;
+</code></pre>
+<p>于是 <code>WorkspaceId</code> 仍能像字符串一样记录、比较和序列化，但类型系统会把它与 <code>SessionId</code> 等其他品牌区分开。构造函数 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/workspace/workspace/src/index.ts#L29-L39"><code>WorkspaceId(id: string)</code></a> 内部只是断言，源码注释明确说运行时仍是同一个字符串。</p>
+<p>为什么有用？结构类型系统通常认为形状相同就兼容；跨 package 的多个 ID 都是 string，最容易传错。品牌像不同颜色门禁工牌，弥补“外形相同却语义不同”的缺口。</p>
+<p>边界：品牌不验证字符串格式，也阻止不了 <code>as WorkspaceId</code> 的强制断言。它是编译期防误接，不是密码学或运行时权限。</p>
+<h2>五、satisfies never：新状态来了，旧 switch 必须报警</h2>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/workflow/tool-workflow/src/index.ts#L178-L190"><code>stopReasonError()</code></a> 处理 <code>completed</code>、<code>cancelled</code>、<code>error</code> 后，在 default 写：</p>
+<pre><code class="language-ts">result.stopReason satisfies never
+</code></pre>
+<p><img src="../assets/lesson-03/reader/fig-04-exhaustive-check.png" alt="最后一格做穷尽检查"></p>
+<p>如果前三个 case 已穷尽联合类型，default 分支中的值理论上不可能存在，类型应缩小成 <code>never</code>。未来有人新增 <code>timed-out</code> 却没补 case，编译器会在这里报错。</p>
+<p>这像关门前点名：不是说意外永远不会发生，而是把“新增一种合法状态却忘记处理”的维护错误变成编译失败。源码仍保留 defensive default，因此面对异常运行时值还会生成错误描述。</p>
+<h2>六、<code>.ts</code> 相对导入：地址写法由整个构建约定决定</h2>
+<p>仓库源码常写：</p>
+<pre><code class="language-ts">import { WorkspaceEntity } from &#39;./entity.ts&#39;
+</code></pre>
+<p>根 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/tsconfig.base.json#L6-L18"><code>tsconfig.base.json#L6-L18</code></a> 同时设置：</p>
+<ul>
+<li><code>module: esnext</code></li>
+<li><code>moduleResolution: bundler</code></li>
+<li><code>allowImportingTsExtensions: true</code></li>
+<li><code>rewriteRelativeImportExtensions: true</code></li>
+</ul>
+<p><img src="../assets/lesson-03/reader/fig-05-esm-addresses.png" alt="源码地址经过构建约定重写"></p>
+<p>因此在这个仓库里，源码可以明确写 <code>.ts</code>，编译输出会重写相对扩展名。它改善源码定位，也让 import 与真实源文件对应。</p>
+<p>不要把它复制成“所有 Node ESM 都应该这样写”。能否写 <code>.ts</code>、运行器是否直接执行 TypeScript、输出要变成 <code>.js</code> 还是由 bundler 接管，都取决于项目配置和工具链。</p>
+<h2>七、四站源码路线</h2>
+<ol>
+<li><code>vendor/cordis/src/events.ts</code>：只看 <code>K extends keyof Events</code> 与 <code>Parameters&lt;Events[K]&gt;</code>。</li>
+<li><code>packages/workspace/workspace/src/index.ts</code>：找 <code>import type</code>、<code>declare module</code> 和 <code>WorkspaceId()</code>。</li>
+<li><code>packages/util/brand/src/index.ts</code>：看品牌原语为什么没有运行时代码。</li>
+<li><code>tsconfig.base.json</code>：把 <code>.ts</code> 导入放回编译配置解释。</li>
+</ol>
+<p>看到 Cordis 具体事件实现先停下；那是第八讲。此刻目标是读懂类型在表达哪些架构关系。</p>
+<h2>八、一句话总结</h2>
+<p>泛型守住“名称与参数”的对应关系；声明合并让插件扩展共同契约；品牌类型阻止同形 ID 混用；<code>satisfies never</code> 守住状态分支的完整性；ESM 导入写法则由仓库的编译约定保证。它们都是防错工装，不是运行时能力本身。</p>
+</article>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第三讲练习与答案</h1>
+<h2>练习 1：泛型保住了什么</h2>
+<p>为什么 <code>emit&lt;K extends keyof Events&gt;(name: K, ...args: Parameters&lt;Events[K]&gt;)</code> 比 <code>emit(name: string, ...args: any[])</code> 更有用？</p>
+<details><summary>展开答案</summary>
+
+<p>前者把事件名限制在 Events 的键内，并根据具体事件名推出对应参数；后者允许任何名字和任何参数，丢掉了关系。两者仍都需要真实的运行时分发实现。</p>
+</details>
+
+<h2>练习 2：只有 declare module 会怎样</h2>
+<p>假设插件只写 <code>declare module</code> 增加 <code>ctx.demo</code>，却没有任何 provider 或初始化代码。运行时会自动出现 demo 吗？</p>
+<details><summary>展开答案</summary>
+
+<p>不会。声明扩展只改变编译器看到的类型形状。运行时属性要由真正的服务注册或对象赋值产生；否则访问可能得到 undefined 或触发框架错误。</p>
+</details>
+
+<h2>练习 3：品牌能防什么、不能防什么</h2>
+<details><summary>展开答案</summary>
+
+<p>能在正常类型检查下防止 WorkspaceId 与其他 string 品牌混用；不能校验 UUID 格式、提供运行时权限或阻止开发者强制类型断言。序列化后仍是普通字符串，边界输入需要重新验证和建立品牌。</p>
+</details>
+
+<h2>练习 4：新增状态</h2>
+<p>若 <code>WorkflowStopReason</code> 新增 <code>timed-out</code>，但 switch 没有 case，会发生什么？</p>
+<details><summary>展开答案</summary>
+
+<p>在开启类型检查时，default 中 <code>result.stopReason satisfies never</code> 将不再成立，编译失败，提醒补上分支。若异常值绕过类型系统进入运行时，defensive default 仍会返回异常描述。</p>
+</details>
+
+<h2>练习 5：import type 的误区</h2>
+<p>判断：“使用 <code>import type {}</code> 就证明这个 package 在整个系统运行时完全没用。”</p>
+<details><summary>展开答案</summary>
+
+<p>错误。它只说明当前 import 不生成值依赖。该 package 可能通过配置、别的值 import 或插件加载器参与运行。</p>
+</details>
+
+<h2>练习 6：源码定位</h2>
+<p>请在固定提交中找到：</p>
+<ol>
+<li><code>Branded&lt;B&gt;</code> 的定义；</li>
+<li><code>WorkspaceId()</code> 的运行时实现；</li>
+<li>Workspace 对 Cordis Context 的扩展；</li>
+<li><code>.ts</code> 相对导入的两项关键配置。</li>
+</ol>
+<details><summary>展开答案</summary>
+
+<p>依次在 <code>packages/util/brand/src/index.ts</code>、<code>packages/workspace/workspace/src/index.ts</code> 29–39 行、同文件 67–71 行、<code>tsconfig.base.json</code> 的 <code>allowImportingTsExtensions</code> 与 <code>rewriteRelativeImportExtensions</code>。</p>
+</details>
+
+</article>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第三讲分享稿 · 类型系统如何替架构守门</h1>
+<p>第二讲说类型像标签，第三讲我会说它还是一套防错工装。</p>
+<p>泛型像可调夹具。Cordis 的事件方法用事件名 K 找到对应参数，因此不会把 A 事件的参数接到 B 事件上。</p>
+<p>声明合并像扩展登记册。每个插件都能告诉 TypeScript 自己给 Context 增加了哪一栏，但登记不会自动创造运行时服务。</p>
+<p>品牌类型像同形工牌。WorkspaceId 和 SessionId 运行时都是字符串，编译期却不能随手互换。它降低跨 package 接错 ID 的风险，不负责校验格式或权限。</p>
+<p><code>satisfies never</code> 像关门前点名。联合类型出现新状态而 switch 漏处理时，让维护错误在编译阶段暴露。</p>
+<p>最后，源码里的 <code>.ts</code> 相对导入不是通用魔法；本仓库用 <code>allowImportingTsExtensions</code> 和 <code>rewriteRelativeImportExtensions</code> 形成完整构建约定。读架构代码时，类型与 tsconfig 要放在一起看。</p>
+</article>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第三讲术语与比喻词典</h1>
+<table>
+<thead>
+<tr>
+<th>英文 / 语法</th>
+<th>先这样理解</th>
+<th>技术含义</th>
+<th>比喻边界</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Generic 泛型</td>
+<td>可调夹具</td>
+<td>用类型参数保存输入输出之间的关系</td>
+<td>通常不会自动生成运行时验证</td>
+</tr>
+<tr>
+<td><code>extends</code> 约束</td>
+<td>夹具尺寸范围</td>
+<td>限制类型参数必须满足某集合或形状</td>
+<td>不是 class 继承的唯一含义</td>
+</tr>
+<tr>
+<td><code>keyof</code></td>
+<td>目录的所有栏名</td>
+<td>取得对象类型的键联合</td>
+<td>不枚举运行时对象</td>
+</tr>
+<tr>
+<td>Indexed access <code>T[K]</code></td>
+<td>按栏名取说明</td>
+<td>从类型 T 取得键 K 对应的类型</td>
+<td>不等于运行时读取表达式</td>
+</tr>
+<tr>
+<td>Module augmentation 模块扩展</td>
+<td>扩展登记册</td>
+<td><code>declare module</code> 合并已有模块声明</td>
+<td>不会创建运行时服务</td>
+</tr>
+<tr>
+<td><code>import type</code></td>
+<td>只借说明书</td>
+<td>只导入类型，避免发出值 import</td>
+<td>不代表目标包没有架构作用</td>
+</tr>
+<tr>
+<td>Brand / branded type 品牌类型</td>
+<td>同形工牌</td>
+<td>用 unique symbol 交叉类型区分同底层值</td>
+<td>不验证格式、不提供权限</td>
+</tr>
+<tr>
+<td><code>unique symbol</code></td>
+<td>不可仿造的印章位</td>
+<td>类型层面唯一的 symbol 身份</td>
+<td>本例的 BRAND 只用于类型</td>
+</tr>
+<tr>
+<td><code>never</code></td>
+<td>不该有任何值</td>
+<td>不可能发生的类型</td>
+<td>运行时仍可能遇到绕过类型的异常值</td>
+</tr>
+<tr>
+<td><code>satisfies never</code></td>
+<td>关门点名</td>
+<td>验证当前值已被分支穷尽</td>
+<td>不替代 defensive runtime handling</td>
+</tr>
+<tr>
+<td>ESM</td>
+<td>标准模块货架</td>
+<td>JavaScript 的 import/export 模块体系</td>
+<td>具体解析规则取决于环境与工具链</td>
+</tr>
+<tr>
+<td><code>.ts</code> relative import</td>
+<td>源码货架地址</td>
+<td>相对导入明确指向 TypeScript 源文件</td>
+<td>需要仓库编译配置支持</td>
+</tr>
+</tbody></table>
+</article></main>
+</body>
+</html>

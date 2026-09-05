@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>DeepSeek Harness · 第02次-TypeScript最小语法I</title>
+  <style>
+    @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-02.html#doc-0">学习导航</a><a href="../previews/lesson-02.html#doc-1">视觉课件</a><a href="../previews/lesson-02.html#doc-2">逐步讲解</a><a href="../previews/lesson-02.html#doc-3">练习与答案</a><a href="../previews/lesson-02.html#doc-4">分享稿</a><a href="../previews/lesson-02.html#doc-5">术语词典</a></nav>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第二讲 · 把类型当成源码里的行李牌</h1>
+<blockquote>
+<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。本讲学习的是阅读 TypeScript 的最低必要语法，不是完整语言教程。</p>
+</blockquote>
+<p>这一讲只追一个问题：<strong>类型怎样帮我们在代码真正运行前，看懂“会收到什么、可能返回什么、该沿哪条分支读”？</strong></p>
+<p>把 Java 的类型经验先带上，但不要一一硬套。TypeScript 的 <code>interface</code>、联合类型和类型注解更像贴在包裹上的行李牌：它们帮助编辑器和读者检查路线；包裹真正怎么移动，仍由 JavaScript 代码决定。</p>
+<h2>建议顺序</h2>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>做什么</th>
+<th>带走什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>8 分钟</td>
+<td>看 <a href="../previews/lesson-02.html#doc-1">视觉课件</a></td>
+<td>记住标签、分拣码、取号单</td>
+</tr>
+<tr>
+<td>30 分钟</td>
+<td>读 <a href="../previews/lesson-02.html#doc-2">逐步讲解</a></td>
+<td>看懂函数签名、对象形状、联合类型与异步函数</td>
+</tr>
+<tr>
+<td>15 分钟</td>
+<td>打开 <code>apps/cli/src/args.ts</code> 跟读</td>
+<td>用 <code>mode</code> 找到三种命令行结果</td>
+</tr>
+<tr>
+<td>15 分钟</td>
+<td>做 <a href="../previews/lesson-02.html#doc-3">练习与答案</a></td>
+<td>从类型预测合法值，再回源码核对</td>
+</tr>
+<tr>
+<td>5 分钟</td>
+<td>试讲 <a href="../previews/lesson-02.html#doc-4">分享稿</a></td>
+<td>不背语法表也能解释类型的用途</td>
+</tr>
+</tbody></table>
+<p>陌生词先查 <a href="../previews/lesson-02.html#doc-5">术语与比喻词典</a>。</p>
+<h2>学到哪一层就够了</h2>
+<p><strong>现在必须懂</strong>：冒号后的类型注解；<code>interface</code> 描述对象形状；<code>A | B</code> 表示多种可能；判别字段帮助缩小分支；<code>async</code> 函数返回 Promise，<code>await</code> 等待其结果。</p>
+<p><strong>知道存在即可</strong>：可选属性 <code>?</code>、只读数组、函数重载、类型推断。</p>
+<p><strong>留到后面</strong>：条件类型、映射类型、复杂泛型、声明合并和品牌类型。后两项是第三讲主角。</p>
+<h2>完成标准</h2>
+<p>合上教材后，你能：</p>
+<ol>
+<li>读出 <code>parseDshArgs(argv: readonly string[], version: string): DshInvocation</code> 的输入和输出承诺。</li>
+<li>根据 <code>mode</code> 判断联合类型当前是哪一种，并说明为什么相应字段才能安全读取。</li>
+<li>解释“类型通常不增加运行时检查”与“判别字段在运行时真实存在”并不矛盾。</li>
+<li>看到 <code>Promise&lt;void&gt;</code> 时知道它表示异步完成，而不是函数立即返回最终值。</li>
+</ol>
+<h2>可直接打开的成品</h2>
+<ul>
+<li><a href="../previews/lesson-02.html">整讲浏览版</a></li>
+<li><a href="../evidence/lesson-02.html">源码事实矩阵</a></li>
+<li><a href="../assets/lesson-02/reader/fig-01-label-not-engine.png">代表插图：类型是标签，不是发动机</a></li>
+</ul>
+</article>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第二讲视觉课件 · 四张图读懂基础类型</h1>
+<blockquote>
+<p>先看图建立直觉，再用源码纠正比喻。类型系统不是运行时保安。</p>
+</blockquote>
+<h2>1. 类型是行李牌，不是发动机</h2>
+<p><img src="../assets/lesson-02/reader/fig-01-label-not-engine.png" alt="包裹旁的类型标签帮助读者识别内容，但机器人仍按实际代码搬运"></p>
+<blockquote>
+<p>类型告诉编辑器和读者“这里应当是什么”；真正运行的是编译后的 JavaScript。<code>interface</code> 和多数类型注解会被擦除，但像 <code>mode</code> 这样的普通字段会保留。</p>
+</blockquote>
+<h2>2. Interface 是验货单</h2>
+<p><img src="../assets/lesson-02/reader/fig-02-interface-checklists.png" alt="三张验货清单分别列出命令行调用需要的字段"></p>
+<blockquote>
+<p><code>interface</code> 关心对象有没有这些字段、字段是什么类型。它不像 Java class 那样天然代表一个可实例化的运行时类。</p>
+</blockquote>
+<h2>3. 联合类型是一条有分拣码的传送带</h2>
+<p><img src="../assets/lesson-02/reader/fig-03-discriminated-union.png" alt="三种调用对象依据 mode 分拣到 profile dump-config 和 plugin 三个出口"></p>
+<blockquote>
+<p><code>DshInvocation</code> 可以是三种形状之一。<code>mode</code> 是真实字段，也是类型系统用来缩小范围的判别码。</p>
+</blockquote>
+<h2>4. Async 像取号单</h2>
+<p><img src="../assets/lesson-02/reader/fig-04-promise-ticket.png" alt="异步函数先交回 Promise 取号单，等待完成后才得到结果"></p>
+<blockquote>
+<p><code>async function ...: Promise&lt;T&gt;</code> 表示调用者先拿到 Promise；<code>await</code> 等的是成功值，异常则沿 Promise 拒绝路径传播。它不是新线程的同义词。</p>
+</blockquote>
+<h2>一页带走</h2>
+<table>
+<thead>
+<tr>
+<th>看到</th>
+<th>先翻译成</th>
+<th>阅读动作</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>name: string</code></td>
+<td>字段/参数应是字符串</td>
+<td>找名字与冒号两边</td>
+</tr>
+<tr>
+<td><code>interface X</code></td>
+<td>对象验货单</td>
+<td>看必填、可选、只读字段</td>
+</tr>
+<tr>
+<td>`A</td>
+<td>B`</td>
+<td>可能是 A，也可能是 B</td>
+</tr>
+<tr>
+<td><code>async ...: Promise&lt;T&gt;</code></td>
+<td>稍后完成并给 T</td>
+<td>找 <code>await</code>、异常与调用方</td>
+</tr>
+</tbody></table>
+</article>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第二讲逐步讲解 · 跟着一张命令行订单读 TypeScript</h1>
+<blockquote>
+<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。代码链接均固定到该提交。</p>
+</blockquote>
+<h2>一、先回答最容易误会的一句</h2>
+<p>很多 Java 工程师第一次看 TypeScript，会把类型想成 JVM 字节码里的运行时约束。更稳妥的第一印象是：<strong>类型主要服务于编译检查、编辑器提示和源码阅读；程序运行时执行的是 JavaScript。</strong></p>
+<p><img src="../assets/lesson-02/reader/fig-01-label-not-engine.png" alt="类型标签帮助检查，实际搬运仍由代码完成"></p>
+<p>像机场行李牌一样，标签可以让分拣员在装机前发现“这件行李不该去这里”。但标签不会自己把箱子搬上飞机。同样，下面的 <code>string</code> 不会在运行时自动生成一段校验代码：</p>
+<pre><code class="language-ts">const collect = (value: string, previous: string[] = []): string[] =&gt;
+  [...previous, value]
+</code></pre>
+<p>这段来自 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/args.ts#L61"><code>apps/cli/src/args.ts#L61</code></a>。名字左边是参数，冒号右边是类型；最后一个冒号后的 <code>string[]</code> 是返回类型。</p>
+<p>边界要记牢：不是所有 TypeScript 语法都必然“零运行时影响”，例如某些 <code>enum</code> 或装饰器配置可能生成代码。本讲讨论的是仓库中常见的 <code>interface</code>、类型别名、类型注解和 <code>import type</code>。</p>
+<h2>二、函数签名就是收货与发货单</h2>
+<p>看 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/args.ts#L112"><code>parseDshArgs()</code></a>：</p>
+<pre><code class="language-ts">export function parseDshArgs(
+  argv: readonly string[],
+  version: string,
+): DshInvocation
+</code></pre>
+<p>先不读函数体，也能得到三条信息：</p>
+<ul>
+<li><code>argv</code> 是字符串只读数组；函数承诺不通过这个引用改数组。</li>
+<li><code>version</code> 是字符串。</li>
+<li>返回值属于 <code>DshInvocation</code>。</li>
+</ul>
+<p>这很像 Java 的方法签名，但 <code>readonly</code> 是 TypeScript 对当前引用的编译期约束，不等于把数组在运行时深度冻结。函数签名是阅读入口，不是实现证明；输入检查、错误处理和副作用仍要看函数体与测试。</p>
+<h2>三、Interface 是对象验货单，不是 Java class</h2>
+<p><img src="../assets/lesson-02/reader/fig-02-interface-checklists.png" alt="三种对象验货单"></p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/args.ts#L21-L28"><code>ProfileInvocation</code></a> 写着：</p>
+<pre><code class="language-ts">interface ProfileInvocation {
+  mode: &#39;profile&#39;
+  profile: string
+  patches: string[]
+  args: string[]
+}
+</code></pre>
+<p>可以读成：“任何要被当作 <code>ProfileInvocation</code> 的值，都要符合这张验货单。” TypeScript 是结构类型系统：通常更关心形状是否满足，而不是对象是不是由名为 <code>ProfileInvocation</code> 的构造器创建。</p>
+<p><code>mode: &#39;profile&#39;</code> 不是“任意字符串”，而是字符串字面量类型，只接受这个固定值。这里最关键，因为它把三张相似订单区分开。</p>
+<p>与 Java <code>interface</code> 的重要区别：这个 TypeScript interface 本身没有运行时构造器、反射类对象或 <code>instanceof</code> 身份。它通常在编译后消失。</p>
+<h2>四、联合类型：不是三样都要，而是三选一</h2>
+<p>源码在 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/args.ts#L48"><code>args.ts#L48</code></a>：</p>
+<pre><code class="language-ts">export type DshInvocation =
+  ProfileInvocation | DumpConfigInvocation | PluginInvocation
+</code></pre>
+<p>竖线读作“或”。一个 <code>DshInvocation</code> 在某一刻是三种形状中的一种，不是同时拥有三种形状的全部字段。</p>
+<p><img src="../assets/lesson-02/reader/fig-03-discriminated-union.png" alt="mode 判别码把联合类型送往三个出口"></p>
+<p>如果代码先判断：</p>
+<pre><code class="language-ts">if (invocation.mode === &#39;profile&#39;) {
+  invocation.args
+}
+</code></pre>
+<p>TypeScript 会根据 <code>mode</code> 缩小范围，知道分支内是 <code>ProfileInvocation</code>。这叫判别联合：</p>
+<ul>
+<li>联合类型本身是编译期概念；</li>
+<li><code>mode</code> 是普通对象字段，运行时真实存在；</li>
+<li><code>if</code> 或 <code>switch</code> 是 JavaScript 真的会执行的分支。</li>
+</ul>
+<p>因此“类型被擦除”和“可以在运行时按 mode 分支”并不矛盾。运行时判断的是字段值，不是某个联合类型对象。</p>
+<h2>五、可选属性：问号不是 null 的别名</h2>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/args.ts#L51-L55"><code>BootOptions</code></a> 中有：</p>
+<pre><code class="language-ts">interface BootOptions {
+  patch?: string[]
+  dumpConfig?: boolean
+  dumpDefaultConfig?: boolean
+}
+</code></pre>
+<p><code>patch?</code> 表示属性可以不存在。仓库启用了 <code>exactOptionalPropertyTypes</code>，因此“没有这个属性”与“显式放入 <code>undefined</code>”会被更严格地区分。阅读时先问：调用者是否保证字段存在？源码里 <code>options.patch ?? []</code> 正是在没有值时提供空数组。</p>
+<h2>六、Async：先拿取号单，再等结果</h2>
+<p><img src="../assets/lesson-02/reader/fig-04-promise-ticket.png" alt="Promise 取号单"></p>
+<p>另一个小入口 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/lsp/lsp-stdio/src/index.ts#L126-L142"><code>packages/lsp/lsp-stdio/src/index.ts#L126</code></a> 有：</p>
+<pre><code class="language-ts">export async function apply(ctx: Context, config: Config): Promise&lt;void&gt; {
+  const entries = Object.entries(config.servers)
+  // ...
+  const providers = await (async () =&gt; { /* ... */ })()
+}
+</code></pre>
+<p><code>async</code> 保证调用表达式得到 Promise。<code>Promise&lt;void&gt;</code> 表示成功完成时没有业务结果值；不表示“同步返回 void”。<code>await</code> 暂停当前 async 函数后续语句的推进，事件循环仍可处理别的任务；它不是“新建一个线程”。</p>
+<p>对源码阅读最有用的四个问题是：</p>
+<ol>
+<li>Promise 最终给什么类型？</li>
+<li>哪些地方 <code>await</code>？</li>
+<li>失败会在哪里抛出或转成拒绝？</li>
+<li>调用者是否等待了它？</li>
+</ol>
+<h2>七、第一次跟读 args.ts，只走四站</h2>
+<ol>
+<li>看 21–48 行：画出三张对象验货单和联合类型。</li>
+<li>看 83–103 行：根据条件找两个返回分支。</li>
+<li>看 112 行签名：确认输入与返回承诺。</li>
+<li>搜索 <code>resolved =</code>：观察不同 Commander action 如何产生联合类型成员。</li>
+</ol>
+<p>不要第一次就钻进 Commander 链式 API 的每个方法。我们此刻只借这个文件练习“从签名和类型缩小阅读范围”。</p>
+<h2>八、合上源码后的准确表述</h2>
+<p>TypeScript 类型像源码上的标签与验货单：帮助我们在运行前发现不匹配，并让读者迅速判断输入、输出和可能分支。<code>interface</code> 描述对象形状；联合类型表达多种可能；字面量字段把分支区分开；async 函数通过 Promise 表达稍后完成。类型不是运行时校验器，源码中的真实字段、条件与异步操作才会在运行时发生。</p>
+</article>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第二讲练习与答案</h1>
+<p>先在纸上或脑中回答，再展开答案。</p>
+<h2>练习 1：读签名</h2>
+<p><code>function resolveBoot(program: Command, profile: string, options: BootOptions, args: string[]): DshInvocation</code></p>
+<p>请说出四个输入和一个输出，并指出仅凭签名不能知道的两件事。</p>
+<details><summary>展开答案</summary>
+
+<p>输入依次是 Commander 命令对象、profile 字符串、BootOptions 形状、字符串数组；输出是 DshInvocation 联合类型。仅凭签名不知道函数会在哪些条件下报错，也不知道会返回联合类型中的哪一种；需要看函数体和测试。</p>
+</details>
+
+<h2>练习 2：合法还是不合法</h2>
+<pre><code class="language-ts">const x: DshInvocation = {
+  mode: &#39;plugin&#39;,
+  profile: &#39;tui&#39;,
+  patches: [],
+}
+</code></pre>
+<details><summary>展开答案</summary>
+
+<p>不符合当前三种 interface。<code>PluginInvocation</code> 需要 <code>args</code>，没有 <code>patches</code>；<code>mode: &#39;plugin&#39;</code> 又排除了另外两种。注意这是编译期判断；若外部 JSON 未经运行时校验进入程序，类型声明本身不会拦截它。</p>
+</details>
+
+<h2>练习 3：为什么 mode 有两份工作</h2>
+<details><summary>展开答案</summary>
+
+<p>在运行时它是普通字符串字段，供 if/switch 分支读取；在编译期它是字面量判别字段，帮助 TypeScript 把联合类型缩小到某个成员。联合类型会擦除，字段不会因为参与类型判断就消失。</p>
+</details>
+
+<h2>练习 4：Promise<void> 是什么</h2>
+<p>判断：“返回 <code>Promise&lt;void&gt;</code> 等于函数立即返回 <code>void</code>，因此不需要 await。”</p>
+<details><summary>展开答案</summary>
+
+<p>错误。调用立即得到 Promise；成功完成时 Promise 没有业务值。调用方是否必须 await 取决于是否需要等待完成、捕获失败或保证顺序，不能把 Promise 丢掉后仍假设任务已经结束。</p>
+</details>
+
+<h2>练习 5：源码定位</h2>
+<p>在固定提交的 <code>apps/cli/src/args.ts</code> 中找到：</p>
+<ol>
+<li>三个判别字段值；</li>
+<li>可选属性；</li>
+<li><code>readonly string[]</code>；</li>
+<li>一个返回对象字面量的分支。</li>
+</ol>
+<details><summary>展开答案</summary>
+
+<p>判别值是 <code>profile</code>、<code>dump-config</code>、<code>plugin</code>；BootOptions 三个字段可选；<code>parseDshArgs</code> 的 argv 是只读字符串数组；<code>resolveBoot</code> 在 87 或 102 行附近返回对象字面量。行号只对应本讲固定提交。</p>
+</details>
+
+<h2>练习 6：画图</h2>
+<p>只用四个物件画出 <code>DshInvocation</code>：一个入口、三个出口。箭头上写清楚它表示“按 mode 选择类型分支”，不要画成运行时调用链。</p>
+<details><summary>展开答案</summary>
+
+<p>关键不是美观，而是语义：入口标注联合类型；出口分别标注三种成员；分支条件是 mode 的三个字面量值；图注说明它既帮助编译器缩小类型，也对应运行时字段判断，但不表示每个分支都会依次执行。</p>
+</details>
+
+</article>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第二讲分享稿 · 五分钟讲清 TypeScript 类型</h1>
+<p>我把 TypeScript 类型理解成包裹上的行李牌，而不是搬运行李的发动机。</p>
+<p>第一，函数签名是收货与发货单。<code>parseDshArgs(argv: readonly string[], version: string): DshInvocation</code> 已经告诉我输入和输出的大致形状，让我不用先读两百行函数体。</p>
+<p>第二，<code>interface</code> 是对象验货单。它描述字段，而不是天然生成一个 Java 式运行时类。<code>ProfileInvocation</code> 要求 <code>mode</code>、<code>profile</code>、<code>patches</code> 和 <code>args</code>。</p>
+<p>第三，联合类型表示多种可能中的一种。<code>DshInvocation</code> 是三种 invocation 的联合，<code>mode</code> 像分拣码。TypeScript 用它缩小类型，JavaScript 在运行时也能读取这个真实字段。</p>
+<p>第四，<code>async</code> 函数给调用者 Promise。<code>Promise&lt;void&gt;</code> 不是立即返回 void；它表示稍后完成，但没有业务返回值。<code>await</code> 也不是新线程的同义词。</p>
+<p>最重要的边界是：类型能帮助检查和阅读，却不会自动替代运行时验证。看到一个外部 JSON 标成某个 interface，不等于它已经被真实校验。</p>
+<p>源码练习只需走两处：先读 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/args.ts"><code>apps/cli/src/args.ts</code></a>，再看一个 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/lsp/lsp-stdio/src/index.ts#L126"><code>async apply()</code></a>。</p>
+</article>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第二讲术语与比喻词典</h1>
+<table>
+<thead>
+<tr>
+<th>英文 / 语法</th>
+<th>先这样理解</th>
+<th>技术含义</th>
+<th>比喻边界</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Type annotation 类型注解</td>
+<td>行李牌</td>
+<td>名字后用冒号标注期望类型</td>
+<td>不自动生成运行时校验</td>
+</tr>
+<tr>
+<td>Function signature 函数签名</td>
+<td>收货与发货单</td>
+<td>参数与返回类型的公开形状</td>
+<td>不说明完整实现、副作用和失败</td>
+</tr>
+<tr>
+<td>Interface 接口</td>
+<td>对象验货单</td>
+<td>描述对象应具有的字段与方法</td>
+<td>通常不是运行时类，也不能靠 instanceof 判断</td>
+</tr>
+<tr>
+<td>Structural typing 结构类型</td>
+<td>按尺寸验货</td>
+<td>形状兼容比名义身份更重要</td>
+<td>仍受私有成员、品牌等规则影响</td>
+</tr>
+<tr>
+<td>Union type 联合类型</td>
+<td>多选一通道</td>
+<td>值可以属于多个候选类型之一</td>
+<td>不是把所有字段合并到一起</td>
+</tr>
+<tr>
+<td>Literal type 字面量类型</td>
+<td>固定分拣码</td>
+<td>只允许特定字符串/数字值</td>
+<td>运行时只剩普通值</td>
+</tr>
+<tr>
+<td>Discriminated union 判别联合</td>
+<td>带分拣码的订单</td>
+<td>共享字面量字段区分联合成员</td>
+<td>必须真的判断字段才能缩小分支</td>
+</tr>
+<tr>
+<td>Optional property 可选属性</td>
+<td>可缺省栏位</td>
+<td><code>?</code> 表示属性可以不存在</td>
+<td>不简单等同于 null</td>
+</tr>
+<tr>
+<td>readonly</td>
+<td>请勿改写标签</td>
+<td>编译期限制通过该引用修改</td>
+<td>不等于运行时深冻结</td>
+</tr>
+<tr>
+<td>async</td>
+<td>异步柜台</td>
+<td>函数调用返回 Promise</td>
+<td>不等于自动新建线程</td>
+</tr>
+<tr>
+<td>Promise</td>
+<td>取号单</td>
+<td>表示未来完成或失败</td>
+<td>不是最终结果本身</td>
+</tr>
+<tr>
+<td>await</td>
+<td>等叫号</td>
+<td>在 async 上下文等待 Promise 结果</td>
+<td>不会阻塞整个 JavaScript 事件循环</td>
+</tr>
+</tbody></table>
+</article></main>
+</body>
+</html>
