@@ -36,28 +36,28 @@
       article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
       article p>img { width:1080px; max-width:none; }
     }
-  </style><nav><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-03.html">第03讲</a></nav><main><article><h1>Lesson 03 Source Fact Matrix</h1>
+  </style><nav><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-03.html">第03讲</a></nav><main><article><h1>讲次 03 源码事实矩阵</h1>
 <blockquote>
-<p>Upstream commit：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
+<p>上游源码提交：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
 </blockquote>
 <table>
 <thead>
 <tr>
-<th>Claim ID</th>
-<th>Claim</th>
-<th>Exact evidence</th>
-<th>Evidence type</th>
-<th>Confidence</th>
-<th>Teaching simplification</th>
-<th>Boundary / uncertainty</th>
+<th>主张编号</th>
+<th>主张</th>
+<th>精确证据</th>
+<th>证据类型</th>
+<th>确认程度</th>
+<th>教学简化</th>
+<th>边界与不确定性</th>
 </tr>
 </thead>
 <tbody><tr>
 <td>L03-C01</td>
 <td>Cordis 事件方法以 <code>K extends keyof Events</code> 限制事件名</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L34-L63"><code>events.ts#L34-L63</code></a></td>
-<td>Type declarations</td>
-<td>Confirmed</td>
+<td>类型 declarations</td>
+<td>已确认</td>
 <td>泛型夹具</td>
 <td>不提供运行时输入校验</td>
 </tr>
@@ -65,26 +65,26 @@
 <td>L03-C02</td>
 <td><code>Parameters&lt;Events[K]&gt;</code> 保持事件名与参数元组对应</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L10-L63"><code>events.ts#L10-L63</code></a></td>
-<td>Type declarations</td>
-<td>Confirmed</td>
+<td>类型 declarations</td>
+<td>已确认</td>
 <td>调整槽位</td>
 <td>条件类型细节暂不展开</td>
 </tr>
 <tr>
 <td>L03-C03</td>
-<td>Workspace 用模块扩展给 Context 增加 workspaceRegistry</td>
+<td>包管理工作区用模块扩展给插件上下文增加 workspaceRegistry</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/workspace/workspace/src/index.ts#L67-L71"><code>workspace/src/index.ts#L67-L71</code></a></td>
-<td>Type declaration</td>
-<td>Confirmed</td>
+<td>类型 declaration</td>
+<td>已确认</td>
 <td>扩展登记册</td>
 <td>声明本身不注册服务</td>
 </tr>
 <tr>
 <td>L03-C04</td>
-<td>Cordis Context 本身由 interface/class 合并并由 proxy 提供运行时行为</td>
+<td>Cordis 插件上下文本身由 interface/class 合并并由 proxy 提供运行时行为</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/context.ts#L11-L39"><code>vendor/cordis/src/context.ts#L11-L39</code></a></td>
-<td>Types + implementation</td>
-<td>Confirmed</td>
+<td>Types + 实现</td>
+<td>已确认</td>
 <td>共同目录</td>
 <td>具体服务生命周期后续讲</td>
 </tr>
@@ -93,7 +93,7 @@
 <td><code>import type</code> 用于纯类型依赖与声明扩展可见性</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/workspace/workspace/src/index.ts#L8-L22"><code>workspace/src/index.ts#L8-L22</code></a></td>
 <td>Imports</td>
-<td>Confirmed</td>
+<td>已确认</td>
 <td>只借说明书</td>
 <td>不证明目标包没有运行时角色</td>
 </tr>
@@ -101,8 +101,8 @@
 <td>L03-C06</td>
 <td>Branded 用 unique symbol 交叉类型区分字符串</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/util/brand/src/index.ts#L24-L27"><code>brand/src/index.ts#L24-L27</code></a></td>
-<td>Type primitive</td>
-<td>Confirmed</td>
+<td>类型 primitive</td>
+<td>已确认</td>
 <td>同形工牌</td>
 <td>无格式校验和权限能力</td>
 </tr>
@@ -110,8 +110,8 @@
 <td>L03-C07</td>
 <td>WorkspaceId 工厂返回同一个字符串的类型断言</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/workspace/workspace/src/index.ts#L29-L39"><code>workspace/src/index.ts#L29-L39</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
+<td>实现</td>
+<td>已确认</td>
 <td>发工牌</td>
 <td>强制断言可绕过保护</td>
 </tr>
@@ -119,26 +119,26 @@
 <td>L03-C08</td>
 <td><code>satisfies never</code> 用于 stopReason switch 的穷尽性检查</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/workflow/tool-workflow/src/index.ts#L178-L190"><code>tool-workflow/src/index.ts#L178-L190</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
+<td>实现</td>
+<td>已确认</td>
 <td>关门点名</td>
-<td>defensive default 仍有运行时价值</td>
+<td>defensive 默认分支仍有运行时价值</td>
 </tr>
 <tr>
 <td>L03-C09</td>
 <td>仓库允许 <code>.ts</code> 扩展名并重写相对导入扩展</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/tsconfig.base.json#L6-L18"><code>tsconfig.base.json#L6-L18</code></a></td>
-<td>Configuration</td>
-<td>Confirmed</td>
+<td>配置</td>
+<td>已确认</td>
 <td>货架地址重写</td>
 <td>不是所有项目默认配置</td>
 </tr>
 <tr>
 <td>L03-C10</td>
-<td>Workspace 源码实际使用 <code>.ts</code> 相对导入</td>
+<td>包管理工作区源码实际使用 <code>.ts</code> 相对导入</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/workspace/workspace/src/index.ts#L15-L27"><code>workspace/src/index.ts#L15-L27</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
+<td>实现</td>
+<td>已确认</td>
 <td>地址实例</td>
 <td>最终输出由构建链决定</td>
 </tr>

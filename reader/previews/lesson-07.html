@@ -47,208 +47,167 @@
 </head>
 <body>
   <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-07.html#doc-0">学习导航</a><a href="../previews/lesson-07.html#doc-1">视觉课件</a><a href="../previews/lesson-07.html#doc-2">逐步讲解</a><a href="../previews/lesson-07.html#doc-3">练习与答案</a><a href="../previews/lesson-07.html#doc-4">分享稿</a><a href="../previews/lesson-07.html#doc-5">术语词典</a></nav>
-  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第 7 次学习导航：只认插座，不焊死机器</h1>
-<blockquote>
-<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
-</blockquote>
-<p>本讲追问：<strong><code>tool-fs</code> 为什么只依赖 <code>fs</code>，就能在本地、沙箱或远程后端之间替换？</strong></p>
-<p>主比喻是标准插座：Definition 规定插口，Provider 供电，Consumer 用电，inject 是通电联锁，scope 是房间门牌。</p>
-<h2>学习路径</h2>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第7讲学习导航 · 依赖注入：同一个服务名怎样接对实现</h1>
+<p>第六讲知道资源属于哪次安装。现在解决安装需要的能力从哪里来，以及为什么不能随意换掉后继续用旧资源。</p>
+<p>本讲只追一个问题：<strong>读取文件的工具怎样得到正确的文件服务？</strong></p>
+<h2>怎样阅读</h2>
+<p>先看<a href="../previews/lesson-07.html#doc-1">视觉课件</a>建立画面，再读<a href="../previews/lesson-07.html#doc-2">逐步讲解</a>把证据接起来。用<a href="../previews/lesson-07.html#doc-3">练习</a>检查能否解释失败分支；最后借<a href="../previews/lesson-07.html#doc-4">分享稿</a>讲给别人听。<a href="../previews/lesson-07.html#doc-5">词典</a>是随用随查的工具，不需要预先背诵。</p>
+<p>现在必须懂的是本讲问题与答案；源码符号只在定位时保留原拼写，代码中的标识不作破坏性翻译。TypeScript 是本项目主要源码语言，JavaScript 是其运行语义基础；Cordis 是项目使用的插件组织框架。对照 Java 只帮助理解，不意味着机制逐项相同。</p>
+<h2>学会的判断标准</h2>
 <ol>
-<li><a href="../previews/lesson-07.html#doc-1">视觉课件</a>：先建立三角色与 scope 图像。</li>
-<li><a href="../previews/lesson-07.html#doc-2">逐步讲解</a>：跟读真实文件系统链。</li>
-<li><a href="../previews/lesson-07.html#doc-3">练习与答案</a>：判断服务加载与替换行为。</li>
-<li><a href="../previews/lesson-07.html#doc-5">术语词典</a>：按需查英文词。</li>
+<li>分清能力契约、提供者与使用者。</li>
+<li>解释依赖注入如何影响激活和重载。</li>
+<li>区分服务可见范围与安全边界。</li>
 </ol>
-<h2>完成标准</h2>
-<ul>
-<li><p>区分 Definition、Provider、Consumer。</p>
-</li>
-<li><p>解释 <code>inject</code> 既是依赖声明，也是生命周期联锁。</p>
-</li>
-<li><p>解释 isolate 为什么允许同名服务有局部实现。</p>
-</li>
-<li><p>明确 isolate 不是安全沙箱。</p>
-</li>
-<li><p><a href="../previews/lesson-07.html">整讲浏览版</a></p>
-</li>
-<li><p><a href="../evidence/lesson-07.html">源码事实矩阵</a></p>
-</li>
-</ul>
+<h2>在全书中的位置</h2>
+<p>主线建议：第一讲 → 第五讲 → 第九讲 → 第六讲 → 第七讲 → 第八讲。第二至四讲是语法与工程地图补课；编号保留以兼容旧链接。这是学习顺序，不是程序执行顺序。</p>
+<p>下一站：<a href="../previews/lesson-08.html#doc-2">第8讲</a>。工具能找到服务了，多个插件又怎样围绕同一件事合作？</p>
+<p><a href="../previews/lesson-07.html">本讲浏览版</a> · <a href="../evidence/lesson-07.html">源码证据</a></p>
 </article>
-<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第七讲视觉课件 · 服务名像标准插座</h1>
-<h2>1. Consumer 认名字，不焊死具体实现</h2>
-<p><img src="../assets/lesson-07/reader/fig-01-stable-socket.png" alt="工具只连接 fs 服务名，后方可以接入不同实现"></p>
-<blockquote>
-<p>稳定的是 <code>fs</code> 契约；Local、Sandbox、E2B 等实现可以替换。</p>
-</blockquote>
-<h2>2. 文件系统的三角色是真实源码链</h2>
-<p><img src="../assets/lesson-07/reader/fig-02-fs-three-roles.png" alt="FileSystem 定义、LocalFileSystem 提供和 tool-fs 消费组成三段链"></p>
-<blockquote>
-<p>Definition 说“必须会什么”，Provider 说“具体怎么做”，Consumer 说“我要用什么”。</p>
-</blockquote>
-<h2>3. inject 是通电联锁，不只是拿参数</h2>
-<p><img src="../assets/lesson-07/reader/fig-03-inject-waits.png" alt="消费插件等待所有必需服务出现后才进入 ACTIVE"></p>
-<blockquote>
-<p>依赖没齐，Fiber 等待；依赖齐了，插件主体才运行。</p>
-</blockquote>
-<h2>4. 换电源时，旧工单先清理再重装</h2>
-<p><img src="../assets/lesson-07/reader/fig-04-provider-swap.png" alt="旧 provider 被新 provider 替换时消费 Fiber 先卸载再加载"></p>
-<blockquote>
-<p><code>inject</code> 还订阅服务实现变化，因此依赖替换不是静默改指针。</p>
-</blockquote>
-<h2>5. scope 是门牌：同名插座可接不同机器</h2>
-<p><img src="../assets/lesson-07/reader/fig-05-isolated-rooms.png" alt="两个隔离工位中的 fs 同名插座分别连接不同 provider"></p>
-<blockquote>
-<p>isolate 改变服务解析范围，不提供文件权限或进程隔离。</p>
-</blockquote>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第7讲视觉课件 · 依赖注入：同一个服务名怎样接对实现</h1>
+<p>第六讲知道资源属于哪次安装。现在解决安装需要的能力从哪里来，以及为什么不能随意换掉后继续用旧资源。</p>
+<p>每张图只帮助回答一个问题。看完图后，请用一句话解释图中的动作或边界，再到<a href="../previews/lesson-07.html#doc-2">逐步讲解</a>核对源码。</p>
+<h2>1. 文件能力的契约、实现与工具各负责什么？</h2>
+<p><img src="../assets/lesson-07/reader/fig-02-fs-three-roles.png" alt="文件能力的契约、实现与工具各负责什么？"></p>
+<p>插座表示契约，目录表示本地文件实现，扳手表示工具；不是源码中三步依次调用。</p>
+<h2>2. 同名服务怎样在不同范围内不串线？</h2>
+<p><img src="../assets/lesson-07/reader/fig-05-isolated-rooms.png" alt="同名服务怎样在不同范围内不串线？"></p>
+<p>房间只比喻服务解析隔离，不提供操作系统权限或沙箱保证。</p>
+<h2>把图连成一句话</h2>
+<p>分清能力契约、提供者与使用者；解释依赖注入如何影响激活和重载；区分服务可见范围与安全边界。这些不是互不相干的名词，而是在回答“读取文件的工具怎样得到正确的文件服务？”。</p>
+<p>工具能找到服务了，多个插件又怎样围绕同一件事合作？</p>
 </article>
-<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第七讲逐步讲解 · 从 <code>ctx.fs</code> 看服务为何可替换</h1>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第七讲逐步讲解 · 文件工具怎样接到正确的文件能力？</h1>
 <blockquote>
-<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
+<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。</p>
 </blockquote>
-<h2>一、先分清三种角色</h2>
-<p><img src="../assets/lesson-07/reader/fig-01-stable-socket.png" alt="服务标准插座"></p>
+<h2>一、工单有了，设备该接到哪里</h2>
+<p>第六讲用定时器解释了资源归谁管。但报告监视插件要读文件，仅有一张安装工单还不够：它还需要文件能力。假如每个使用者都直接创建本地磁盘实现，以后要更换兼容后端，就要逐处修改调用代码，还可能失去统一清理边界。</p>
+<p>Service（服务能力）把“我要什么”与“谁提供”分开。像设备只约定插头规格，而不把供电厂写死在内部。但这个比喻只帮助理解稳定契约，不意味着接口相同的实现就能在任意条件下安全替换。</p>
+<p>provider（服务提供者）负责接上真实实现；consumer（服务使用者）声明需要什么，并按契约使用。Java 工程师可以联想到接口、实现对象和注入点，但这里还要把依赖可用性接入插件生命周期。</p>
+<h2>二、沿文件能力核对三种角色</h2>
+<p><img src="../assets/lesson-07/reader/fig-02-fs-three-roles.png" alt="文件能力的契约、提供者与工具使用者"></p>
+<p>先看 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/fs/src/index.ts#L44-L89">文件能力定义</a>。它扩展插件上下文的类型，声明文件服务名称及方法契约。声明回答“能够请求哪些操作”，并没有自己完成磁盘读取。</p>
+<p>再看 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/fs-local/src/index.ts#L64-L80">本地实现</a>。它继承定义，通过基类接入服务注册。最后看 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/tool-fs/src/index.ts#L1-L22">文件工具入口</a>，其中声明需要工具服务、文件服务和系统提示服务。</p>
+<p>于是同一份失败报告的读取可以分成职责：模型提出读文件请求；文件工具使用文件能力；当前可见的提供者执行具体操作。配置另一个兼容实现时，使用者的业务代码不必逐处改成新类名，但参数约定、能力支持与生命周期仍须满足。</p>
+<h2>三、服务注册为何也要能撤销</h2>
+<p>提供者不是把对象永远丢进全局字典。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/service.ts#L32-L58">服务构造函数</a> 接到 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/reflect.ts#L267-L305">服务注册实现</a>，记录服务名、对象和提供它的安装实例，同时登记撤销注册的清理动作。</p>
+<p>这样才接上第六讲的资源责任：提供者卸载时，服务也从对应可见范围撤下。否则旧设备已经拆掉，通讯录却还把它列为可用，使用者可能继续拿到失效对象。</p>
+<p>但使用者可能比提供者更早登记。它不能只查一次“现在有没有”然后永远不管，这就需要依赖声明。</p>
+<h2>四、依赖注入首先是一把启动联锁</h2>
+<p>inject（声明并等待依赖）不是简单把对象塞进某个参数。它把“这次安装必须看见哪些服务”写进生命周期条件：</p>
 <ul>
-<li><strong>Definition</strong>：公开名字、类型和方法契约；</li>
-<li><strong>Provider</strong>：按契约注册一个可用实现；</li>
-<li><strong>Consumer</strong>：声明依赖并通过 <code>ctx.&lt;name&gt;</code> 使用。</li>
+<li>少了必需服务，插件主体不能凭空开工。</li>
+<li>必需服务可用后，才进入加载过程。</li>
+<li>依赖实现消失或变更时，旧资源需要清理，再在满足条件时加载。</li>
 </ul>
-<p>这类似 Java 的接口、实现 Bean 与注入点，但 Cordis 进一步把可用性、scope 和插件生命周期绑在一起。</p>
-<h2>二、真实案例：文件系统三段链</h2>
-<p><img src="../assets/lesson-07/reader/fig-02-fs-three-roles.png" alt="文件系统三角色"></p>
-<ol>
-<li><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/fs/src/index.ts#L44-L89"><code>packages/fs/fs</code></a> 扩展 <code>Context</code>，声明 <code>fs: FileSystem</code>，抽象类列出解析、读取、写入等契约。</li>
-<li><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/fs-local/src/index.ts#L64-L80"><code>LocalFileSystem</code></a> 继承该定义，构造时通过基类注册到 <code>fs</code>。</li>
-<li><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/tool-fs/src/index.ts#L1-L22"><code>tool-fs</code></a> 声明 <code>inject = [&#39;tools&#39;, &#39;fs&#39;, &#39;systemPrompt&#39;]</code>，具体读写代码调用 <code>ctx.fs</code>，不依赖 <code>LocalFileSystem</code> 类名。</li>
-</ol>
-<p>所以换成 <code>fs-sandbox</code> 或 E2B provider 时，工具层不必改写自己的读写业务。</p>
-<h2>三、Service 构造函数做了什么</h2>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/service.ts#L32-L58"><code>Service</code> 构造函数</a> 最终调用 <code>ctx.reflect.provide(name, self, check)</code>。</p>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/reflect.ts#L267-L305"><code>provide()</code></a> 记录服务名、对象和提供它的 Fiber，并把“撤销注册”登记成 effect。Provider 卸载，服务随之从当前 scope 消失。</p>
-<h2>四、inject 是生命周期联锁</h2>
-<p><img src="../assets/lesson-07/reader/fig-03-inject-waits.png" alt="inject 等待依赖"></p>
-<p><code>inject</code> 不是把对象塞进构造函数那么简单。它先声明必需服务名；Fiber 的 <code>_refresh()</code> 检查这些名字是否都能解析：</p>
-<ul>
-<li>缺一个：保持 inactive/PENDING，不运行插件主体；</li>
-<li>全部出现：进入 LOADING，执行插件；</li>
-<li>某个实现变化：epoch 变化，先 UNLOADING 再按新组合加载。</li>
-</ul>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/registry.ts#L164-L176"><code>ctx.inject(deps, callback)</code></a> 本质是带 inject 声明的小插件，因此 callback 也获得完整的清理与重载语义。</p>
-<p><img src="../assets/lesson-07/reader/fig-04-provider-swap.png" alt="替换 provider"></p>
-<h2>五、为什么 <code>ctx.fs</code> 看似普通属性却受控</h2>
-<p>Context 是 Proxy。读取 <code>ctx.fs</code> 时，<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/reflect.ts#L133-L170">resolver</a> 会检查当前 Fiber 的 inject 和可见 store。如果插件未声明必需服务，直接读取可能抛出 <code>cannot get property ... without inject</code>。</p>
-<p><code>ctx.get(&#39;name&#39;)</code> 是显式可选查询，语义不同：它可能返回 <code>undefined</code>，不要用它伪装必需依赖。</p>
-<h2>六、scope：同名但不串线</h2>
-<p><img src="../assets/lesson-07/reader/fig-05-isolated-rooms.png" alt="隔离房间"></p>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/context.ts#L109-L125"><code>isolate(&#39;fs&#39;, label)</code></a> 给 child Context 的 <code>fs</code> 分配独立 isolation label。Reflect store 按这个 symbol 查实现，因此 A 房的 <code>fs</code> 与 B 房的 <code>fs</code> 可以同名却连接不同 provider。</p>
-<p>边界：这是依赖解析隔离，不是权限隔离。它不会像 OS 沙箱那样阻止 provider 访问磁盘。</p>
-<h2>七、一句话总结</h2>
-<p>Service 名称把“我要什么”与“谁来实现”分开；inject 把依赖可用性接入 Fiber 生命周期；scope 决定当前名字通向哪一个实现。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/registry.ts#L164-L176">依赖回调入口</a> 把依赖回调组织为一个小插件，因此它也有清理与重载责任，不是一次性的字典查询。</p>
+<p>联想到报告监视器：若文件服务还没准备好，就不要启动依赖它的定时任务；若文件实现换了，也不能让旧定时任务偷偷保留旧对象。这正是“接线问题”为什么会改变“资源生命周期”。</p>
+<h2>五、看起来像属性读取，为何可能报错</h2>
+<p>插件代码写 <code>ctx.fs</code>，表面上像取对象字段，实际服务访问会经过 resolver（服务解析器）。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/reflect.ts#L133-L170">解析实现</a> 会结合当前安装的依赖声明和可见范围查找对象。</p>
+<p>如果把必需依赖漏掉，某些受控读取会报告未声明依赖。这个错误在提醒你：程序必须把依赖关系表达出来，框架才能管理等待和重载。不能只为了消除报错，把所有读取改成可选查询。</p>
+<p><code>ctx.get(&#39;name&#39;)</code> 是显式可选查询，可能没有结果。它适合“没有这个能力也能走合理分支”的情形。若任务本来就必须读文件，可选查询不能替代“缺文件服务就不能启动”的声明。</p>
+<h2>六、两个房间都叫文件服务，怎么避免串线</h2>
+<p>即使名字和契约正确，当前环境仍可能有不止一个实现。scope（服务可见范围）决定这个名字在当前位置通向谁，像两个房间各有自己的插座。</p>
+<p><img src="../assets/lesson-07/reader/fig-05-isolated-rooms.png" alt="两个房间里的同名服务具有不同解析范围"></p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/context.ts#L109-L125">服务解析隔离</a> 为子上下文中指定的服务建立独立隔离标记。查找时使用对应标记区分服务存储，于是甲房间与乙房间可以同名而不通向同一个提供者。</p>
+<p>这里的墙不是安全边界。它不会阻止一个文件实现访问操作系统磁盘，也不会把同一进程变成两个容器。它解决的是“名字解析到谁”，沙箱与权限解决的则是“这个实现被允许做什么”。</p>
+<h2>七、把接线关系放回测试排查</h2>
+<p>文件工具拿不到服务，先查契约名称与依赖声明，再查当前范围里有没有提供者；提供者更换后行为异常，继续查旧安装的资源是否已清理；如果担心越权，则要去执行策略与沙箱边界，不能拿作用域隔离当作安全证明。</p>
+<p>现在可以读懂第一讲里“连接工具与文件能力”的具体一部分了。不过，一个任务还会让界面、记录者和提问处理者一起参与。它们该全部等待，还是找到一个回答就停？<a href="../previews/lesson-08.html#doc-2">第八讲</a>沿这个问题进入事件协作。</p>
 </article>
 <article id="doc-3"><div class="doc-label">练习与答案</div><h1>第七讲练习与答案</h1>
 <h2>练习 1：三角色归类</h2>
 <p>把 <code>FileSystem</code>、<code>LocalFileSystem</code>、<code>tool-fs</code> 分别归类。</p>
 <details><summary>展开答案</summary>
 
-<p><code>FileSystem</code> 是 Definition，<code>LocalFileSystem</code> 是 Provider，<code>tool-fs</code> 是 Consumer。</p>
+<p><code>FileSystem</code> 是契约定义，<code>LocalFileSystem</code> 是服务提供者，<code>tool-fs</code> 是服务使用者。</p>
 </details>
 
 <h2>练习 2：缺少依赖</h2>
-<p><code>tool-fs</code> 已安装但 <code>fs</code> provider 尚未加载，插件主体应立即执行并等第一次调用再报错吗？</p>
+<p><code>tool-fs</code> 已安装但 <code>fs</code> 服务提供者尚未加载，插件主体应立即执行并等第一次调用再报错吗？</p>
 <details><summary>展开答案</summary>
 
-<p>不是。<code>fs</code> 是必需 inject；缺失时 Fiber 不激活，直到依赖满足。</p>
+<p>不是。<code>fs</code> 是必需依赖声明；缺失时插件安装实例不激活，直到依赖满足。</p>
 </details>
 
 <h2>练习 3：可选依赖</h2>
 <p>若某服务只是锦上添花，为什么不应偷偷从 <code>ctx.fs</code> 直接读取？</p>
 <details><summary>展开答案</summary>
 
-<p>普通服务属性读取受 inject 约束。可选能力应显式采用 <code>ctx.get()</code> 或项目既有的可选组合方式，并处理 <code>undefined</code>，让语义清楚。</p>
+<p>普通服务属性读取受依赖声明约束。可选能力应显式采用 <code>ctx.get()</code> 或项目既有的可选组合方式，并处理 <code>undefined</code>，让语义清楚。</p>
 </details>
 
-<h2>练习 4：scope</h2>
-<p>两个 child Context 都 <code>isolate(&#39;fs&#39;)</code>，未给相同 label，它们能看到彼此的 provider 吗？</p>
+<h2>练习 4：服务可见范围</h2>
+<p>两个子对象插件上下文都 <code>isolate(&#39;fs&#39;)</code>，未给相同标签，它们能看到彼此的服务提供者吗？</p>
 <details><summary>展开答案</summary>
 
-<p>不能。它们获得不同 isolation symbol；只有显式使用相同 label 才加入同一 scope。</p>
+<p>不能。它们获得不同隔离标记；只有显式使用相同标签才加入同一服务可见范围。</p>
 </details>
 
 <h2>练习 5：安全边界</h2>
-<p>把 <code>fs</code> isolate 后，是否就能防止本地 provider 访问工作区外文件？</p>
+<p>把 <code>fs</code> 服务解析隔离后，是否就能防止本地服务提供者访问工作区外文件？</p>
 <details><summary>展开答案</summary>
 
-<p>不能。isolate 只控制服务解析。路径与权限约束必须由 <code>fs-sandbox</code>、策略插件或更底层执行边界实现。</p>
+<p>不能。服务解析隔离只控制服务解析。路径与权限约束必须由 <code>fs-sandbox</code>、策略插件或更底层执行边界实现。</p>
 </details>
 </article>
-<article id="doc-4"><div class="doc-label">分享稿</div><h1>第七讲分享稿 · 只认插座，不焊死机器</h1>
-<h2>三分钟主线</h2>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第7讲分享稿 · 依赖注入：同一个服务名怎样接对实现</h1>
+<h2>开场：从同一任务说起</h2>
+<p>我们让助手排查一个 Java 测试失败。第六讲知道资源属于哪次安装。现在解决安装需要的能力从哪里来，以及为什么不能随意换掉后继续用旧资源。 今天不讲一串孤立术语，只回答：读取文件的工具怎样得到正确的文件服务？</p>
+<h2>三分钟讲清</h2>
 <ol>
-<li>Definition 规定稳定的服务名与契约。</li>
-<li>Provider 通过 Service 基类把实例注册到当前 Fiber 和 scope。</li>
-<li>Consumer 用 inject 声明必需名字，通过 <code>ctx.fs</code> 使用。</li>
-<li>缺依赖时不加载；provider 改变时先清理再重载。</li>
-<li>isolate 让不同房间的同名插座连接不同机器。</li>
+<li>分清能力契约、提供者与使用者。先用下面的比喻建立直觉，再回到逐步讲解中的源码证据。</li>
+<li>解释依赖注入如何影响激活和重载。先用下面的比喻建立直觉，再回到逐步讲解中的源码证据。</li>
+<li>区分服务可见范围与安全边界。先用下面的比喻建立直觉，再回到逐步讲解中的源码证据。</li>
 </ol>
-<h2>文件系统例子</h2>
-<p><code>FileSystem</code> → <code>LocalFileSystem</code> → <code>tool-fs</code> 是完整的定义、提供、消费链。工具无需知道后端类名，所以沙箱或远程后端可替换。</p>
-<h2>边界</h2>
-<p>Cordis scope 是依赖解析范围，不是网络服务发现，也不是安全沙箱。</p>
+<p>Service（服务能力）：通过稳定名称提供给其他插件的能力，像按规格提供的插座。</p>
+<p>provider（服务提供者）：真的把某种实现接入系统的一方；不是接口文档。</p>
+<p>consumer（服务使用者）：按契约请求能力的一方，不应把每个调用都绑定到具体实现。</p>
+<h2>把结论接回任务</h2>
+<p>工具能找到服务了，多个插件又怎样围绕同一件事合作？ 这不是另换一个故事，而是继续追问当前答案还没解释的那一部分。</p>
+<p>分享结束请对方用自己的话复述一个正常过程，再提出一种失败情况。能念出定义不算完成；能指出该查哪个源码边界，才说明形成了可用理解。</p>
 </article>
-<article id="doc-5"><div class="doc-label">术语词典</div><h1>第七讲术语与比喻词典</h1>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第7讲术语与比喻词典</h1>
+<p>遇到陌生词，先回到这个问题：读取文件的工具怎样得到正确的文件服务？ 以下是查阅页，正文会在需要时解释关键概念。英文只用于和源码对照；它不是额外的背诵任务。</p>
 <table>
 <thead>
 <tr>
-<th>中文 / 英文</th>
-<th>比喻</th>
-<th>实际职责</th>
-<th>边界</th>
+<th>英文与中文</th>
+<th>直觉、实际职责与边界</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>服务定义 Service Definition</td>
-<td>插座标准</td>
-<td>声明名字、类型与能力契约</td>
-<td>本身未必可运行</td>
+<td>Service（服务能力）</td>
+<td>通过稳定名称提供给其他插件的能力，像按规格提供的插座。</td>
 </tr>
 <tr>
-<td>提供方 Provider</td>
-<td>真实电源</td>
-<td>注册某服务名的实现</td>
-<td>受提供 Fiber 生命周期约束</td>
+<td>provider（服务提供者）</td>
+<td>真的把某种实现接入系统的一方；不是接口文档。</td>
 </tr>
 <tr>
-<td>消费方 Consumer</td>
-<td>用电设备</td>
-<td>声明并调用所需服务</td>
-<td>不应依赖具体实现类</td>
+<td>consumer（服务使用者）</td>
+<td>按契约请求能力的一方，不应把每个调用都绑定到具体实现。</td>
 </tr>
 <tr>
-<td>依赖注入 inject</td>
-<td>通电联锁</td>
-<td>声明必需服务，并控制激活/重载</td>
-<td>不只是参数传递</td>
+<td>inject（声明并等待依赖）</td>
+<td>不只是塞对象；还让依赖可用性参与本次安装的生命周期。</td>
 </tr>
 <tr>
-<td>scope</td>
-<td>房间门牌</td>
-<td>决定当前服务名解析范围</td>
-<td>不是安全隔离</td>
+<td>scope（服务可见范围）</td>
+<td>决定同一个名称在当前工位解析到谁，像不同房间各有自己的插座。</td>
 </tr>
 <tr>
-<td>isolate</td>
-<td>独立线路</td>
-<td>为指定服务创建独立 scope label</td>
-<td>同 label 可重新汇合</td>
+<td>resolver（服务解析器）</td>
+<td>根据当前依赖声明与可见范围找对象的机制，不是简单全局查表。</td>
 </tr>
 <tr>
-<td>optional lookup</td>
-<td>备用插座探测</td>
-<td><code>ctx.get()</code> 查询可能不存在的服务</td>
-<td>必须处理 <code>undefined</code></td>
+<td>isolate（隔离服务解析）</td>
+<td>为指定服务划分查找范围，不会自动限制实现读写操作系统文件。</td>
 </tr>
 </tbody></table>
+<h2>别让比喻越界</h2>
+<p>工单不是线程，通讯录不是模型的记忆，房间不是安全沙箱，图上的阅读箭头也不自动等于源码调用。遇到行为判断，回<a href="../previews/lesson-07.html#doc-2">逐步讲解</a>检查实现与异常分支。</p>
 </article></main>
 </body>
 </html>

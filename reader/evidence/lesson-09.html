@@ -1,0 +1,123 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第09讲 · 源码事实矩阵</title><link rel="icon" href="data:,"><style>
+    @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style><nav><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-09.html">第09讲</a></nav><main><article><h1>第九讲源码事实矩阵</h1>
+<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>，本轮已用 git rev-parse HEAD 核实。下列路径均相对此固定源码树，信心为高；测试文件表示已读测试证据，不表示运行了上游全套测试。</p>
+<table>
+<thead>
+<tr>
+<th>定位编号</th>
+<th>已确认主张</th>
+<th>精确证据</th>
+<th>证据类型</th>
+<th>允许的简化与边界</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>L09-C01</td>
+<td>CLI 解析后，装配方案分支把环境、方案、补丁和内层参数交给 runProfile</td>
+<td>apps/cli/src/bin.ts，24–34 行</td>
+<td>实现</td>
+<td>门口分流；不是每种命令都启动与验收</td>
+</tr>
+<tr>
+<td>L09-C02</td>
+<td>装配方案包清单的 bundles 按数组顺序解析，每个插件套装必须声明 dsh.bundle.patch</td>
+<td>packages/boot/app-boot/src/profile.ts，805–843 行 loadProfile</td>
+<td>实现、base/package.json</td>
+<td>方案选套装；装配方案与 Spring 装配方案不是等价机制</td>
+</tr>
+<tr>
+<td>L09-C03</td>
+<td>prepareProfile 每次将 cordis.yml 写回空数组，作为配置文件入口的路径锚点</td>
+<td>apps/cli/src/profile-boot.ts，PROFILE_ROOT_CONFIG、prepareProfile</td>
+<td>实现、注释</td>
+<td>空装配场地；不是在整个运行中没有插件</td>
+</tr>
+<tr>
+<td>L09-C04</td>
+<td>应用顺序为插件套装、装配方案、用户数据层、CLI 追加覆盖层；遥测禁用补丁可能追加在最后</td>
+<td>apps/cli/src/profile-boot.ts，allPatches、composeProfile、resolveTelemetryPatch</td>
+<td>实现</td>
+<td>画五层以拆开追加覆盖层；不是所有启动都有遥测追加</td>
+</tr>
+<tr>
+<td>L09-C05</td>
+<td>insert 加行并建立定位编号索引，之后的补丁可修改刚插入的行</td>
+<td>vendor/include/src/index.ts，applyEntryPatches，57–126 行</td>
+<td>实现；app-boot/tests/config-dump.spec.ts 109–142</td>
+<td>补丁按序执行；不存在的目标告警后跳过</td>
+</tr>
+<tr>
+<td>L09-C06</td>
+<td>修改是逐个覆盖配置条目的顶层字段；配置对象是整个替换；名称是匹配护栏</td>
+<td>同上 applyEntryPatches；packages/bundle/base/cordis.patch.yml 1–13</td>
+<td>实现、配置说明</td>
+<td>换整张配置页；不是深合并；名称不是直接重命名指令</td>
+</tr>
+<tr>
+<td>L09-C07</td>
+<td>启动与验收创建插件上下文、装装配器、执行 prepare 回调、挂配置文件入口、等待并检查激活；失败回收根插件安装实例</td>
+<td>packages/boot/app-boot/src/index.ts，772–805 行</td>
+<td>实现；tests/app-boot.spec.ts assertEntriesActivated</td>
+<td>安装再验收；主动提前退出的已释放树有特殊返回分支</td>
+</tr>
+<tr>
+<td>L09-C08</td>
+<td>普通存活树中启用行必须激活；未解析模块、失败或缺依赖被启动审计报告</td>
+<td>packages/boot/app-boot/src/index.ts，assertEntriesLoaded、assertEntriesActivated</td>
+<td>实现、测试</td>
+<td>“行存在”不能证明可用；disabled 行被忽略</td>
+</tr>
+<tr>
+<td>L09-C09</td>
+<td>激活由注入依赖可用性驱动，配置行顺序不定义执行顺序</td>
+<td>vendor/cordis/src/fiber.ts，_refresh、_setEpoch；base/cordis.patch.yml 12–13</td>
+<td>实现、配置说明</td>
+<td>通电条件；不等于操作系统线程调度</td>
+</tr>
+<tr>
+<td>L09-C10</td>
+<td>patchReload 运行中更新才安装用户补丁监听；仅启动时应用仍应用用户层但本次运行不监听修改</td>
+<td>apps/cli/src/profile-boot.ts runProfile 后半段；profile.ts PROFILE_TEMPLATES</td>
+<td>实现、配置</td>
+<td>本讲只介绍边界，不展开 HMR 事务算法</td>
+</tr>
+</tbody></table>
+<p>公开阅读时源码链接固定为 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/">https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/</a> 加上上述相对路径。</p>
+</article></main></html>

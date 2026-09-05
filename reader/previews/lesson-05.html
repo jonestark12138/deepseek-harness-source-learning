@@ -47,96 +47,43 @@
 </head>
 <body>
   <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-05.html#doc-0">学习导航</a><a href="../previews/lesson-05.html#doc-1">视觉课件</a><a href="../previews/lesson-05.html#doc-2">逐步讲解</a><a href="../previews/lesson-05.html#doc-3">练习与答案</a><a href="../previews/lesson-05.html#doc-4">分享稿</a><a href="../previews/lesson-05.html#doc-5">术语词典</a></nav>
-  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第五讲 · 给陌生 package 做一次六站验货</h1>
-<blockquote>
-<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。样本选择 <code>packages/core/session/</code>。</p>
-</blockquote>
-<p>这一讲只追一个问题：<strong>打开一个陌生 package 时，怎样快速建立可靠模型，而不是从第一行漫游到最后一行？</strong></p>
-<p>主比喻是工业包裹验货：说明牌告诉你作者想交付什么；运输标签告诉你允许从哪扇门进入；实现是机器；测试是压力报告；真实调用方是买家回单。六份证据相互校验，才算“读懂”。</p>
-<h2>建议顺序</h2>
-<table>
-<thead>
-<tr>
-<th>时间</th>
-<th>做什么</th>
-<th>带走什么</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>10 分钟</td>
-<td>看 <a href="../previews/lesson-05.html#doc-1">视觉课件</a></td>
-<td>记住六站验货顺序</td>
-</tr>
-<tr>
-<td>40 分钟</td>
-<td>读 <a href="../previews/lesson-05.html#doc-2">逐步讲解</a></td>
-<td>给 Session 写一张 package 阅读卡</td>
-</tr>
-<tr>
-<td>20 分钟</td>
-<td>跟读五个源码站点</td>
-<td>README → manifest → implementation → tests → caller</td>
-</tr>
-<tr>
-<td>15 分钟</td>
-<td>做 <a href="../previews/lesson-05.html#doc-3">练习与答案</a></td>
-<td>区分确认、推断与未验证</td>
-</tr>
-<tr>
-<td>5 分钟</td>
-<td>试讲 <a href="../previews/lesson-05.html#doc-4">分享稿</a></td>
-<td>把方法迁移到任意 package</td>
-</tr>
-</tbody></table>
-<h2>完成标准</h2>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第5讲学习导航 · 会话日志：把第一次证据带到下一次请求</h1>
+<p>第一讲已经看到完整任务；第四讲的工程地图只是查找帮助。现在直接走进会话包，验证记录如何支撑持续工作。</p>
+<p>本讲只追一个问题：<strong>第一次读到的测试报告，怎样成为下一次模型判断的材料？</strong></p>
+<h2>怎样阅读</h2>
+<p>先看<a href="../previews/lesson-05.html#doc-1">视觉课件</a>建立画面，再读<a href="../previews/lesson-05.html#doc-2">逐步讲解</a>把证据接起来。用<a href="../previews/lesson-05.html#doc-3">练习</a>检查能否解释失败分支；最后借<a href="../previews/lesson-05.html#doc-4">分享稿</a>讲给别人听。<a href="../previews/lesson-05.html#doc-5">词典</a>是随用随查的工具，不需要预先背诵。</p>
+<p>现在必须懂的是本讲问题与答案；源码符号只在定位时保留原拼写，代码中的标识不作破坏性翻译。TypeScript 是本项目主要源码语言，JavaScript 是其运行语义基础；Cordis 是项目使用的插件组织框架。对照 Java 只帮助理解，不意味着机制逐项相同。</p>
+<h2>学会的判断标准</h2>
 <ol>
-<li>不看提示说出 README、manifest、public entry、implementation、tests、callers 六站。</li>
-<li>用一句话说明 Session 的职责与明确不负责的事。</li>
-<li>从 manifest 找到主入口和 subpath exports。</li>
-<li>用一个测试说明失败边界，用一个调用方说明主链位置。</li>
-<li>阅读结论能标记为“已确认、合理推断、仍未验证”。</li>
+<li>从日志追到派生消息再找到调用者。</li>
+<li>区分内存追加与持久化完成。</li>
+<li>用意图、契约、实现、测试和调用证据读包。</li>
 </ol>
-<h2>可直接打开的成品</h2>
-<ul>
-<li><a href="../previews/lesson-05.html">整讲浏览版</a></li>
-<li><a href="../evidence/lesson-05.html">源码事实矩阵</a></li>
-<li><a href="../assets/lesson-05/reader/fig-01-six-stations.png">代表插图：六站验货法</a></li>
-</ul>
+<h2>在全书中的位置</h2>
+<p>主线建议：第一讲 → 第五讲 → 第九讲 → 第六讲 → 第七讲 → 第八讲。第二至四讲是语法与工程地图补课；编号保留以兼容旧链接。这是学习顺序，不是程序执行顺序。</p>
+<p>下一站：<a href="../previews/lesson-09.html#doc-2">第9讲</a>。日志、工具和模型分属不同能力，启动时怎样装到同一工作台？</p>
+<p><a href="../previews/lesson-05.html">本讲浏览版</a> · <a href="../evidence/lesson-05.html">源码证据</a></p>
 </article>
-<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第五讲视觉课件 · 看一间工坊，要核对六份证据</h1>
-<h2>1. 六站验货，不从 index.ts 第一行硬啃</h2>
-<p><img src="../assets/lesson-05/reader/fig-01-six-stations.png" alt="机器人依次核对说明牌、运输标签、公开入口、实现机器、测试报告和真实调用方"></p>
-<blockquote>
-<p>README 提供方向，不是终审判决；调用方和测试经常暴露文档没写出的真实边界。</p>
-</blockquote>
-<h2>2. Session 是日志本，不是第二个模型</h2>
-<p><img src="../assets/lesson-05/reader/fig-02-session-journal.png" alt="事件持续写入 Session 日志，模型消息从日志派生后交给模型大脑"></p>
-<blockquote>
-<p>日志是事实源；<code>deriveMessages()</code> 是投影。Session 本包不执行模型调用，持久化也由独立后端负责。</p>
-</blockquote>
-<h2>3. Manifest 画门，不描述门后的机器</h2>
-<p><img src="../assets/lesson-05/reader/fig-03-public-doors.png" alt="package manifest 标出主入口和多个公开侧门，并限制发布文件"></p>
-<blockquote>
-<p><code>exports</code> 能证明允许怎样导入；不能单独证明函数语义、性能或生命周期。</p>
-</blockquote>
-<h2>4. 测试像夹具，钉住正常与失败边界</h2>
-<p><img src="../assets/lesson-05/reader/fig-04-test-clamps.png" alt="工作台一边验证日志派生消息，一边拒绝非 JSON 数据和外部突变"></p>
-<blockquote>
-<p>好测试不仅证明“能跑”，还展示输入被拒绝的位置与对象不可变约束。</p>
-</blockquote>
-<h2>5. 反向找买家，验证 package 在主链的位置</h2>
-<p><img src="../assets/lesson-05/reader/fig-05-reverse-callers.png" alt="Agent Loop 向 Session 追加事件，从 Session 派生消息，再把消息交给模型"></p>
-<blockquote>
-<p>这两条真实调用把 README 的核心说法闭环：loop 写日志，也从同一日志取模型历史。</p>
-</blockquote>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第5讲视觉课件 · 会话日志：把第一次证据带到下一次请求</h1>
+<p>第一讲已经看到完整任务；第四讲的工程地图只是查找帮助。现在直接走进会话包，验证记录如何支撑持续工作。</p>
+<p>每张图只帮助回答一个问题。看完图后，请用一句话解释图中的动作或边界，再到<a href="../previews/lesson-05.html#doc-2">逐步讲解</a>核对源码。</p>
+<h2>1. 日志和模型可见消息为什么不是同一件东西？</h2>
+<p><img src="../assets/lesson-05/reader/fig-02-session-journal.png" alt="日志和模型可见消息为什么不是同一件东西？"></p>
+<p>纸面报告只示意从案卷整理材料，不表示消息投影仅筛选一份报告或只有文本。</p>
+<h2>2. 会话是否直接调用模型？</h2>
+<p><img src="../assets/lesson-05/reader/fig-05-reverse-callers.png" alt="会话是否直接调用模型？"></p>
+<p>箭头区分函数调用与数据返回；中央文字明确控制者，日志与大脑不会自行连接。</p>
+<h2>把图连成一句话</h2>
+<p>从日志追到派生消息再找到调用者；区分内存追加与持久化完成；用意图、契约、实现、测试和调用证据读包。这些不是互不相干的名词，而是在回答“第一次读到的测试报告，怎样成为下一次模型判断的材料？”。</p>
+<p>日志、工具和模型分属不同能力，启动时怎样装到同一工作台？</p>
 </article>
-<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第五讲逐步讲解 · README 是路牌，证据链才是地图</h1>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第五讲逐步讲解 · README（包说明文档）是路牌，证据链才是地图</h1>
 <blockquote>
 <p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。</p>
 </blockquote>
-<p>读陌生 package 最怕两种极端：只看 README 就下结论，或者从 <code>index.ts</code> 第一行一路陷进实现细节。更稳的做法是固定走六站，每站只回答它擅长的问题。</p>
+<p>读陌生代码包最怕两种极端：只看 README（包说明文档）就下结论，或者从 <code>index.ts</code> 第一行一路陷进实现细节。更稳的做法是固定走六站，每站只回答它擅长的问题。</p>
 <h2>一、六站验货法</h2>
-<p><img src="../assets/lesson-05/reader/fig-01-six-stations.png" alt="六站 package 验货"></p>
+<p>先明确工作问题：助手读完报告后，下次请求不能只靠“我记得”。我们要找到可追溯的记录、派生材料和真正发请求的调用方。六站方法服务于这个问题，不是为了填满六个格子。</p>
 <table>
 <thead>
 <tr>
@@ -146,80 +93,82 @@
 </tr>
 </thead>
 <tbody><tr>
-<td>README</td>
+<td>README（包说明文档）</td>
 <td>作者说它负责什么、边界是什么</td>
 <td>当前实现一定完全吻合</td>
 </tr>
 <tr>
-<td>package.json</td>
-<td>名称、入口、exports、依赖、发布文件</td>
+<td><code>package.json</code>（包清单）</td>
+<td>名称、入口、公开导出、依赖、发布文件</td>
 <td>函数的真实行为</td>
 </tr>
 <tr>
-<td>public entry</td>
+<td>公开入口</td>
 <td>消费者能拿到哪些符号</td>
 <td>所有内部细节</td>
 </tr>
 <tr>
-<td>implementation</td>
+<td>实现</td>
 <td>关键状态怎样变化、错误在哪里抛</td>
 <td>所有路径都被验证过</td>
 </tr>
 <tr>
-<td>tests</td>
+<td>测试</td>
 <td>哪些正常与异常行为被钉住</td>
 <td>未覆盖场景也正确</td>
 </tr>
 <tr>
-<td>callers</td>
+<td>调用方</td>
 <td>谁真实使用、用在主链哪里</td>
 <td>所有潜在消费者</td>
 </tr>
 </tbody></table>
 <p>顺序不是死规定。它的价值是迫使自己不断区分“意图、契约、实现、验证、使用”。</p>
-<h2>二、第一站：README 先建立假说</h2>
-<p>Session README 的 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/README.md#L10-L12"><code>Summary</code></a> 给出一组强主张：</p>
+<h2>二、第一站：README（包说明文档）先建立假说</h2>
+<p>带着这个问题，先从作者的职责说明得到待验证假说。</p>
+<p>会话 README（包说明文档）的 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/README.md#L10-L12"><code>Summary</code></a> 给出一组强主张：</p>
 <ul>
-<li>Session 是 append-only 事件日志；</li>
+<li>Session（会话）是 append-only（仅追加）事件日志；</li>
 <li>日志是模型可见事实的单一来源；</li>
-<li>LLM 消息由 <code>deriveMessages()</code> 派生，不另外保存；</li>
-<li>in-memory store 暴露为 <code>ctx.sessions</code>；</li>
-<li>持久化由独立 backend 监听事件并响应 flush；</li>
+<li>大语言模型消息由 <code>deriveMessages()</code> 派生，不另外保存；</li>
+<li>内存存储暴露为 <code>ctx.sessions</code>；</li>
+<li>持久化由独立后端实现监听事件并响应持久化等待；</li>
 <li>这个包本身不发起模型调用。</li>
 </ul>
-<p>先把它们写成“待核对假说”，而不是立即当成最终事实。README 的 source map 还告诉我们关键入口在 <code>src/index.ts</code>，投影逻辑在 <code>src/surface.ts</code>，JSON 边界在 <code>src/json.ts</code>。</p>
-<h2>三、第二站：Manifest 看身份、门和货单</h2>
+<p>先把它们写成“待核对假说”，而不是立即当成最终事实。README（包说明文档）的源码导航还告诉我们关键入口在 <code>src/index.ts</code>，投影逻辑在 <code>src/surface.ts</code>，JSON（结构化数据格式）边界在 <code>src/json.ts</code>。</p>
+<h2>三、第二站：包清单看身份、门和货单</h2>
+<p>说明文档只是路牌。要进入实现，需要先知道这个包向外开了哪些门，以及实际文件在哪里。</p>
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/package.json#L13-L45"><code>package.json#L13-L45</code></a> 说明：</p>
 <ul>
-<li>这是 ESM package；</li>
+<li>这是标准模块机制代码包；</li>
 <li>主运行入口是 <code>lib/index.js</code>，类型入口是 <code>lib/types/index.d.ts</code>；</li>
 <li>还公开 <code>./invariant</code>、<code>./types</code>、<code>./chunk-rows</code>、<code>./surface</code> 等侧门；</li>
-<li>发布货单限制在 <code>lib</code> 中的 JS 与 <code>.d.ts</code>。</li>
+<li>发布货单限制在 <code>lib</code> 中的 JavaScript（运行代码）与 <code>.d.ts</code>。</li>
 </ul>
-<p><img src="../assets/lesson-05/reader/fig-03-public-doors.png" alt="Manifest 标出公开门"></p>
-<p>peerDependencies 告诉我们它期望与 brand、llm、scope、cordis 等包协作，但依赖声明仍不是调用证据。要知道它怎样使用 Message 或 Cordis Service，继续读公开入口与实现。</p>
+<p><code>peerDependencies</code>（协作依赖声明）告诉我们它期望与品牌标识、大语言模型、服务可见范围、cordis（插件框架包） 等包协作，但依赖声明仍不是调用证据。要知道它怎样使用消息或 Cordis 服务能力，继续读公开入口与实现。</p>
 <h2>四、第三、四站：入口和实现验证核心机器</h2>
-<p><code>src/index.ts</code> 既导出 Session 相关类型与辅助函数，也实现 <code>Session</code> 和 <code>SessionStore</code>。先围绕 README 的核心主张寻找最小证据。</p>
-<h3>1. 日志是否真是 append-only</h3>
+<p>入口已经找到，现在只核对与测试证据有关的三件事：怎样写入、怎样取出、何时算保存完成。</p>
+<p><code>src/index.ts</code> 既导出会话相关类型与辅助函数，也实现 <code>Session</code> 和 <code>SessionStore</code>。先围绕 README（包说明文档）的核心主张寻找最小证据。</p>
+<h3>1. 日志是否真是仅追加</h3>
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L423-L445"><code>Session</code></a> 内部有 <code>private log: SessionEvent[] = []</code>。</p>
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L602-L646"><code>append()</code></a> 的顺序是：</p>
 <ol>
-<li>快照并验证 JSON；</li>
+<li>快照并验证 JSON（结构化数据格式）；</li>
 <li>建立 <code>seq = log.length</code> 的冻结事件；</li>
-<li>让 surface 预先验证；</li>
+<li>让 surface（消息投影结构）预先验证；</li>
 <li><code>log.push(event)</code>；</li>
 <li>通知观察者并返回事件。</li>
 </ol>
 <p>这支持“追加日志”的说法，而且异常会尽量在进入日志之前暴露。</p>
 <h3>2. 模型消息是否另存一份</h3>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L699-L744"><code>deriveMessages()</code></a> 遍历 surface 节点，把对应事件投影成 Message，并缓存已处理位置；每次返回一个新数组，里面复用被冻结的消息对象。</p>
-<p><img src="../assets/lesson-05/reader/fig-02-session-journal.png" alt="Session 日志派生模型消息"></p>
-<p>因此模型历史不是与日志并列维护的第二份真相，而是可重建投影。surface replace 会改变未来投影，却不删除原始日志事件。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L699-L744"><code>deriveMessages()</code></a> 遍历消息投影结构节点，把对应事件投影成消息，并缓存已处理位置；每次返回一个新数组，里面复用被冻结的消息对象。</p>
+<p><img src="../assets/lesson-05/reader/fig-02-session-journal.png" alt="会话日志派生模型消息"></p>
+<p>因此模型历史不是与日志并列维护的第二份真相，而是可重建投影。消息投影结构替换会改变未来投影，却不删除原始日志事件。</p>
 <h3>3. 生命周期和持久化在哪里</h3>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L790-L838"><code>SessionStore</code></a> 继承 Cordis <code>Service</code>。普通 <code>create()</code> 把 Session 绑定到调用 fiber 的 effect 生命周期。</p>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L1010-L1036"><code>flush()</code></a> 收集 durability listener，等待所有 listener settled；若有失败，再抛出首个失败。它负责“等待落盘屏障”，却不在本包中实现磁盘后端。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L790-L838"><code>SessionStore</code></a> 继承 Cordis <code>Service</code>。普通 <code>create()</code> 把会话的清理责任绑定到调用它的插件安装实例。这里先理解成“谁创建，就登记在谁的资源账下”；第六讲再展开副作用登记机制。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L1010-L1036"><code>flush()</code></a> 收集持久化完成约定监听器，等待所有监听器结束；若有失败，再抛出首个失败。它负责“等待落盘屏障”，却不在本包中实现磁盘后端。</p>
 <h2>五、第五站：测试钉住边界</h2>
-<p><img src="../assets/lesson-05/reader/fig-04-test-clamps.png" alt="测试夹具同时钉住正常与失败路径"></p>
+<p>实现看上去合理，还需要异常测试帮我们确定边界，尤其不能让外部修改悄悄改写旧证据。</p>
 <p>测试文件很大，不要顺序通读。围绕主张用测试名搜索：</p>
 <ul>
 <li><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/tests/session.spec.ts#L23-L61"><code>derives message history from the event log</code></a>：验证派生消息；</li>
@@ -227,43 +176,44 @@
 <li><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/tests/session.spec.ts#L471-L497"><code>rejects non-JSON-serializable event data</code></a>：验证失败发生在源头；</li>
 <li><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/tests/session.spec.ts#L759-L777"><code>snapshots append data</code></a>：验证调用者随后改原对象也不会改日志。</li>
 </ul>
-<p>这些测试把“append-only”从一句设计口号拆成可观察约束：连续序号、输入快照、深冻结、拒绝不可持久化数据。</p>
+<p>这些测试把“仅追加”从一句设计口号拆成可观察约束：连续序号、输入快照、深冻结、拒绝不可持久化数据。</p>
 <h2>六、第六站：反向找真实调用方</h2>
-<p>现在从 <code>append(</code>、<code>deriveMessages(</code> 反向搜索。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L252-L330"><code>agent-loop/src/agent.ts#L252-L330</code></a> 在 turn 和 step 边界追加事件，也把用户消息写入 Session。</p>
+<p>测试说明局部行为，仍没有回答模型在哪儿使用它。最后反向找真正的调用者，才能回到第一讲的任务。</p>
+<p>现在从 <code>append(</code>、<code>deriveMessages(</code> 反向搜索。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L252-L330"><code>agent-loop/src/agent.ts#L252-L330</code></a> 在一轮处理和一步模型交互边界追加事件，也把用户消息写入会话。</p>
 <p>随后 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L339-L366"><code>agent.ts#L339-L366</code></a> 在构建模型请求时调用 <code>session.deriveMessages()</code>。</p>
 <p><img src="../assets/lesson-05/reader/fig-05-reverse-callers.png" alt="真实调用方闭环"></p>
-<p>这形成闭环：Agent Loop 把发生的事情写入 Session，又从同一 Session 派生模型要看的消息。模型调用发生在 loop 的 LLM 边界，不在 Session 包里。</p>
-<h2>七、写一张 package 阅读卡</h2>
+<p>这形成闭环：智能体循环驱动把发生的事情写入会话，又从同一会话派生模型要看的消息。模型调用发生在循环驱动的大语言模型边界，不在会话包里。</p>
+<h2>七、写一张代码包阅读卡</h2>
 <table>
 <thead>
 <tr>
 <th>维度</th>
-<th>Session 的当前答案</th>
+<th>会话的当前答案</th>
 </tr>
 </thead>
 <tbody><tr>
 <td>一句话职责</td>
-<td>保存 append-only 事件日志，并提供派生消息与内存 SessionStore</td>
+<td>保存仅追加事件日志，并提供派生消息与内存 SessionStore（会话存储服务）</td>
 </tr>
 <tr>
 <td>主要输入</td>
-<td>typed SessionEvent、创建元数据、flush 请求</td>
+<td>有类型约束的 SessionEvent（会话事件类型）、创建元数据、持久化等待请求</td>
 </tr>
 <tr>
 <td>主要输出</td>
-<td>冻结事件、派生 Message[]、Session 生命周期事件</td>
+<td>冻结事件、派生消息数组、会话生命周期事件</td>
 </tr>
 <tr>
 <td>关键依赖</td>
-<td>Cordis Service、LLM Message 类型、brand/scope/invariant 等</td>
+<td>Cordis 服务能力、大语言模型消息类型、品牌标识、范围与一致性约束等</td>
 </tr>
 <tr>
 <td>生命周期</td>
-<td>普通 create 绑定调用 fiber；Agent 可用更细事务路径</td>
+<td>普通创建绑定调用者所属安装实例的生命周期；智能体可用更细事务路径</td>
 </tr>
 <tr>
 <td>失败边界</td>
-<td>非 lossless JSON、非法 surface、重复 ID、flush listener 失败</td>
+<td>非无损 JSON（结构化数据格式）数据、非法消息投影结构、重复定位编号、持久化等待监听器失败</td>
 </tr>
 <tr>
 <td>明确不负责</td>
@@ -271,15 +221,15 @@
 </tr>
 <tr>
 <td>关键验证</td>
-<td>session.spec.ts 的派生、快照、冻结、拒绝测试</td>
+<td><code>session.spec.ts</code>（会话测试文件）的派生、快照、冻结、拒绝测试</td>
 </tr>
 <tr>
 <td>真实调用方</td>
-<td>agent-loop 写事件并取派生消息；API/persistence 等也消费服务</td>
+<td><code>agent-loop</code>（循环驱动包）写事件并取派生消息；接口与持久化后端等也消费服务</td>
 </tr>
 </tbody></table>
-<p>这张卡不是终点，而是决定下一步深入哪里。若要研究 crash repair，再转 <code>repair.ts</code>；若要研究持久化，再进入 session-persistence，而不是继续扩张 <code>index.ts</code> 阅读范围。</p>
-<h2>八、把方法迁移到任意 package</h2>
+<p>这张卡不是终点，而是决定下一步深入哪里。若要研究崩溃恢复，再转 <code>repair.ts</code>；若要研究持久化，再进入 <code>session-persistence</code>（会话持久化包），而不是继续扩张 <code>index.ts</code> 阅读范围。</p>
+<h2>八、把方法迁移到任意代码包</h2>
 <p>每读一个包，只写三类句子：</p>
 <ul>
 <li><strong>已确认</strong>：有实现、测试或调用方证据；</li>
@@ -288,147 +238,110 @@
 </ul>
 <p>这会阻止“看见名字就猜职责”和“看见依赖就猜调用”两种常见错误。</p>
 <h2>九、一句话总结</h2>
-<p>README 给方向，manifest 画边界，入口展示契约，实现揭示机制，测试钉住失败，调用方验证位置。六站闭环后，才算真正读懂一个 package 的骨架。</p>
+<p>README（包说明文档）给方向，包清单画边界，入口展示契约，实现揭示机制，测试钉住失败，调用方验证位置。六站闭环后，才算真正读懂一个代码包的骨架。</p>
+<h2>接着追同一个问题</h2>
+<p>日志、工具和模型分属不同能力，启动时怎样装到同一工作台？ 下一站不是再背几个启动术语，而是核对同一工作台在任务到达前怎样装好。</p>
+<p><a href="../previews/lesson-09.html#doc-2">继续第9讲</a></p>
 </article>
 <article id="doc-3"><div class="doc-label">练习与答案</div><h1>第五讲练习与答案</h1>
-<h2>练习 1：README 能证明到哪里</h2>
-<p>判断：“README 说 Session 不调用模型，所以无需再检查。”</p>
+<h2>练习 1：README（包说明文档）能证明到哪里</h2>
+<p>判断：“README（包说明文档）说会话不调用模型，所以无需再检查。”</p>
 <details><summary>展开答案</summary>
 
-<p>不够。README 是高价值意图证据，还应搜索 Session 实现是否出现模型调用，并反向看 agent-loop 在哪里真正调用 LLM。当前固定提交的 caller 证据支持模型调用在 loop，不在 Session。</p>
+<p>不够。README（包说明文档）是高价值意图证据，还应搜索会话实现是否出现模型调用，并反向看 <code>agent-loop</code>（循环驱动包）在哪里真正调用大语言模型。当前固定提交的调用方证据支持模型调用在循环驱动，不在会话。</p>
 </details>
 
-<h2>练习 2：exports 的证明力</h2>
-<p>从 <code>&quot;./surface&quot;</code> export 可以确认什么，不能确认什么？</p>
+<h2>练习 2：公开导出的证明力</h2>
+<p>从 <code>&quot;./surface&quot;</code> 导出可以确认什么，不能确认什么？</p>
 <details><summary>展开答案</summary>
 
-<p>可确认消费者被允许通过该 subpath 导入相应运行文件和类型文件；不能仅凭 manifest 确认 surface 的算法、性能或异常语义。</p>
+<p>可确认消费者被允许通过该子路径导入相应运行文件和类型文件；不能仅凭包清单确认消息投影结构的算法、性能或异常语义。</p>
 </details>
 
-<h2>练习 3：append-only 不只是没有 delete</h2>
+<h2>练习 3：仅追加不只是没有删除</h2>
 <p>请列出测试进一步钉住的两个约束。</p>
 <details><summary>展开答案</summary>
 
-<p>例如：append 会快照调用者数据，随后修改原对象不影响日志；事件及派生消息被冻结；非 lossless JSON 在 append 入口被拒绝；seq 由 log.length 连续生成。任答两个即可。</p>
+<p>例如：追加会快照调用者数据，随后修改原对象不影响日志；事件及派生消息被冻结；非无损 JSON（结构化数据格式）数据在追加入口被拒绝；seq（连续事件序号） 由 log.length（日志当前长度） 连续生成。任答两个即可。</p>
 </details>
 
 <h2>练习 4：持久化边界</h2>
-<p><code>ctx.sessions.flush(session)</code> 是否表示 Session 包自己把文件写到磁盘？</p>
+<p><code>ctx.sessions.flush(session)</code> 是否表示会话包自己把文件写到磁盘？</p>
 <details><summary>展开答案</summary>
 
-<p>不是。它收集并等待 durability listeners，相当于发起并等待持久化屏障；具体后端由独立 persistence package 提供。</p>
+<p>不是。它收集并等待持久化完成约定监听器，相当于发起并等待持久化屏障；具体后端由独立持久化代码包提供。</p>
 </details>
 
 <h2>练习 5：真实主链</h2>
-<p>请用两个动词描述 agent-loop 与 Session 的关系。</p>
+<p>请用两个动词描述 <code>agent-loop</code>（循环驱动包）与会话的关系。</p>
 <details><summary>展开答案</summary>
 
-<p>“追加”和“派生”：loop 把 turn、step、消息等事件 append 到 Session；构建模型请求时从同一 Session deriveMessages。</p>
+<p>“追加”和“派生”：循环驱动把一轮处理、一步模型交互、消息等事件追加到会话；构建模型请求时从同一会话 deriveMessages（消息派生方法）。</p>
 </details>
 
 <h2>练习 6：迁移方法</h2>
-<p>任选一个 package，写出六站路径，并至少标记一个“仍未验证”问题。</p>
+<p>任选一个代码包，写出六站路径，并至少标记一个“仍未验证”问题。</p>
 <details><summary>展开答案</summary>
 
-<p>答案结构应包含 README、package.json、公开入口、关键实现、测试、调用方。未验证项可以是并发语义、失败恢复、平台差异或性能，但不能在无证据时写成结论。</p>
+<p>答案结构应包含 README（包说明文档）、<code>package.json</code>（包清单）、公开入口、关键实现、测试、调用方。未验证项可以是并发语义、失败恢复、平台差异或性能，但不能在无证据时写成结论。</p>
 </details>
 </article>
-<article id="doc-4"><div class="doc-label">分享稿</div><h1>第五讲分享稿 · 不要从 index.ts 第一行开始迷路</h1>
-<p>读陌生 package，我使用六站验货法。</p>
-<p>第一站 README，建立职责假说；第二站 package.json，看身份、公开入口、依赖和发布货单；第三站 public entry，看消费者能拿到什么；第四站 implementation，追一个关键状态变化；第五站 tests，用测试名找正常与失败边界；第六站 callers，反向确认谁在主链中真实使用。</p>
-<p>以 Session 为例，README 说它是 append-only 日志，模型消息由日志派生，持久化是独立关注点。实现里 <code>append()</code> 验证、冻结并按连续 seq 推入 log，<code>deriveMessages()</code> 从 surface 投影消息。测试钉住不可变与非 JSON 拒绝。真实调用方 agent-loop 一边写 turn、step 和 message 事件，一边在模型请求前取派生消息。</p>
-<p>因此我们得到的不是“Session 大概和聊天有关”，而是一张有边界的阅读卡：它保存事件与派生消息，生命周期由 SessionStore 管理，不自己调用模型，也不实现具体持久化后端。</p>
-<p>README 是路牌，证据链才是地图。</p>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第5讲分享稿 · 会话日志：把第一次证据带到下一次请求</h1>
+<h2>开场：从同一任务说起</h2>
+<p>我们让助手排查一个 Java 测试失败。第一讲已经看到完整任务；第四讲的工程地图只是查找帮助。现在直接走进会话包，验证记录如何支撑持续工作。 今天不讲一串孤立术语，只回答：第一次读到的测试报告，怎样成为下一次模型判断的材料？</p>
+<h2>三分钟讲清</h2>
+<ol>
+<li>从日志追到派生消息再找到调用者。先用下面的比喻建立直觉，再回到逐步讲解中的源码证据。</li>
+<li>区分内存追加与持久化完成。先用下面的比喻建立直觉，再回到逐步讲解中的源码证据。</li>
+<li>用意图、契约、实现、测试和调用证据读包。先用下面的比喻建立直觉，再回到逐步讲解中的源码证据。</li>
+</ol>
+<p>Session（会话）：像可追加工作日志，记录事实并提供供模型使用的派生内容。</p>
+<p>append-only（仅追加）：新事实向后写入，不因展示方式改变就抹掉原始记录。</p>
+<p>projection（投影或派生视图）：从原始日志整理出当前要看的消息，像从全套案卷选出本轮材料。</p>
+<h2>把结论接回任务</h2>
+<p>日志、工具和模型分属不同能力，启动时怎样装到同一工作台？ 这不是另换一个故事，而是继续追问当前答案还没解释的那一部分。</p>
+<p>分享结束请对方用自己的话复述一个正常过程，再提出一种失败情况。能念出定义不算完成；能指出该查哪个源码边界，才说明形成了可用理解。</p>
 </article>
-<article id="doc-5"><div class="doc-label">术语词典</div><h1>第五讲术语与比喻词典</h1>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第5讲术语与比喻词典</h1>
+<p>遇到陌生词，先回到这个问题：第一次读到的测试报告，怎样成为下一次模型判断的材料？ 以下是查阅页，正文会在需要时解释关键概念。英文只用于和源码对照；它不是额外的背诵任务。</p>
 <table>
 <thead>
 <tr>
-<th>英文 / 概念</th>
-<th>先这样理解</th>
-<th>技术含义</th>
-<th>比喻边界</th>
+<th>英文与中文</th>
+<th>直觉、实际职责与边界</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>README</td>
-<td>包裹说明牌</td>
-<td>维护者写的用途、边界与导航</td>
-<td>可能落后于实现，需校验</td>
+<td>Session（会话）</td>
+<td>像可追加工作日志，记录事实并提供供模型使用的派生内容。</td>
 </tr>
 <tr>
-<td>Manifest / package.json</td>
-<td>运输标签</td>
-<td>包身份、入口、依赖、脚本、发布文件</td>
-<td>不描述全部运行行为</td>
+<td>append-only（仅追加）</td>
+<td>新事实向后写入，不因展示方式改变就抹掉原始记录。</td>
 </tr>
 <tr>
-<td>Public entry</td>
-<td>正门</td>
-<td>消费者支持使用的导出入口</td>
-<td>内部文件可存在但不稳定</td>
+<td>projection（投影或派生视图）</td>
+<td>从原始日志整理出当前要看的消息，像从全套案卷选出本轮材料。</td>
 </tr>
 <tr>
-<td>Subpath export</td>
-<td>有门牌的侧门</td>
-<td><code>package-name/subpath</code> 形式的公开入口</td>
-<td>只开放指定路径</td>
+<td>surface（消息投影结构）</td>
+<td>源码用来组织哪些日志内容呈现给模型的结构，不是网页界面。</td>
 </tr>
 <tr>
-<td>Implementation</td>
-<td>真正的机器</td>
-<td>状态、算法、生命周期和异常的代码实现</td>
-<td>单看实现仍不知哪些行为被测试</td>
+<td>SessionStore（会话存储服务）</td>
+<td>管理内存中的会话及生命周期，不等于具体磁盘数据库。</td>
 </tr>
 <tr>
-<td>Test</td>
-<td>压力测试报告</td>
-<td>对可观察行为和边界的自动验证</td>
-<td>未覆盖不等于正确</td>
+<td>durability（持久可靠性）</td>
+<td>让记录在进程结束后仍可保存的要求；需要后端执行，不能只靠内存存在。</td>
 </tr>
 <tr>
-<td>Caller / consumer</td>
-<td>买家回单</td>
-<td>实际导入或调用该 package 的代码</td>
-<td>一个调用方不代表全部用途</td>
-</tr>
-<tr>
-<td>Reverse search</td>
-<td>反查买家</td>
-<td>从符号名或方法调用向外找消费者</td>
-<td>文本命中仍要读上下文</td>
-</tr>
-<tr>
-<td>Append-only</td>
-<td>只增不改的日志</td>
-<td>新事件追加，既有事件不原地改写</td>
-<td>派生视图仍可替换或压缩</td>
-</tr>
-<tr>
-<td>Event sourcing</td>
-<td>以流水还原状态</td>
-<td>把事件流作为事实源，其他视图从中派生</td>
-<td>不代表自动拥有持久化</td>
-</tr>
-<tr>
-<td>Projection</td>
-<td>从日志抄工作单</td>
-<td>从事件流计算模型消息等视图</td>
-<td>不是第二份独立真相</td>
-</tr>
-<tr>
-<td>Lifecycle</td>
-<td>工坊开关与交接</td>
-<td>创建、注册、使用、释放的时序与所有权</td>
-<td>不只等于 constructor/destructor</td>
-</tr>
-<tr>
-<td>Failure boundary</td>
-<td>验货拒收点</td>
-<td>非法输入或依赖失败在哪一层暴露</td>
-<td>需用实现和测试共同确认</td>
+<td>flush（等待持久化屏障）</td>
+<td>等待相关持久化参与者完成；失败必须传播，不能当作保存保证。</td>
 </tr>
 </tbody></table>
+<h2>别让比喻越界</h2>
+<p>工单不是线程，通讯录不是模型的记忆，房间不是安全沙箱，图上的阅读箭头也不自动等于源码调用。遇到行为判断，回<a href="../previews/lesson-05.html#doc-2">逐步讲解</a>检查实现与异常分支。</p>
 </article></main>
 </body>
 </html>

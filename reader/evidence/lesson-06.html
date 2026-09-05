@@ -36,102 +36,102 @@
       article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
       article p>img { width:1080px; max-width:none; }
     }
-  </style><nav><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-06.html">第06讲</a></nav><main><article><h1>Lesson 06 Source Fact Matrix</h1>
+  </style><nav><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-06.html">第06讲</a></nav><main><article><h1>讲次 06 源码事实矩阵</h1>
 <blockquote>
-<p>Upstream commit：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
+<p>上游源码提交：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
 </blockquote>
 <table>
 <thead>
 <tr>
-<th>Claim ID</th>
-<th>Claim</th>
-<th>Exact evidence</th>
-<th>Evidence type</th>
-<th>Confidence</th>
-<th>Teaching simplification</th>
-<th>Boundary / uncertainty</th>
+<th>主张编号</th>
+<th>主张</th>
+<th>精确证据</th>
+<th>证据类型</th>
+<th>确认程度</th>
+<th>教学简化</th>
+<th>边界与不确定性</th>
 </tr>
 </thead>
 <tbody><tr>
 <td>L06-C01</td>
-<td>Context 是根/子依赖容器，服务属性读取经过 resolver</td>
+<td>插件上下文是根/子依赖容器，服务属性读取经过服务解析器</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/context.ts#L35-L41"><code>context.ts#L35-L41</code></a></td>
-<td>Implementation docs</td>
-<td>Confirmed</td>
+<td>实现与注释</td>
+<td>已确认</td>
 <td>工位视野</td>
 <td>不是普通全局字典</td>
 </tr>
 <tr>
 <td>L06-C02</td>
-<td><code>extend()</code> 创建原型继承的子 Context，不修改父 Context</td>
+<td><code>extend()</code> 创建原型继承的子插件上下文，不在父对象上写入这些局部元信息</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/context.ts#L90-L107"><code>context.ts#L90-L107</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
+<td>实现</td>
+<td>已确认</td>
 <td>从总工坊拉出子工位</td>
-<td>子上下文仍共享未隔离的服务视野</td>
+<td>不是深拷贝；共享引用内部修改仍可能互相影响</td>
 </tr>
 <tr>
 <td>L06-C03</td>
-<td><code>ctx.plugin()</code> 为一次安装创建新 Fiber，并把 inject 归一化后交给它</td>
+<td><code>ctx.plugin()</code> 为一次安装创建新插件安装实例，并把依赖声明归一化后交给它</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/registry.ts#L293-L335"><code>registry.ts#L293-L335</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
+<td>实现</td>
+<td>已确认</td>
 <td>蓝图生成一张安装工单</td>
-<td>同一 Plugin 可有多个 Fiber</td>
+<td>同一定义可有多个独立安装；重复安装还须服从登记器规则</td>
 </tr>
 <tr>
 <td>L06-C04</td>
-<td>Fiber 表示一次插件应用，跟踪依赖、配置、effects 与清理</td>
+<td>插件安装实例表示一次插件应用，跟踪依赖、配置、可撤销副作用与清理</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L178-L200"><code>fiber.ts#L178-L200</code></a></td>
-<td>Implementation docs</td>
-<td>Confirmed</td>
+<td>实现与注释</td>
+<td>已确认</td>
 <td>安装工单兼责任账本</td>
-<td>Fiber 不是线程或协程调度器</td>
+<td>插件安装实例不是线程或协程调度器</td>
 </tr>
 <tr>
 <td>L06-C05</td>
-<td><code>effect()</code> 立即执行 setup，收集返回的 disposer</td>
+<td><code>effect()</code> 立即执行资源创建阶段，收集返回的清理函数</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L402-L418"><code>fiber.ts#L402-L418</code></a>, <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L444-L522"><code>fiber.ts#L444-L522</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
+<td>实现</td>
+<td>已确认</td>
 <td>借资源时同时写归还条</td>
-<td>effect 可返回函数、Promise 或迭代器形态</td>
+<td>可撤销副作用可返回函数、异步结果凭据或迭代器形态</td>
 </tr>
 <tr>
 <td>L06-C06</td>
-<td>同一 effect 内的 disposers 倒序运行，重复 dispose 为 no-op</td>
+<td>同一可撤销副作用内的清理函数倒序运行，重复 dispose 为 no-op</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L424-L441"><code>fiber.ts#L424-L441</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
+<td>实现</td>
+<td>已确认</td>
 <td>后借先还</td>
-<td>Fiber 卸载时多个顶层 effects 由 <code>Promise.all</code> 清理</td>
+<td>插件安装实例卸载时多个顶层可撤销副作用由 <code>Promise.all</code> 清理</td>
 </tr>
 <tr>
 <td>L06-C07</td>
-<td>Fiber 有 pending/loading/active/failed/disposed/unloading 状态</td>
+<td>插件安装实例有 pending/loading/active/failed/disposed/unloading 状态</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L139-L154"><code>fiber.ts#L139-L154</code></a></td>
-<td>Enum contract</td>
-<td>Confirmed</td>
+<td>枚举契约</td>
+<td>已确认</td>
 <td>工单状态牌</td>
 <td>FAILED 是可观察状态，不等同进程崩溃</td>
 </tr>
 <tr>
 <td>L06-C08</td>
-<td>依赖 epoch 变化触发 reload 或 unload</td>
+<td>依赖依赖组合标识变化触发 reload 或卸载</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L611-L638"><code>fiber.ts#L611-L638</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
+<td>实现</td>
+<td>已确认</td>
 <td>插座变化，先拆再装</td>
-<td>具体触发取决于 inject 的服务实现</td>
+<td>具体触发取决于依赖声明的服务实现</td>
 </tr>
 <tr>
 <td>L06-C09</td>
-<td><code>_unload()</code> 执行登记的清理，清空 store，并可在新 epoch 下重载</td>
+<td><code>_unload()</code> 执行登记的清理，清空服务存储，并可在新依赖组合标识下重载</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L675-L695"><code>fiber.ts#L675-L695</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
+<td>实现</td>
+<td>已确认</td>
 <td>拉闸、归还、清台</td>
-<td>顶层 disposer 失败会记录日志并继续收尾</td>
+<td>顶层清理函数失败会记录日志并继续收尾</td>
 </tr>
 </tbody></table>
 </article></main></html>

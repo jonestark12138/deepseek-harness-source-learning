@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>DeepSeek Harness · 第09次-Loader配置profile-bundle与启动</title>
+  <style>
+    @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-09.html#doc-0">学习导航</a><a href="../previews/lesson-09.html#doc-1">视觉课件</a><a href="../previews/lesson-09.html#doc-2">逐步讲解</a><a href="../previews/lesson-09.html#doc-3">练习与答案</a><a href="../previews/lesson-09.html#doc-4">分享稿</a><a href="../previews/lesson-09.html#doc-5">术语词典</a></nav>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第9讲学习导航 · 装配与验收：配置写对为何还不能开工</h1>
+<p>第五讲确认会话记录怎样支撑下一次请求。现在把镜头移到任务开始以前：这些独立能力怎样被装进同一应用？</p>
+<p>本讲只追一个问题：<strong>配置值不对与插件没激活，为什么要分开查？</strong></p>
+<h2>怎样阅读</h2>
+<p>先看<a href="../previews/lesson-09.html#doc-1">视觉课件</a>建立画面，再读<a href="../previews/lesson-09.html#doc-2">逐步讲解</a>把证据接起来。用<a href="../previews/lesson-09.html#doc-3">练习</a>检查能否解释失败分支；最后借<a href="../previews/lesson-09.html#doc-4">分享稿</a>讲给别人听。<a href="../previews/lesson-09.html#doc-5">词典</a>是随用随查的工具，不需要预先背诵。</p>
+<p>现在必须懂的是本讲问题与答案；源码符号只在定位时保留原拼写，代码中的标识不作破坏性翻译。TypeScript 是本项目主要源码语言，JavaScript 是其运行语义基础；Cordis 是项目使用的插件组织框架。对照 Java 只帮助理解，不意味着机制逐项相同。</p>
+<h2>学会的判断标准</h2>
+<ol>
+<li>按来源还原最终补丁顺序。</li>
+<li>解释整份配置替换而非深合并。</li>
+<li>区分配置组合、依赖激活、启动审计与退出。</li>
+</ol>
+<h2>在全书中的位置</h2>
+<p>主线建议：第一讲 → 第五讲 → 第九讲 → 第六讲 → 第七讲 → 第八讲。第二至四讲是语法与工程地图补课；编号保留以兼容旧链接。这是学习顺序，不是程序执行顺序。</p>
+<p>下一站：<a href="../previews/lesson-06.html#doc-2">第6讲</a>。启动知道怎样验收了，依赖变化或退出时又怎样把已装资源收回？</p>
+<p><a href="../previews/lesson-09.html">本讲浏览版</a> · <a href="../evidence/lesson-09.html">源码证据</a></p>
+</article>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第9讲视觉课件 · 装配与验收：配置写对为何还不能开工</h1>
+<p>第五讲确认会话记录怎样支撑下一次请求。现在把镜头移到任务开始以前：这些独立能力怎样被装进同一应用？</p>
+<p>每张图只帮助回答一个问题。看完图后，请用一句话解释图中的动作或边界，再到<a href="../previews/lesson-09.html#doc-2">逐步讲解</a>核对源码。</p>
+<h2>1. 清单怎样变成可用设备？</h2>
+<p><img src="../assets/lesson-09/reader/fig-01-from-plan-to-workshop.png" alt="清单怎样变成可用设备？"></p>
+<p>吊机是 Loader（装配器）的装配比喻；挂载后仍需依赖和激活检查。</p>
+<h2>2. 几层补丁按什么顺序应用？</h2>
+<p><img src="../assets/lesson-09/reader/fig-02-patch-layers.png" alt="几层补丁按什么顺序应用？"></p>
+<p>阶梯表示配置应用，不是激活；追加覆盖层包含本次文件和可能的末尾遥测调整。</p>
+<h2>3. 改 <code>config</code>（配置对象）会保留旧页没写的字段吗？</h2>
+<p><img src="../assets/lesson-09/reader/fig-03-replace-page.png" alt="改 config（配置对象）会保留旧页没写的字段吗？"></p>
+<p>目录和超时为教学虚构字段；真实规则为替换整个 <code>Entry.config</code>（配置条目的设置对象），插件自己的默认值另算。</p>
+<h2>4. 为什么配置存在，插件仍不能开工？</h2>
+<p><img src="../assets/lesson-09/reader/fig-04-ready-check.png" alt="为什么配置存在，插件仍不能开工？"></p>
+<p>左侧缺必需依赖，右侧简化为已满足全部依赖并加载成功；正常存活树必须通过启动审计。</p>
+<h2>把图连成一句话</h2>
+<p>按来源还原最终补丁顺序；解释整份配置替换而非深合并；区分配置组合、依赖激活、启动审计与退出。这些不是互不相干的名词，而是在回答“配置值不对与插件没激活，为什么要分开查？”。</p>
+<p>启动知道怎样验收了，依赖变化或退出时又怎样把已装资源收回？</p>
+</article>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第九讲逐步讲解 · 为什么改了清单，机器却没按预期启动？</h1>
+<blockquote>
+<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。故事是教学比喻，配置实验不是实际启动记录。</p>
+</blockquote>
+<h2>一、先从熟悉的排障现场开始</h2>
+<p>第五讲确认会话记录怎样成为后续模型请求的材料。现在把镜头移到任务开始以前：日志、文件工具与模型能力分属不同插件，它们究竟怎样被装进同一应用？</p>
+<p>同一份代码，在网页模式和后台模式下会装出不同应用。你在某处写了配置，启动后却发现值不对；或者配置已经打印出来，插件还是没有工作。</p>
+<p>Java 工程师常会先查“到底选了哪个 Profile（装配方案）”“配置源谁覆盖谁”“受容器管理的对象有没有创建”。这个排查方向可以带过来，但这里的装配方案有具体文件结构，不能直接当成 Spring 的环境名称。</p>
+<p>我们把问题分成两次核对：<strong>纸上最终要装什么？这些设备实际能不能工作？</strong> 前一次查配置，后一次查依赖和启动结果。混在一起查，容易反复修改正确的文件，却始终找不到失败环节。</p>
+<h2>二、四个角色：方案、套装、修改单、安装员</h2>
+<p>方案像车间选装单，决定选哪几套设备。Bundle（插件套装）是带配置与代码的分发单元。Patch（配置补丁）是对装配配置的修改指令。Loader（装配器）负责把Entry（配置条目）接入插件系统。</p>
+<p><img src="../assets/lesson-09/reader/fig-01-from-plan-to-workshop.png" alt="配置清单和套装箱交给装配吊机，吊机将模块安放到工作台"></p>
+<blockquote>
+<p>本图：左侧是装配依据，右侧是安装动作。起重吊机是装配器的比喻，不是操作系统线程。</p>
+</blockquote>
+<p>看<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/bin.ts#L24-L34">入口 bin.ts（命令行入口文件）</a>，它先解析命令，再在装配方案分支调用 <code>runProfile()</code>。传入的四项分别是环境快照、方案名、补丁文件列表、交给应用的参数。插件管理和配置打印是另外的分支，不必都启动整棵应用树。</p>
+<p>随后，<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/boot/app-boot/src/profile.ts#L805-L843"><code>loadProfile()</code>（方案读取函数）</a> 读取方案的 <code>package.json</code>，看 <code>dsh.profile.bundles</code> 数组。下面是便于辨认结构的教学示例，使用本仓库已有的套装名称：</p>
+<pre><code class="language-json">{
+  &quot;dsh&quot;: {
+    &quot;profile&quot;: {
+      &quot;bundles&quot;: [
+        &quot;@deepseek-ai/dsh-base&quot;,
+        &quot;@deepseek-ai/dsh-web-app&quot;
+      ]
+    }
+  }
+}
+</code></pre>
+<p>数组表达套装层的应用顺序。每个套装自己的清单再用 <code>dsh.bundle.patch</code> 指出补丁文件。例如<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/bundle/base/package.json">基础套装</a>提供 <code>cordis.patch.yml</code>，在里面用 <code>insert</code> 插入模型、会话、工具等配置行。</p>
+<p>这里出现第五个词：<strong>配置行（配置条目）</strong>，就是“要安装哪个插件、给它什么配置、是否禁用”等信息组成的一项记录。<code>id</code> 是该行的定位编号，<code>name</code> 通常是加载模块的名称。它们不等于插件运行实例。</p>
+<h3>为什么根配置竟然是空数组？</h3>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/profile-boot.ts#L71-L120"><code>prepareProfile()</code>（方案准备函数）</a> 每次把方案目录里的 <code>cordis.yml</code> 写回 <code>[]</code>。这不矛盾：场地先清空，设备由后面的套装和补丁插入。</p>
+<p>文件存在还给加载流程一个目录锚点，便于解析相对路径。源码注释解释了重写原因：装配器的写回可能把已经组合的行留在根文件里；下次再应用套装 <code>insert</code>（插入配置行），就会重复插入。<strong>根配置是起点，最终配置是计算结果。</strong> 因此日常调整应进入相应补丁文件，而不是把这份空根文件当总配置去维护。</p>
+<h2>三、同一行被改了几次，谁最后说了算？</h2>
+<p>先看全貌，再看函数。把补丁想成轮流批改同一张装配清单：套装给初稿，方案做专项调整，本机偏好再改，本次命令还可以追加修改。</p>
+<p><img src="../assets/lesson-09/reader/fig-02-patch-layers.png" alt="由低到高的五层装配清单，最后一层遥测禁用只在条件满足时出现"></p>
+<blockquote>
+<p>本图：阶梯表示补丁应用次序；它不表示设备依次开机。图把源码最后一组展开成两种来源。</p>
+</blockquote>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/profile-boot.ts#L136-L143"><code>allPatches()</code>（补丁排序函数）</a> 是最短的顺序证据：</p>
+<pre><code class="language-ts">return [
+  ...composed.bundlePatches,
+  ...composed.profile.patches,
+  ...composed.homePatches,
+  ...composed.overlays,
+]
+</code></pre>
+<p>只关注数组展开的先后。套装按方案列出的顺序展开；之后是方案自己的 <code>cordis.patch.yml</code>；再是运行支撑系统主目录中的同名补丁；最后是叠加层（追加覆盖层），包括按参数顺序读取的 <code>--patch</code> 文件。</p>
+<p>“主目录”在这里指由 <code>resolveDshHome()</code> 解析的运行支撑系统数据目录，不是当前仓库目录。方案补丁只影响这个方案，本机补丁影响经过该启动入口的各个方案。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/profile-boot.ts#L156-L176"><code>composeProfile()</code>（方案组合函数）</a> 还可能在追加覆盖层最后加一条遥测禁用补丁：相关环境变量非空，并且配置里确有遥测行时，追加 <code>disabled: true</code>。所以“命令行永远最高优先级”不够准确。也不要据此扩展成所有环境变量都能覆盖所有 YAML（配置数据格式）字段；这里只核对了这一项显式逻辑。</p>
+<p>现在可以回答开头的第一种故障：方案文件看起来改对了，但用户数据层或本次 Overlay（追加覆盖层）又写了同一字段，最后生效的值就可能不同。</p>
+<h2>四、最容易踩坑的地方：改的是哪一层？</h2>
+<p>“后写覆盖前写”还少了一个关键细节：覆盖粒度。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/include/src/index.ts#L57-L126"><code>applyEntryPatches()</code>（配置行补丁算法）</a> 先复制输入并按行定位编号建索引，然后依次处理补丁。<code>insert</code> 添加新行，普通补丁用 <code>id</code> 找到旧行。真正修改的核心只有几行：</p>
+<pre><code class="language-ts">for (const [key, value] of Object.entries(overrides)) {
+  if (key === &#39;id&#39;) continue
+  target[key] = value
+}
+</code></pre>
+<p>这是配置条目顶层赋值。如果键是 <code>disabled</code>，改的是禁用标记；如果键是 <code>config</code>，换的就是整个配置对象。</p>
+<p><img src="../assets/lesson-09/reader/fig-03-replace-page.png" alt="改章把旧的两项配置整页换成只有一项的新配置，提示缺失项不会从旧页自动补回来"></p>
+<blockquote>
+<p>本图：“换页”对应整份配置对象替换。没有画成在旧页上补一小行，因为那会暗示深合并。</p>
+</blockquote>
+<p>下面用一个<strong>虚构插件</strong>做纸面实验。字段只为展示补丁算法，不属于项目某个真实插件：</p>
+<pre><code class="language-yaml"># 第一层：插入设备配置
+- insert:
+    - id: demo
+      name: demo-plugin
+      config:
+        directory: reports
+        timeout: 30
+</code></pre>
+<p>第二层：</p>
+<pre><code class="language-yaml">- id: demo
+  config:
+    timeout: 60
+</code></pre>
+<p>两层应用后，demo（教学示例行） 行的配置对象是 <code>{ timeout: 60 }</code>，<strong>没有 <code>directory</code>（目录字段）</strong>。旧页整张换掉了。若希望保留目录，第二层就要明确写上它。之后某插件是否通过自己的配置解析补默认目录，是另一个阶段，不能说补丁算法保留了旧值。</p>
+<p>再做三个小判断：</p>
+<table>
+<thead>
+<tr>
+<th>改法</th>
+<th>此阶段结果</th>
+<th>为什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>只写 <code>disabled: true</code></td>
+<td>原配置对象保留</td>
+<td>没覆盖配置对象字段</td>
+</tr>
+<tr>
+<td>指向不存在的定位编号</td>
+<td>告警并跳过该补丁</td>
+<td>查不到修改对象</td>
+</tr>
+<tr>
+<td>定位编号命中，但给了不同的名称</td>
+<td>告警并跳过</td>
+<td>名称在这里是目标匹配护栏，不是重命名指令</td>
+</tr>
+</tbody></table>
+<p>插入行会立即加入索引，因此后面的补丁可以修改前面刚插入的行。这一点由<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/boot/app-boot/tests/config-dump.spec.ts#L109-L165">配置组合测试</a>交叉验证。不要把所有无效补丁都想成“启动立即失败”：未命中定位编号的情况在这个函数里是告警并跳过。</p>
+<h2>五、纸面装好了，运行为什么还可能失败？</h2>
+<p>前面处理的全是配置数据。现在才轮到安装员。</p>
+<p><code>boot()</code> 先建立根插件上下文，也就是服务查找与局部信息的入口，再装配加载机制。这里还不需要先读第六讲：把上下文理解成工作台的通讯录即可。配置文件入口负责读配置文件并应用补丁，装配器把配置条目连接到 Cordis 的插件安装过程。一个配置行可能对应一个插件，也可能是承载子树的分组或文件入口。</p>
+<p>把<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/boot/app-boot/src/index.ts#L772-L805"><code>boot()</code>（启动与验收函数） 的主体</a>按职责读，可以看到：</p>
+<ol>
+<li>建根插件上下文，设置路径等宿主信息。</li>
+<li>安装装配器。</li>
+<li>执行宿主准备回调 <code>prepare</code>，让环境与命令行服务先可用。</li>
+<li>挂载根 Include（配置文件入口），进入配置树装配。</li>
+<li>等待加载树收敛，再检查启用行是否真正激活。</li>
+</ol>
+<p>“收敛”先理解成：这一轮正在推进的装配处理告一段落。它本身不等于所有启用插件都成功，所以后面还有激活审计。</p>
+<p><img src="../assets/lesson-09/reader/fig-04-ready-check.png" alt="同一个插件模块在缺服务时等待，在服务连接齐备并成功加载后才可工作"></p>
+<blockquote>
+<p>图 4：未连接与已连接是依赖条件的比喻。缺少必需服务时不会凭空激活，正常存活的启动树会由审计报告失败。</p>
+</blockquote>
+<p>插件的每次安装都有一个运行实例，源码称为 Fiber（插件安装实例）；它根据声明的必需服务决定能否加载。第六、七讲将继续拆开这项机制。设备已经送到门口，但电源没接好，不能算验收通过。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/boot/app-boot/src/index.ts#L706-L740"><code>assertEntriesActivated()</code>（激活审计）</a> 把问题进一步分开：模块没能加载出来；插件初始化失败；或者插件仍在等待某个服务。<code>disabled</code>（禁用标记）行不参加“必须可用”的要求。初始化失败会保留相关错误信息，缺依赖则列出等待的服务名。</p>
+<p><code>boot()</code> 捕获启动异常后会释放根插件安装实例，回收已经装上的部分，再包装错误抛出。因此不能把启动器画成“碰到坏设备仍一路前进，最后总会返回成功”。</p>
+<p>还有一个源码中的特殊情况：某个一次性应用在启动窗口内主动完成并释放整棵树，装配器已不存在时会提前返回。它不是“仍存活的树通过了激活审计”。正常运行与主动结束要按实际分支区分。</p>
+<h3>为什么不能按 YAML（配置数据格式）行顺序推断激活顺序？</h3>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/bundle/base/cordis.patch.yml#L1-L13">基础套装注释</a>已明确提醒：行顺序不携带加载语义，激活取决于服务可用性。更底层的依据在 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L611-L638"><code>Fiber._refresh()</code>（安装实例的依赖刷新方法）</a>，它检查注入的服务实现，决定进入加载还是卸载。</p>
+<p>配置应用像改清单，依赖激活像接好电才允许开机。这两条顺序解决不同问题。</p>
+<h2>六、改完文件，为什么有时要重新启动？</h2>
+<p>方案的 <code>patchReload</code> 决定本次运行怎样对待用户补丁变化。<code>live</code> 表示运行中监听并重新组合；<code>startup</code> 表示启动时应用，本次运行不安装这条监听路径。</p>
+<p>这不表示仅启动时应用模式忽略用户配置。两种模式都先应用用户层，差别在启动以后是否跟随修改。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/profile-boot.ts#L269-L307"><code>runProfile()</code>（方案启动函数） 后半段</a>明确用条件分支安装监听与提交就绪通知。</p>
+<p>这是本讲与“热更新”之间的边界。你只需要知道到哪里查，不必现在就读完事务回滚和文件监听。</p>
+<h2>七、把排障问题放回五站源码路线</h2>
+<table>
+<thead>
+<tr>
+<th>站点</th>
+<th>必看位置</th>
+<th>带着什么问题去</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>入口</td>
+<td><code>apps/cli/src/bin.ts</code> 装配方案分支</td>
+<td>这次选了哪个方案，交下什么参数？</td>
+</tr>
+<tr>
+<td>选料</td>
+<td><code>profile.ts</code> 的 loadProfile（方案读取函数）</td>
+<td>套装从哪些包清单与补丁文件来？</td>
+</tr>
+<tr>
+<td>叠层</td>
+<td><code>profile-boot.ts</code> 的 allPatches（补丁排序函数） / composeProfile（方案组合函数）</td>
+<td>谁在后面覆盖了同一行字段？</td>
+</tr>
+<tr>
+<td>改单</td>
+<td><code>vendor/include/src/index.ts</code> 的 applyEntryPatches（应用配置行补丁的函数）</td>
+<td>定位编号命中吗，是否换了整个配置对象？</td>
+</tr>
+<tr>
+<td>安装验收</td>
+<td><code>app-boot/src/index.ts</code> 的启动与验收 / assertEntriesActivated（激活审计函数）</td>
+<td>加载失败、初始化失败，还是缺服务？</td>
+</tr>
+</tbody></table>
+<p>这是读者的排查路线，其中会从调用代码跳去查看配置算法；不是五个函数严格依次调用的完整时序图。</p>
+<p>回到开头：配置值不对，先追选料、叠层和覆盖粒度；插件不工作，再看加载与激活证据。你现在能把“修改没有生效”拆成具体、可查证的问题了。</p>
+<h2>下一问：开工以后，怎样安全收工</h2>
+<p>启动验收解释了设备能不能开工，却还没有回答它留下的定时器、监听器与服务该由谁撤销。接着读<a href="../previews/lesson-06.html#doc-2">第六讲的资源责任链</a>，把这张装配清单继续追到每次安装的生命周期。</p>
+</article>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第九讲练习 · 先改清单，再判断能否开工</h1>
+<p>先独立回答，再展开。所有源码位置绑定本讲快照；虚构配置仅用于理解算法。</p>
+<h2>1. 空文件真的什么都没装吗？</h2>
+<p>方案目录的 cordis.yml（根配置文件） 只有 <code>[]</code>，能否判断它没有模型和工具？</p>
+<details><summary>展开答案</summary>
+
+<p>不能。它是空根配置，套装的 <code>insert</code>（插入配置行）和后续补丁构成最终行列表。去看 prepareProfile（准备方案目录的函数）、loadProfile（方案读取函数） 和 allPatches（补丁排序函数），而不是只看根文件。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/profile-boot.ts#L71-L143">证据</a>。</p>
+</details>
+
+<h2>2. 手算整体替换</h2>
+<p>初始 <code>demo.config</code>（示例行配置）是 <code>{ directory: &#39;reports&#39;, timeout: 30 }</code>。方案层只把配置对象写成 <code>{ timeout: 60 }</code>。本机层只写 <code>disabled: true</code>。最后配置对象与 <code>disabled</code>（禁用标记）各是什么？</p>
+<details><summary>展开答案</summary>
+
+<p>配置对象为 <code>{ timeout: 60 }</code>，<code>disabled</code>（禁用标记）为 true（真值）。<code>directory</code>（目录字段）在方案层整体替换时丢失；本机层没写配置对象，不会再改它。这里说的是补丁组合结果，不是插件补默认值后的结果。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/include/src/index.ts#L116-L126">证据</a>。</p>
+</details>
+
+<h2>3. “后写”就一定成功吗？</h2>
+<p>先写 <code>{ id: &#39;missing&#39;, disabled: true }</code>，但前面从未插入 missing（不存在的示例编号） 行，会怎样？再给已存在行指定不同名称呢？</p>
+<details><summary>展开答案</summary>
+
+<p>两种情况都会告警并跳过该补丁；不会因此自动新建行，也不是重命名。新建用 <code>insert</code>（插入配置行）。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/include/src/index.ts#L102-L118">证据</a>。</p>
+</details>
+
+<h2>4. 是同一条顺序吗？</h2>
+<p>A 插件行写在 B 前面，但 A 必需的服务由 B 提供。能否要求 A 先 ACTIVE（已激活状态）？</p>
+<details><summary>展开答案</summary>
+
+<p>不能。配置行顺序与依赖激活顺序不同。A 必须等相应服务满足后才可能完成加载；把 A 的行向上移动不能消除依赖。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L611-L638">证据</a>。</p>
+</details>
+
+<h2>5. 启用插件缺服务，启动与验收会当作成功吗？</h2>
+<p>限定：应用没有主动提前退出，启动树仍然存活。</p>
+<details><summary>展开答案</summary>
+
+<p>不会。等待树收敛之后还会审计启用行。等待依赖行会报告缺少的服务；启动与验收捕获失败后释放根插件安装实例，再抛出带上下文的错误。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/boot/app-boot/src/index.ts#L706-L805">证据</a>。</p>
+</details>
+
+<h2>6. 画回缺失的一步</h2>
+<p>用清单、吊机、模块、插座、状态灯画“已配置但未激活”。写出一条箭头的具体含义，并说明这不是线程调度图。</p>
+<details><summary>展开一种参考摆法</summary>
+
+<p>清单交给吊机，表示按配置挂载；模块旁留一个未连接的插座，表示必需服务未满足；等待灯标注等待依赖。若只把模块画在台上，却直接亮就绪灯，就漏掉了加载和激活验证。</p>
+</details>
+
+<h2>7. 把 Java 经验用对</h2>
+<p>这套装配方案和 Spring 装配方案相似在哪里，不能等同在哪里？</p>
+<details><summary>展开答案</summary>
+
+<p>相似的是不同方案会影响应用装配。这里的具体机制是方案包清单选 bundles（套装名称数组），多层配置补丁改配置条目，然后由装配器与 Cordis 安装和激活；不能把它简化成选择一组环境变量，也不能照搬 Spring 配置深合并规则。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/boot/app-boot/src/profile.ts#L805-L861">证据</a>。</p>
+</details>
+
+<h2>8. 源码寻宝与预测</h2>
+<p>找到命令行补丁之上的条件性调整。如果 patchReload（补丁重载模式） 是仅启动时应用，用户补丁会被忽略吗？</p>
+<details><summary>展开答案</summary>
+
+<p>条件性调整是 composeProfile（方案组合函数） 可能追加的遥测禁用补丁。仅启动时应用仍在启动时应用方案与本机用户补丁，只是不在本次运行中安装运行中更新监听。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/profile-boot.ts">证据</a>。</p>
+</details>
+
+<p>这些配置结果已在制作环节用固定源码中的补丁函数做隔离验证。验证范围是配置计算，不代表完整应用已经启动；请先手算，再回到源码核对赋值粒度。</p>
+</article>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第9讲分享稿 · 装配与验收：配置写对为何还不能开工</h1>
+<h2>开场：从同一任务说起</h2>
+<p>我们让助手排查一个 Java 测试失败。第五讲确认会话记录怎样支撑下一次请求。现在把镜头移到任务开始以前：这些独立能力怎样被装进同一应用？ 今天不讲一串孤立术语，只回答：配置值不对与插件没激活，为什么要分开查？</p>
+<h2>三分钟讲清</h2>
+<ol>
+<li>按来源还原最终补丁顺序。先用下面的比喻建立直觉，再回到逐步讲解中的源码证据。</li>
+<li>解释整份配置替换而非深合并。先用下面的比喻建立直觉，再回到逐步讲解中的源码证据。</li>
+<li>区分配置组合、依赖激活、启动审计与退出。先用下面的比喻建立直觉，再回到逐步讲解中的源码证据。</li>
+</ol>
+<p>Profile（装配方案）：选择套装并做调整的选装单，不只是某个环境名称。</p>
+<p>Bundle（插件套装）：带代码与配置的一组分发单元，像整套设备箱。</p>
+<p>Patch（配置补丁）：按定位编号修改清单的指令，不保证递归合并嵌套对象。</p>
+<h2>把结论接回任务</h2>
+<p>启动知道怎样验收了，依赖变化或退出时又怎样把已装资源收回？ 这不是另换一个故事，而是继续追问当前答案还没解释的那一部分。</p>
+<p>分享结束请对方用自己的话复述一个正常过程，再提出一种失败情况。能念出定义不算完成；能指出该查哪个源码边界，才说明形成了可用理解。</p>
+</article>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第9讲术语与比喻词典</h1>
+<p>遇到陌生词，先回到这个问题：配置值不对与插件没激活，为什么要分开查？ 以下是查阅页，正文会在需要时解释关键概念。英文只用于和源码对照；它不是额外的背诵任务。</p>
+<table>
+<thead>
+<tr>
+<th>英文与中文</th>
+<th>直觉、实际职责与边界</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Profile（装配方案）</td>
+<td>选择套装并做调整的选装单，不只是某个环境名称。</td>
+</tr>
+<tr>
+<td>Bundle（插件套装）</td>
+<td>带代码与配置的一组分发单元，像整套设备箱。</td>
+</tr>
+<tr>
+<td>Patch（配置补丁）</td>
+<td>按定位编号修改清单的指令，不保证递归合并嵌套对象。</td>
+</tr>
+<tr>
+<td>Entry（配置条目）</td>
+<td>待安装的模块、设置和状态标记组成的一行，不是运行实例。</td>
+</tr>
+<tr>
+<td>Loader（装配器）</td>
+<td>把配置树接入插件安装与管理的机制，像安装员。</td>
+</tr>
+<tr>
+<td>Overlay（追加覆盖层）</td>
+<td>在前面层次之后再应用的修改来源，不能概括成所有环境变量。</td>
+</tr>
+<tr>
+<td>boot（启动与验收）</td>
+<td>建立应用、装配并检查运行条件，不只是读完配置文件。</td>
+</tr>
+<tr>
+<td>Include（配置文件入口）</td>
+<td>把文件中的配置与补丁接进装配树。</td>
+</tr>
+</tbody></table>
+<h2>别让比喻越界</h2>
+<p>工单不是线程，通讯录不是模型的记忆，房间不是安全沙箱，图上的阅读箭头也不自动等于源码调用。遇到行为判断，回<a href="../previews/lesson-09.html#doc-2">逐步讲解</a>检查实现与异常分支。</p>
+</article></main>
+</body>
+</html>

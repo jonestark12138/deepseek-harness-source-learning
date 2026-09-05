@@ -36,100 +36,100 @@
       article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
       article p>img { width:1080px; max-width:none; }
     }
-  </style><nav><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-08.html">第08讲</a></nav><main><article><h1>Lesson 08 Source Fact Matrix</h1>
+  </style><nav><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-08.html">第08讲</a></nav><main><article><h1>讲次 08 源码事实矩阵</h1>
 <blockquote>
-<p>Upstream commit：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
+<p>上游源码提交：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
 </blockquote>
 <table>
 <thead>
 <tr>
-<th>Claim ID</th>
-<th>Claim</th>
-<th>Exact evidence</th>
-<th>Type</th>
-<th>Confidence</th>
-<th>Boundary</th>
+<th>主张编号</th>
+<th>主张</th>
+<th>精确证据</th>
+<th>类型</th>
+<th>确认程度</th>
+<th>边界</th>
 </tr>
 </thead>
 <tbody><tr>
 <td>L08-C01</td>
-<td>bail 值是除 null、false、undefined 之外的返回值</td>
+<td>同步裁决值是除 null、false、undefined 之外的返回值</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L7-L15"><code>events.ts#L7-L15</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
-<td><code>0</code>、空字符串也会 bail</td>
+<td>实现</td>
+<td>已确认</td>
+<td><code>0</code>、空字符串也会同步裁决</td>
 </tr>
 <tr>
 <td>L08-C02</td>
-<td>emit 同步调用监听器，不等待返回的 Promise</td>
+<td>通知分发同步调用监听器，不等待返回的异步结果凭据</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L189-L196"><code>events.ts#L189-L196</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
-<td>不是“全部完成”屏障</td>
+<td>实现</td>
+<td>已确认</td>
+<td>不是全部完成屏障；同步异常可打断后续调用，异步工作可能重叠</td>
 </tr>
 <tr>
 <td>L08-C03</td>
-<td>parallel 并发等待全部 listener settled，失败汇总为 AggregateError</td>
+<td>并行等待并发等待全部监听器已成功或失败，失败汇总为 AggregateError</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L177-L187"><code>events.ts#L177-L187</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
-<td>失败不会自动取消其他 listener</td>
+<td>实现</td>
+<td>已确认</td>
+<td>失败不会自动取消其他监听器</td>
 </tr>
 <tr>
 <td>L08-C04</td>
-<td>serial 逐个 await，遇 bail 值停止并返回</td>
+<td>逐个等待裁决逐个 await，遇同步裁决值停止并返回</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L198-L209"><code>events.ts#L198-L209</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
-<td>后续 listener 不执行</td>
+<td>实现</td>
+<td>已确认</td>
+<td>后续监听器不执行</td>
 </tr>
 <tr>
 <td>L08-C05</td>
-<td>bail 同步逐个调用，遇 bail 值停止</td>
+<td>同步裁决同步逐个调用，遇同步裁决值停止</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L211-L222"><code>events.ts#L211-L222</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
-<td>不 await Promise；Promise 本身是 bail 值</td>
+<td>实现</td>
+<td>已确认</td>
+<td>不 await 异步结果凭据；异步结果凭据本身是同步裁决值</td>
 </tr>
 <tr>
 <td>L08-C06</td>
-<td>waterfall 把最后参数当 inner，并由后注册到先注册反向包裹</td>
+<td>waterfall（包裹式接力）把最后参数作为默认处理，按队列逐项取出监听器；next（继续函数）不读取替换参数</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L224-L243"><code>events.ts#L224-L243</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
-<td>最先注册的 listener 最外层、最先进入</td>
+<td>实现</td>
+<td>已确认</td>
+<td>先取出的监听器先进入，结果逐层返回；不保证重复调用继续函数可重复执行同一层</td>
 </tr>
 <tr>
 <td>L08-C07</td>
-<td>waterfall listener 不调用 next 会阻止后续和默认 inner</td>
+<td>包裹式接力监听器不调用继续函数会阻止后续和默认末尾默认处理</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L224-L243"><code>events.ts#L224-L243</code></a></td>
-<td>Implementation docs</td>
-<td>Confirmed</td>
+<td>实现与注释</td>
+<td>已确认</td>
 <td>可用于接管、拒绝或短路</td>
 </tr>
 <tr>
 <td>L08-C08</td>
-<td>事件 listener 注册为当前 Fiber 的 effect，随 owner 自动清理</td>
+<td>事件监听器注册为当前插件安装实例的可撤销副作用，随 owner 自动清理</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L125-L130"><code>events.ts#L125-L130</code></a>, <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L245-L260"><code>events.ts#L245-L260</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
-<td>listener 生命周期仍受 Fiber 所有权控制</td>
+<td>实现</td>
+<td>已确认</td>
+<td>监听器生命周期仍受插件安装实例所有权控制</td>
 </tr>
 <tr>
 <td>L08-C09</td>
-<td>user-questions 声明 <code>user-questions/request</code> 为带 next 的事件</td>
+<td>user-questions 声明 <code>user-questions/request</code> 为带继续函数的事件</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/interaction/user-questions/src/types.ts#L85-L90"><code>types.ts#L85-L90</code></a></td>
-<td>Event declaration</td>
-<td>Confirmed</td>
+<td>事件声明</td>
+<td>已确认</td>
 <td>类型声明不单独证明 dispatch 路径</td>
 </tr>
 <tr>
 <td>L08-C10</td>
-<td><code>ask()</code> 通过 scoped waterfall 请求回答，最终 inner 抛 NO_PROVIDER</td>
+<td><code>ask()</code> 通过 scoped 包裹式接力请求回答，最终末尾默认处理抛 NO_PROVIDER</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/interaction/user-questions/src/index.ts#L130-L142"><code>index.ts#L130-L142</code></a></td>
-<td>Dispatch implementation</td>
-<td>Confirmed</td>
-<td>answerer 可回答，也可 <code>next()</code> 放行</td>
+<td>分发实现</td>
+<td>已确认</td>
+<td>回答处理者可回答，也可 <code>next()</code> 放行</td>
 </tr>
 </tbody></table>
 </article></main></html>

@@ -36,107 +36,107 @@
       article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
       article p>img { width:1080px; max-width:none; }
     }
-  </style><nav><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-07.html">第07讲</a></nav><main><article><h1>Lesson 07 Source Fact Matrix</h1>
+  </style><nav><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-07.html">第07讲</a></nav><main><article><h1>讲次 07 源码事实矩阵</h1>
 <blockquote>
-<p>Upstream commit：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
+<p>上游源码提交：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
 </blockquote>
 <table>
 <thead>
 <tr>
-<th>Claim ID</th>
-<th>Claim</th>
-<th>Exact evidence</th>
-<th>Type</th>
-<th>Confidence</th>
-<th>Boundary</th>
+<th>主张编号</th>
+<th>主张</th>
+<th>精确证据</th>
+<th>类型</th>
+<th>确认程度</th>
+<th>边界</th>
 </tr>
 </thead>
 <tbody><tr>
 <td>L07-C01</td>
-<td>Service 子类构造时按名字注册自身</td>
+<td>服务能力子类构造时按名字注册自身</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/service.ts#L32-L58"><code>service.ts#L32-L58</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
-<td>注册属于当前 Fiber 生命周期</td>
+<td>实现</td>
+<td>已确认</td>
+<td>注册属于当前插件安装实例生命周期</td>
 </tr>
 <tr>
 <td>L07-C02</td>
-<td><code>provide()</code> 保存 name/value/provider Fiber，并把撤销注册为 effect</td>
+<td><code>provide()</code> 保存 name/value/provider 插件安装实例，并把撤销注册为可撤销副作用</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/reflect.ts#L267-L305"><code>reflect.ts#L267-L305</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
-<td>同一 isolation key 不允许重复 provider</td>
+<td>实现</td>
+<td>已确认</td>
+<td>同一 isolation 键不允许重复服务提供者</td>
 </tr>
 <tr>
 <td>L07-C03</td>
-<td>服务属性读取经过 Proxy 与当前 Fiber 的 inject/store</td>
+<td>服务属性读取经过 Proxy 与当前插件安装实例的 inject/store</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/reflect.ts#L133-L170"><code>reflect.ts#L133-L170</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
-<td><code>ctx.get()</code> 可绕开 inject 要求做可选读取</td>
+<td>实现</td>
+<td>已确认</td>
+<td><code>ctx.get()</code> 可绕开依赖声明要求做可选读取</td>
 </tr>
 <tr>
 <td>L07-C04</td>
-<td>服务变化会通知注入该名字的 Fiber 并刷新依赖</td>
+<td>服务变化会通知注入该名字的插件安装实例并刷新依赖</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/reflect.ts#L307-L333"><code>reflect.ts#L307-L333</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
-<td>只通知 scope 匹配的依赖者</td>
+<td>实现</td>
+<td>已确认</td>
+<td>只通知服务可见范围匹配的依赖者</td>
 </tr>
 <tr>
 <td>L07-C05</td>
-<td><code>FileSystem</code> package 声明 <code>ctx.fs</code> 与抽象 FileSystem 契约</td>
+<td><code>FileSystem</code> 代码包声明 <code>ctx.fs</code> 与抽象文件系统契约</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/fs/src/index.ts#L1-L8"><code>packages/fs/fs/src/index.ts#L1-L8</code></a>, <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/fs/src/index.ts#L44-L48"><code>index.ts#L44-L48</code></a>, <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/fs/src/index.ts#L80-L89"><code>index.ts#L80-L89</code></a></td>
-<td>Definition</td>
-<td>Confirmed</td>
+<td>契约定义</td>
+<td>已确认</td>
 <td>抽象类不等于可用后端</td>
 </tr>
 <tr>
 <td>L07-C06</td>
-<td>LocalFileSystem 继承 FileSystem 并提供宿主文件实现</td>
+<td>LocalFileSystem 继承文件系统并提供宿主文件实现</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/fs-local/src/index.ts#L1-L4"><code>packages/fs/fs-local/src/index.ts#L1-L4</code></a>, <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/fs-local/src/index.ts#L64-L80"><code>index.ts#L64-L80</code></a></td>
-<td>Provider</td>
-<td>Confirmed</td>
+<td>服务提供者</td>
+<td>已确认</td>
 <td>本地 cwd 不是沙箱</td>
 </tr>
 <tr>
 <td>L07-C07</td>
 <td><code>tool-fs</code> 声明注入 <code>tools</code>、<code>fs</code>、<code>systemPrompt</code> 并调用 <code>ctx.fs</code></td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/tool-fs/src/index.ts#L1-L22"><code>packages/fs/tool-fs/src/index.ts#L1-L22</code></a></td>
-<td>Consumer</td>
-<td>Confirmed</td>
+<td>服务使用者</td>
+<td>已确认</td>
 <td>工具不关心 fs 的具体实现类</td>
 </tr>
 <tr>
 <td>L07-C08</td>
-<td>inject 声明的是必需服务；只有全部可用时插件才加载</td>
+<td>依赖声明声明的是必需服务；只有全部可用时插件才加载</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/registry.ts#L91-L108"><code>registry.ts#L91-L108</code></a></td>
-<td>Contract</td>
-<td>Confirmed</td>
+<td>契约</td>
+<td>已确认</td>
 <td>可选服务应使用其他模式</td>
 </tr>
 <tr>
 <td>L07-C09</td>
 <td><code>ctx.inject()</code> 是插件简写，服务变化时 callback 会卸载并重跑</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/registry.ts#L164-L176"><code>registry.ts#L164-L176</code></a></td>
-<td>Contract docs</td>
-<td>Confirmed</td>
-<td>重跑伴随旧 effect 清理</td>
+<td>契约文档</td>
+<td>已确认</td>
+<td>重跑伴随旧可撤销副作用清理</td>
 </tr>
 <tr>
 <td>L07-C10</td>
-<td><code>isolate(name,label)</code> 创建具有独立服务 scope 标签的 child Context</td>
+<td><code>isolate(name,label)</code> 创建具有独立服务服务可见范围标签的子对象插件上下文</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/context.ts#L109-L125"><code>context.ts#L109-L125</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
-<td>相同 label 可加入同一 scope</td>
+<td>实现</td>
+<td>已确认</td>
+<td>相同 label 可加入同一服务可见范围</td>
 </tr>
 <tr>
 <td>L07-C11</td>
-<td>Reflect store 以 isolation symbol 为 key 解析实现</td>
+<td>Reflect 服务存储以 isolation symbol 为键解析实现</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/reflect.ts#L208-L210"><code>reflect.ts#L208-L210</code></a>, <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/reflect.ts#L233-L242"><code>reflect.ts#L233-L242</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
+<td>实现</td>
+<td>已确认</td>
 <td>isolate 是依赖解析边界，不是安全边界</td>
 </tr>
 </tbody></table>

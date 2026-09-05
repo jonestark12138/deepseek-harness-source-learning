@@ -47,240 +47,166 @@
 </head>
 <body>
   <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-06.html#doc-0">学习导航</a><a href="../previews/lesson-06.html#doc-1">视觉课件</a><a href="../previews/lesson-06.html#doc-2">逐步讲解</a><a href="../previews/lesson-06.html#doc-3">练习与答案</a><a href="../previews/lesson-06.html#doc-4">分享稿</a><a href="../previews/lesson-06.html#doc-5">术语词典</a></nav>
-  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第 6 次学习导航：Cordis 的可撤销插件工位</h1>
-<blockquote>
-<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
-</blockquote>
-<p>这一讲只追一个问题：<strong>插件装上以后留下的服务、监听器和异步资源，卸载时由谁负责收回？</strong></p>
-<p>把 Cordis 想成模块化工坊：Plugin 是机器蓝图，Fiber 是一次安装的工单，Context 是这张工单能看见的工位，effect 把“借出资源”和“归还动作”订在一起。</p>
-<h2>建议顺序</h2>
-<table>
-<thead>
-<tr>
-<th>时间</th>
-<th>做什么</th>
-<th>带走什么</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>10 分钟</td>
-<td>看 <a href="../previews/lesson-06.html#doc-1">视觉课件</a></td>
-<td>记住四个角色和一条生命周期</td>
-</tr>
-<tr>
-<td>35 分钟</td>
-<td>读 <a href="../previews/lesson-06.html#doc-2">逐步讲解</a></td>
-<td>从 <code>ctx.plugin()</code> 追到 <code>_unload()</code></td>
-</tr>
-<tr>
-<td>15 分钟</td>
-<td>做 <a href="../previews/lesson-06.html#doc-3">练习</a></td>
-<td>判断谁拥有清理责任</td>
-</tr>
-<tr>
-<td>5 分钟</td>
-<td>试讲 <a href="../previews/lesson-06.html#doc-4">分享稿</a></td>
-<td>用工位比喻讲给别人</td>
-</tr>
-</tbody></table>
-<h2>完成标准</h2>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第6讲学习导航 · 插件生命周期：谁负责把资源收回来</h1>
+<p>第九讲把配置接成运行能力。本讲追踪每次安装的资源责任；按编号阅读的读者可先把启动理解为已完成。</p>
+<p>本讲只追一个问题：<strong>插件卸载后，为什么定时器仍可能在跑？</strong></p>
+<h2>怎样阅读</h2>
+<p>先看<a href="../previews/lesson-06.html#doc-1">视觉课件</a>建立画面，再读<a href="../previews/lesson-06.html#doc-2">逐步讲解</a>把证据接起来。用<a href="../previews/lesson-06.html#doc-3">练习</a>检查能否解释失败分支；最后借<a href="../previews/lesson-06.html#doc-4">分享稿</a>讲给别人听。<a href="../previews/lesson-06.html#doc-5">词典</a>是随用随查的工具，不需要预先背诵。</p>
+<p>现在必须懂的是本讲问题与答案；源码符号只在定位时保留原拼写，代码中的标识不作破坏性翻译。TypeScript 是本项目主要源码语言，JavaScript 是其运行语义基础；Cordis 是项目使用的插件组织框架。对照 Java 只帮助理解，不意味着机制逐项相同。</p>
+<h2>学会的判断标准</h2>
 <ol>
-<li>分清 Plugin 与 Fiber。</li>
-<li>解释 child Context 为何不会改坏父 Context。</li>
-<li>写出一个 setup 返回 disposer 的 effect。</li>
-<li>解释依赖消失时为什么先 UNLOADING，之后才可能重新 LOADING。</li>
+<li>区分可复用定义与一次安装实例。</li>
+<li>用创建与清理配对定位资源泄漏。</li>
+<li>准确限定子上下文和倒序清理的范围。</li>
 </ol>
-<ul>
-<li><a href="../previews/lesson-06.html">整讲浏览版</a></li>
-<li><a href="../evidence/lesson-06.html">源码事实矩阵</a></li>
-</ul>
+<h2>在全书中的位置</h2>
+<p>主线建议：第一讲 → 第五讲 → 第九讲 → 第六讲 → 第七讲 → 第八讲。第二至四讲是语法与工程地图补课；编号保留以兼容旧链接。这是学习顺序，不是程序执行顺序。</p>
+<p>下一站：<a href="../previews/lesson-07.html#doc-2">第7讲</a>。工单声明需要文件能力，这个名字到底接到谁？</p>
+<p><a href="../previews/lesson-06.html">本讲浏览版</a> · <a href="../evidence/lesson-06.html">源码证据</a></p>
 </article>
-<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第六讲视觉课件 · 给每次插件安装发一张可撤销工单</h1>
-<h2>1. 四个词其实是一条装配链</h2>
-<p><img src="../assets/lesson-06/reader/fig-01-four-roles.png" alt="Context、Plugin、Fiber 与 effect 组成一次可撤销插件安装"></p>
-<blockquote>
-<p>Plugin 是可复用蓝图；Fiber 才是这一次安装。Fiber 拿到 child Context，并拥有这次安装产生的 effects。</p>
-</blockquote>
-<h2>2. 子 Context 是新工位视野，不是复制整个工坊</h2>
-<p><img src="../assets/lesson-06/reader/fig-02-child-context.png" alt="子 Context 继承父工位服务，同时可以拥有自己的局部设置"></p>
-<blockquote>
-<p><code>extend()</code> 通过原型继承创建 child，父 Context 不被修改。</p>
-</blockquote>
-<h2>3. effect 是借用与归还的成对协议</h2>
-<p><img src="../assets/lesson-06/reader/fig-03-effect-pair.png" alt="effect setup 借出资源并立即登记 disposer 归还动作"></p>
-<blockquote>
-<p>只做 setup 不交 disposer，等于借走钥匙却没留下归还办法。</p>
-</blockquote>
-<h2>4. 后借先还，避免拆掉地基后再拆上层</h2>
-<p><img src="../assets/lesson-06/reader/fig-04-reverse-cleanup.png" alt="三项资源按 C、B、A 的相反顺序归还"></p>
-<blockquote>
-<p>倒序规则适用于同一 effect 收集的 disposers；Fiber 的多个顶层 effect 卸载时可并行清理。</p>
-</blockquote>
-<h2>5. Fiber 状态牌描述一次安装的生命</h2>
-<p><img src="../assets/lesson-06/reader/fig-05-fiber-lifecycle.png" alt="Fiber 从等待依赖到加载、工作、卸载和结束"></p>
-<blockquote>
-<p>依赖重新可用时，已卸载的有效 Fiber 还能再次 LOADING；Fiber 不是线程。</p>
-</blockquote>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第6讲视觉课件 · 插件生命周期：谁负责把资源收回来</h1>
+<p>第九讲把配置接成运行能力。本讲追踪每次安装的资源责任；按编号阅读的读者可先把启动理解为已完成。</p>
+<p>每张图只帮助回答一个问题。看完图后，请用一句话解释图中的动作或边界，再到<a href="../previews/lesson-06.html#doc-2">逐步讲解</a>核对源码。</p>
+<h2>1. 定时器卸载后还在运行，该查哪条责任链？</h2>
+<p><img src="../assets/lesson-06/reader/fig-03-effect-pair.png" alt="定时器卸载后还在运行，该查哪条责任链？"></p>
+<p>开关表示卸载触发，真正停止资源依赖登记的清理函数；不是所有资源都能自动回收。</p>
+<h2>把图连成一句话</h2>
+<p>区分可复用定义与一次安装实例；用创建与清理配对定位资源泄漏；准确限定子上下文和倒序清理的范围。这些不是互不相干的名词，而是在回答“插件卸载后，为什么定时器仍可能在跑？”。</p>
+<p>工单声明需要文件能力，这个名字到底接到谁？</p>
 </article>
-<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第六讲逐步讲解 · 从装上模块到收回最后一把钥匙</h1>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第六讲逐步讲解 · 插件卸载了，为什么定时器还在跑？</h1>
 <blockquote>
-<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
+<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。本讲的故障现场是教学示例，不是一次实际事故记录。</p>
 </blockquote>
-<h2>一、先看一条完整装配链</h2>
-<p><img src="../assets/lesson-06/reader/fig-01-four-roles.png" alt="四个角色的装配链"></p>
-<p>调用 <code>ctx.plugin(plugin, config)</code> 时，Registry 先把函数、类或 <code>{ apply }</code> 形态归一化，再创建 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/registry.ts#L316-L335"><code>new Fiber(...)</code></a>。因此：</p>
-<ul>
-<li><strong>Plugin</strong>：可以反复使用的定义或蓝图；</li>
-<li><strong>Fiber</strong>：某个 Context 上的一次安装实例；</li>
-<li><strong>Context</strong>：该实例解析服务、事件和局部配置的视野；</li>
-<li><strong>effect</strong>：Fiber 拥有的可撤销副作用。</li>
-</ul>
-<p>同一 Plugin 可以在不同 Context 上产生多个 Fiber，就像同一型号机器能装到多个工位。</p>
-<h2>二、Context 不是全局大口袋</h2>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/context.ts#L35-L41"><code>Context</code></a> 是根/子依赖容器，属性读取通过服务解析器。它看起来像 <code>ctx.fs</code> 这样的普通属性，背后却要按当前 Fiber、inject 与 scope 找实现。</p>
-<p><img src="../assets/lesson-06/reader/fig-02-child-context.png" alt="父子 Context"></p>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/context.ts#L90-L107"><code>extend(meta)</code></a> 用原型继承创建 child：子工位默认看见父工位提供的能力，却能挂自己的 fiber、isolate 或 intercept 信息。它不是把所有服务复制一份，也不会反向修改父对象。</p>
-<h2>三、Fiber 是责任边界，不是线程</h2>
-<p>Fiber 记录这次安装的配置、依赖快照、状态、effects 和清理动作。它与 Java Thread、协程或 CPU 调度没有关系。</p>
-<p>Fiber 构造时会给插件一个带 <code>{ fiber: this }</code> 的 child Context。插件执行期间通过 <code>ctx.on()</code>、<code>ctx.provide()</code> 或 <code>ctx.effect()</code> 创建的资源，最终都能归到这张工单名下。</p>
-<h2>四、effect 为什么必须返回 disposer</h2>
+<h2>一、工作台能启动，还不等于能拆干净</h2>
+<p>第一讲中，助手为了排查 Java 测试，需要读报告、调用工具、留下记录。第五讲解释了记录如何成为下一次模型请求的材料；第九讲解释了这些能力怎样被装到工作台。现在追问：如果一个能力被换掉，旧能力留下的东西怎么办？</p>
+<p>假设报告监视插件每秒检查一次文件。你卸载插件，界面上已经看不到它，但日志仍每秒打印。问题不是“模型不聪明”，而是定时器没有随安装一起结束。反复重载后，可能有多个旧定时器同时工作。</p>
+<p>所以这一讲不从四个英文定义开始背，而从一个责任问题开始：<strong>谁创建资源，谁登记归还方法，谁在卸载时执行它？</strong></p>
+<h2>二、蓝图和工单为什么必须分开</h2>
+<p>Plugin（插件定义）像设备蓝图，规定安装时做什么；Fiber（插件安装实例）像本次施工工单，记录这一次安装的状态、依赖和清理责任。不要把后者直译成“纤维”再去猜含义，它在这里不是线程、协程，也不是处理器调度单位。</p>
+<p>同一型号设备装到两处，蓝图可以一样，现场资源和责任却不能混在一起。相应地，读取 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/registry.ts#L316-L335">插件登记入口</a>，重点找定义如何被归一化，以及建立安装实例的位置。具体是否接受重复安装，还要服从登记器的规则，不能概括成“每次调用必然新增”。</p>
+<p>蓝图只是定义，工单才拥有现场。这就解释了为什么清理不能挂在一个全局插件名字上：我们要撤销的是某一次安装留下的影响，而不是抹掉这份可复用定义。</p>
+<h2>三、安装实例拿到怎样的工作视野</h2>
+<p>每次安装还需要知道到哪里查找文件能力、事件和局部信息。Context（插件上下文）就是这份工作视野，像工位上的服务通讯录。它与模型上下文不同：模型上下文是交给模型的提示和消息；插件上下文是程序查找能力的入口。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/context.ts#L90-L107">上下文扩展</a> 的关键是基于父对象建立子对象，再加局部元信息。子工位能沿继承关系看到父工位的能力，不需要复制整套系统。</p>
+<p>这不是深拷贝。给子对象设置自己的属性，通常不会改写父对象的同名自有属性；但如果父子都持有同一个可变对象，修改对象内部仍可能互相可见。比如共同引用一份通讯录，子工位在通讯录里删掉一项，并不会因为“子”这个字就自动隔离。</p>
+<p>因此，不能把“有子上下文”理解成数据完全独立，更不能理解成安全沙箱。服务解析的隔离要到第七讲看专门机制。</p>
+<h2>四、拿到资源时，就把归还条订在工单上</h2>
+<p>只知道谁负责，还需要明确怎样归还。可撤销副作用（effect（可撤销副作用登记））把资源创建与撤销配对；disposer（清理函数）就是那张归还条。</p>
+<p>下面是教学示例，<code>tick</code> 代表检查报告的函数，不是仓库中某个已运行插件：</p>
 <pre><code class="language-ts">ctx.effect(() =&gt; {
   const timer = setInterval(tick, 1000)
   return () =&gt; clearInterval(timer)
-}, &#39;heartbeat&#39;)
+}, &#39;report-watch&#39;)
 </code></pre>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L402-L418"><code>effect()</code></a> 立即执行 setup，并收集它产出的 disposer。返回值还可以是 Promise、同步或异步迭代器，但核心契约不变：<strong>创建一项外部影响时，同时交出撤销办法。</strong></p>
-<p><img src="../assets/lesson-06/reader/fig-03-effect-pair.png" alt="effect 配对"></p>
-<p>这和 Java 的 <code>try-with-resources</code> 很像：不是等忘记资源以后再想办法关，而是在获得资源时就把关闭责任绑定到明确的生命周期。</p>
-<h2>五、为什么倒序清理</h2>
-<p>若 setup 依次建立 A=连接、B=订阅、C=定时任务，C 往往依赖 B，B 又依赖 A。卸载应先停 C，再退订 B，最后断 A。</p>
-<p><img src="../assets/lesson-06/reader/fig-04-reverse-cleanup.png" alt="倒序归还"></p>
-<p>源码在 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L424-L441"><code>fiber.ts#L424-L441</code></a> 对同一 effect 内收集的 disposers 使用 <code>reverse()</code>。边界要说清：<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L675-L695"><code>_unload()</code></a> 对 Fiber 的多个顶层 effect 使用 <code>Promise.all</code>；不能把“所有清理全局严格倒序”当成事实。</p>
-<h2>六、状态机是依赖变化的结果</h2>
-<p><img src="../assets/lesson-06/reader/fig-05-fiber-lifecycle.png" alt="Fiber 生命周期"></p>
-<ul>
-<li><code>PENDING</code>：依赖还没齐；</li>
-<li><code>LOADING</code>：正在执行插件 setup；</li>
-<li><code>ACTIVE</code>：已加载且依赖有效；</li>
-<li><code>UNLOADING</code>：正在运行清理；</li>
-<li><code>DISPOSED</code>：永久结束；</li>
-<li><code>FAILED</code>：启动失败的可观察状态。</li>
-</ul>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L611-L638"><code>_refresh()</code></a> 把当前依赖实现的 uid 拼成 epoch。依赖消失或换成另一实现，epoch 改变，Fiber 会卸载旧 effects；依赖重新满足时再加载。</p>
-<h2>七、一句话总结</h2>
-<p>Cordis 的关键不是“能加载插件”，而是让每次插件安装都有明确的可见范围、依赖快照和清理责任：蓝图可复用，工单可追踪，副作用可撤销。</p>
+<p>先创建定时器，再返回“停止这个定时器”的函数。注意返回的是函数，不是立即执行清理的结果。卸载时框架才调用它。如果直接返回 <code>setInterval(...)</code> 的结果，交上去的是计时器句柄，不是归还办法。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L402-L418">副作用登记入口</a> 还支持异步结果和迭代器等形式。现在不必记完重载，先掌握契约：<strong>创建外部影响时，同时把清理责任交给本次安装。</strong></p>
+<p>对 Java 工程师，可以联想到资源关闭约定和生命周期销毁回调；但这里不等于一个词法范围内的 <code>try-with-resources</code>。资源可能跨越多次异步操作，结束边界是插件安装的卸载，而不是某个代码块的右括号。</p>
+<p><img src="../assets/lesson-06/reader/fig-03-effect-pair.png" alt="定时器的创建、清理登记与卸载触发"></p>
+<h2>五、后借先还，到底在哪个范围内成立</h2>
+<p>假设一次设置过程先开连接，再订阅，再启动定时器。定时器依赖订阅，订阅依赖连接。若先关连接，后面的清理可能失去可用条件。因此常用顺序是先停定时器，再退订，最后断连接。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L424-L441">同一副作用内部的清理收集</a> 确实反转了清理列表。但 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L675-L695">安装实例卸载</a> 对多个顶层副作用采用并行等待。</p>
+<p>这意味着：同一个归还袋内有倒序规则，不等于整座工厂所有工单都排成一条逆序队列。需要顺序保证的资源，应在正确的责任边界里表达依赖，不能仅靠“我先注册了它”猜测全局顺序。</p>
+<h2>六、换依赖时，为什么需要先停旧工作</h2>
+<p>报告监视插件如果依赖文件服务，文件服务换成另一实现后，旧定时器可能仍引用旧对象。框架不能只把通讯录改一下，然后假装旧资源自动接到了新实现。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L611-L638">依赖刷新</a> 根据依赖实现的标识构成依赖组合标识。它像“这次接的是哪一组设备”的编号，不是时间戳。组合变化后，需要卸载旧影响；新依赖条件满足后，再加载。</p>
+<p>读状态名时把它们翻译成动作即可：<code>PENDING</code>（等待条件）、<code>LOADING</code>（正在加载）、<code>ACTIVE</code>（已激活）、<code>UNLOADING</code>（正在清理）、<code>FAILED</code>（失败状态）、<code>DISPOSED</code>（永久结束）。</p>
+<p>尤其区分“卸载”和“永久结束”：一个仍有效的安装实例可以清理后重新加载，不必每次都换一张全新的工单；已经永久结束的实例则不能靠服务回来就复活。</p>
+<h2>七、带着故障问题回看源码</h2>
+<p>如果定时器卸载后还在跑，先检查它是否通过副作用登记，以及返回的是否真是清理函数；再查清理属于哪次安装；最后查依赖变化是否触发了预期生命周期。不要先去模型提示里找原因。</p>
+<p>本讲给第一讲的完整任务补上了“装上也能拆下”的机制，但还留下一问：工单写着“需要文件服务”，究竟从哪里找到它？同名服务有两个怎么办？这正是<a href="../previews/lesson-07.html#doc-2">第七讲</a>要解决的接线问题。</p>
 </article>
-<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第六讲练习与答案</h1>
-<h2>练习 1：Plugin 还是 Fiber</h2>
-<p>同一个插件在两个 isolate Context 中各加载一次，是一个 Fiber 还是两个？</p>
-<details><summary>展开答案</summary>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第6讲练习与答案</h1>
+<p>先独立解释，再展开答案。每题都要求把结论接回任务，不以记住英文拼写作为通过标准。</p>
+<h2>1. 定义与安装</h2>
+<p>同一插件定义被独立安装在两处，清理责任能共用一张工单吗？</p>
+<details><summary>展开答案与理由</summary>
 
-<p>两个。Plugin 是可复用定义，每次 <code>ctx.plugin()</code> 安装产生自己的 Fiber、child Context、配置与 effects。</p>
+<p>两次独立安装应分别拥有资源责任。定义可复用不等于运行实例相同；重复安装是否成立还要看登记器规则。</p>
 </details>
 
-<h2>练习 2：识别泄漏</h2>
-<p>下面的 effect 有什么问题？</p>
-<pre><code class="language-ts">ctx.effect(() =&gt; setInterval(tick, 1000))
-</code></pre>
-<details><summary>展开答案</summary>
+<h2>2. 计时器句柄能当归还条吗？</h2>
+<p>副作用创建阶段直接返回计时器句柄，有什么问题？</p>
+<details><summary>展开答案与理由</summary>
 
-<p><code>setInterval</code> 返回数字或对象，不是合法 disposer；代码既会触发 Invalid effect，也没有表达如何 <code>clearInterval</code>。应在 setup 中保存 timer，并返回清理函数。</p>
+<p>句柄不是可调用的清理函数。应保存句柄，并返回停止该计时器的函数，否则没有正确表达撤销责任。</p>
 </details>
 
-<h2>练习 3：清理顺序</h2>
-<p>连接 A、订阅 B、定时器 C 在同一 effect 内依次登记，卸载顺序是什么？</p>
-<details><summary>展开答案</summary>
+<h2>3. 子对象就是深拷贝吗？</h2>
+<p>父子上下文共同引用同一可变对象，子侧修改对象内部是否可能影响父侧？</p>
+<details><summary>展开答案与理由</summary>
 
-<p>C → B → A，后登记的 disposer 先执行。</p>
+<p>可能。原型继承与局部属性不等于深拷贝；共享引用内部仍可能互相可见。</p>
 </details>
 
-<h2>练习 4：Context 边界</h2>
-<p><code>child = ctx.extend(meta)</code> 是否复制了一份所有服务？</p>
-<details><summary>展开答案</summary>
+<h2>4. 倒序边界</h2>
+<p>同一个副作用内部按连接、订阅、定时器登记，是否能推出全系统也严格倒序？</p>
+<details><summary>展开答案与理由</summary>
 
-<p>不是。child 原型继承父 Context；服务读取仍经过 resolver。它获得新的局部元信息，但默认共享未隔离的服务视野。</p>
+<p>不能。内部清理按反向顺序处理，但安装实例的多个顶层副作用采用并行等待。需要顺序的责任必须在合适边界中表达。</p>
 </details>
 
-<h2>练习 5：依赖替换</h2>
-<p>一个 ACTIVE Fiber 注入了 <code>fs</code>，当前 <code>fs</code> provider 被卸载并换成另一个实现，为什么不能原地继续？</p>
-<details><summary>展开答案</summary>
+<h2>5. 卸载与永久结束</h2>
+<p>依赖回来后，已经永久结束的安装实例是否自动复活？</p>
+<details><summary>展开答案与理由</summary>
 
-<p>依赖实现 uid 组成的 epoch 变了。Fiber 先卸载旧 effects，避免旧资源继续绑定原 provider，再在依赖满足后重新加载。</p>
+<p>不会。仍有效的实例可在卸载后重新加载；永久结束与暂时清理是不同状态。</p>
 </details>
+
+<p><a href="../previews/lesson-06.html#doc-2">回逐步讲解核对源码</a></p>
 </article>
-<article id="doc-4"><div class="doc-label">分享稿</div><h1>第六讲分享稿 · Cordis 怎样让插件可撤销</h1>
-<h2>开场</h2>
-<p>很多插件系统只回答“怎样装上”，Cordis 还追问“谁负责拆干净”。把它想成带总电闸的模块工位。</p>
-<h2>三分钟主线</h2>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第6讲分享稿 · 插件生命周期：谁负责把资源收回来</h1>
+<h2>开场：从同一任务说起</h2>
+<p>我们让助手排查一个 Java 测试失败。第九讲把配置接成运行能力。本讲追踪每次安装的资源责任；按编号阅读的读者可先把启动理解为已完成。 今天不讲一串孤立术语，只回答：插件卸载后，为什么定时器仍可能在跑？</p>
+<h2>三分钟讲清</h2>
 <ol>
-<li>Plugin 是机器蓝图，Fiber 是一次真实安装的工单。</li>
-<li>Fiber 获得 child Context，因此服务视野和局部配置有边界。</li>
-<li>插件产生的外部影响登记为 effect；setup 同时返回 disposer。</li>
-<li>同一 effect 内后借先还，避免先拆地基。</li>
-<li>依赖实现变化时，Fiber 先卸载旧 effects，再按新 epoch 重载。</li>
+<li>区分可复用定义与一次安装实例。先用下面的比喻建立直觉，再回到逐步讲解中的源码证据。</li>
+<li>用创建与清理配对定位资源泄漏。先用下面的比喻建立直觉，再回到逐步讲解中的源码证据。</li>
+<li>准确限定子上下文和倒序清理的范围。先用下面的比喻建立直觉，再回到逐步讲解中的源码证据。</li>
 </ol>
-<h2>必须提醒的边界</h2>
-<ul>
-<li>Fiber 不是线程。</li>
-<li>Context 不是随便读写的全局 Map。</li>
-<li>倒序规则不能夸大为所有顶层 effect 的全局串行清理。</li>
-</ul>
-<h2>收尾</h2>
-<p>真正可靠的插件化，不只靠“插得进去”，更靠“拔得干净、换得安全”。</p>
+<p>Plugin（插件定义）：设备蓝图：规定如何安装能力，不代表一次真实安装。</p>
+<p>Fiber（插件安装实例）：本次施工工单：拥有依赖、状态和清理责任；不是线程或协程。</p>
+<p>Context（插件上下文）：工位服务通讯录与局部视野；不是交给模型的提示消息。</p>
+<h2>把结论接回任务</h2>
+<p>工单声明需要文件能力，这个名字到底接到谁？ 这不是另换一个故事，而是继续追问当前答案还没解释的那一部分。</p>
+<p>分享结束请对方用自己的话复述一个正常过程，再提出一种失败情况。能念出定义不算完成；能指出该查哪个源码边界，才说明形成了可用理解。</p>
 </article>
-<article id="doc-5"><div class="doc-label">术语词典</div><h1>第六讲术语与比喻词典</h1>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第6讲术语与比喻词典</h1>
+<p>遇到陌生词，先回到这个问题：插件卸载后，为什么定时器仍可能在跑？ 以下是查阅页，正文会在需要时解释关键概念。英文只用于和源码对照；它不是额外的背诵任务。</p>
 <table>
 <thead>
 <tr>
-<th>中文 / 英文</th>
-<th>物件比喻</th>
-<th>实际职责</th>
-<th>边界</th>
+<th>英文与中文</th>
+<th>直觉、实际职责与边界</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>上下文 Context</td>
-<td>工位视野</td>
-<td>解析当前 scope 可见的服务、事件和元信息</td>
-<td>不是无边界全局变量</td>
+<td>Plugin（插件定义）</td>
+<td>设备蓝图：规定如何安装能力，不代表一次真实安装。</td>
 </tr>
 <tr>
-<td>插件 Plugin</td>
-<td>机器蓝图</td>
-<td>定义如何加载能力</td>
-<td>不是某次安装实例</td>
+<td>Fiber（插件安装实例）</td>
+<td>本次施工工单：拥有依赖、状态和清理责任；不是线程或协程。</td>
 </tr>
 <tr>
-<td>Fiber</td>
-<td>安装工单</td>
-<td>代表一次插件应用，拥有依赖、状态和 effects</td>
-<td>不是线程或协程</td>
+<td>Context（插件上下文）</td>
+<td>工位服务通讯录与局部视野；不是交给模型的提示消息。</td>
 </tr>
 <tr>
-<td>effect</td>
-<td>借用单</td>
-<td>执行 setup 并登记清理</td>
-<td>不只是“产生效果”</td>
+<td>effect（可撤销副作用登记）</td>
+<td>获得资源时同时交出撤销办法，像把归还条订在工单上。</td>
 </tr>
 <tr>
-<td>disposer</td>
-<td>归还条</td>
-<td>撤销监听器、服务、计时器等外部影响</td>
-<td>可能异步；重复调用无效果</td>
+<td>disposer（清理函数）</td>
+<td>具体归还动作，例如取消监听或停止定时器。</td>
 </tr>
 <tr>
-<td>epoch</td>
-<td>插座组合编号</td>
-<td>标识当前依赖实现组合</td>
-<td>不是时间戳</td>
-</tr>
-<tr>
-<td>unload</td>
-<td>拉闸清台</td>
-<td>执行清理并撤下旧依赖状态</td>
-<td>不一定永久 disposed</td>
+<td>epoch（依赖组合标识）</td>
+<td>标明当前接的是哪一组实现，不是年代或时间戳。</td>
 </tr>
 </tbody></table>
+<h2>别让比喻越界</h2>
+<p>工单不是线程，通讯录不是模型的记忆，房间不是安全沙箱，图上的阅读箭头也不自动等于源码调用。遇到行为判断，回<a href="../previews/lesson-06.html#doc-2">逐步讲解</a>检查实现与异常分支。</p>
 </article></main>
 </body>
 </html>

@@ -36,91 +36,91 @@
       article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
       article p>img { width:1080px; max-width:none; }
     }
-  </style><nav><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-04.html">第04讲</a></nav><main><article><h1>Lesson 04 Source Fact Matrix</h1>
+  </style><nav><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-04.html">第04讲</a></nav><main><article><h1>讲次 04 源码事实矩阵</h1>
 <blockquote>
-<p>Upstream commit：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
+<p>上游源码提交：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
 </blockquote>
 <table>
 <thead>
 <tr>
-<th>Claim ID</th>
-<th>Claim</th>
-<th>Exact evidence</th>
-<th>Evidence type</th>
-<th>Confidence</th>
-<th>Teaching simplification</th>
-<th>Boundary / uncertainty</th>
+<th>主张编号</th>
+<th>主张</th>
+<th>精确证据</th>
+<th>证据类型</th>
+<th>确认程度</th>
+<th>教学简化</th>
+<th>边界与不确定性</th>
 </tr>
 </thead>
 <tbody><tr>
 <td>L04-C01</td>
-<td>pnpm workspace 由 vendor、packages、native、apps、website、python 六组路径构成</td>
+<td>pnpm 包管理工作区由 vendor、packages、native、apps、website、python 六组路径构成</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/pnpm-workspace.yaml#L1-L17"><code>pnpm-workspace.yaml#L1-L17</code></a></td>
-<td>Configuration</td>
-<td>Confirmed</td>
+<td>配置</td>
+<td>已确认</td>
 <td>园区围栏与分区</td>
-<td>glob 只定义成员范围</td>
+<td>路径匹配模式只定义成员范围</td>
 </tr>
 <tr>
 <td>L04-C02</td>
-<td>在固定提交展开上述 glob，可得到 264 个含 package.json 的成员</td>
+<td>在固定提交展开上述路径匹配模式，可得到 264 个含 package.json 的成员</td>
 <td>同一配置 + 固定提交文件清单；分组 9+247+2+4+1+1</td>
 <td>Reproducible inventory</td>
-<td>Confirmed</td>
+<td>已确认</td>
 <td>264 间工坊</td>
-<td>数量随提交变化；根 package 不计入</td>
+<td>数量随提交变化；根代码包不计入</td>
 </tr>
 <tr>
 <td>L04-C03</td>
-<td>根 package 也声明 workspaces，但没有列出 python/sdk-runtime</td>
+<td>根代码包也声明 workspaces，但没有列出 python/sdk-runtime</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/package.json#L11-L18"><code>package.json#L11-L18</code></a></td>
-<td>Configuration</td>
-<td>Confirmed</td>
+<td>配置</td>
+<td>已确认</td>
 <td>另一份园区目录</td>
 <td>以 pnpm-workspace.yaml 为 pnpm 的主清单</td>
 </tr>
 <tr>
 <td>L04-C04</td>
-<td>根 tsconfig 是无源码的 solution，只引用 host/client 两个聚合项目</td>
+<td>根 tsconfig 是无源码的聚合检查配置，只引用 host/client 两个聚合项目</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/tsconfig.json#L1-L14"><code>tsconfig.json#L1-L14</code></a></td>
-<td>Configuration</td>
-<td>Confirmed</td>
+<td>配置</td>
+<td>已确认</td>
 <td>施工总图</td>
 <td>references 不是运行时调用</td>
 </tr>
 <tr>
 <td>L04-C05</td>
-<td>tsdown 的 workspace 和 entry 决定普通运行时构建选择及输出位置</td>
+<td>tsdown 的包管理工作区和配置条目决定普通运行时构建选择及输出位置</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/tsdown.config.ts#L10-L29"><code>tsdown.config.ts#L10-L29</code></a></td>
-<td>Build config</td>
-<td>Confirmed</td>
+<td>构建配置对象</td>
+<td>已确认</td>
 <td>出货路线</td>
-<td>不覆盖所有 package-local bundle 细节</td>
+<td>不覆盖所有 package-local 插件套装细节</td>
 </tr>
 <tr>
 <td>L04-C06</td>
-<td>根 build 入口是 <code>tsx scripts/build.ts</code></td>
+<td>根构建入口是 <code>tsx scripts/build.ts</code></td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/package.json#L19-L25"><code>package.json#L19-L25</code></a></td>
 <td>Script declaration</td>
-<td>Confirmed</td>
+<td>已确认</td>
 <td>总调度按钮</td>
 <td>脚本名本身不证明实现</td>
 </tr>
 <tr>
 <td>L04-C07</td>
-<td>build.ts 依次清旧记录、运行 build:lib、运行 build:web、写新记录</td>
+<td>build.ts 依次清旧记录、运行构建:lib、运行构建:web、写新记录</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/scripts/build.ts#L31-L49"><code>scripts/build.ts#L31-L49</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
+<td>实现</td>
+<td>已确认</td>
 <td>总调度员</td>
 <td>子脚本内部仍有各自规则</td>
 </tr>
 <tr>
 <td>L04-C08</td>
-<td>host/client 分开是为了避免同名 Cordis Context 服务的不同声明进入同一 program</td>
+<td>host/client 分开是为了避免同名 Cordis 插件上下文服务的不同声明进入同一类型检查单元</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/tsconfig.json#L2-L8"><code>tsconfig.json#L2-L8</code></a>, <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/tsconfig.client.json#L1-L14"><code>tsconfig.client.json#L1-L14</code></a></td>
-<td>Configuration comments</td>
-<td>Confirmed</td>
+<td>配置 comments</td>
+<td>已确认</td>
 <td>两条质检车道</td>
 <td>不是把系统拆成两个仓库</td>
 </tr>
@@ -128,17 +128,17 @@
 <td>L04-C09</td>
 <td>host/client 聚合配置均 <code>noEmit: true</code></td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/tsconfig.host.json#L1-L9"><code>tsconfig.host.json#L1-L9</code></a>, <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/tsconfig.client.json#L7-L14"><code>tsconfig.client.json#L7-L14</code></a></td>
-<td>Configuration</td>
-<td>Confirmed</td>
+<td>配置</td>
+<td>已确认</td>
 <td>只质检不出货</td>
-<td>package 自身构建仍会产生文件</td>
+<td>代码包自身构建仍会产生文件</td>
 </tr>
 <tr>
 <td>L04-C10</td>
-<td>Session package 的 tsconfig 把源码、类型输出目录和七个 project references 写在一起</td>
+<td>会话代码包的 tsconfig 把源码、类型输出目录和七个类型项目引用写在一起</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/tsconfig.json#L1-L32"><code>packages/core/session/tsconfig.json#L1-L32</code></a></td>
-<td>Package config</td>
-<td>Confirmed</td>
+<td>包配置</td>
+<td>已确认</td>
 <td>单间工坊的接线单</td>
 <td>只表示 TypeScript 项目关系</td>
 </tr>

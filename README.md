@@ -2,13 +2,13 @@
 
 这是一套面向 Java 后端工程师的 DeepSeek Harness 中文图文源码教程，围绕 Agent Harness 原理、AI Agent 工程、TypeScript monorepo 与 Cordis 源码分析展开。先用模块化智能工作室等手绘比喻建立直觉，再沿真实源码确认比喻的边界。
 
-**[在线阅读](https://jonestark12138.github.io/deepseek-harness-source-learning/) · [直接读第八讲](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/lesson-08.html) · [前八讲离线阅读包](https://github.com/jonestark12138/deepseek-harness-source-learning/releases/tag/lessons-01-08-v1.3.0)**
+**[在线阅读](https://jonestark12138.github.io/deepseek-harness-source-learning/) · [从第一讲进入主线](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/lesson-01.html) · [前九讲离线阅读包](https://github.com/jonestark12138/deepseek-harness-source-learning/releases/tag/lessons-01-09-v2.0.0)**
 
-目前已完成前八讲，后续课程持续建设中。本项目为个人学习教材，与 DeepSeek 官方无隶属或背书关系。
+现有九讲已按同一个测试排查故事重构：英文术语配中文说明，源码中的标识保留原拼写。主线建议 01 → 05 → 09 → 06 → 07 → 08，02–04 为语法和工程地图补课。第十至二十讲尚在计划中，后续课程持续建设中。本项目为个人学习教材，与 DeepSeek 官方无隶属或背书关系。
 
 ## 这是阅读版
 
-提供每讲的正文、课件、练习与答案、分享稿、术语词典、源码事实矩阵和四十张完整场景插图。不提供独立物件素材、可编辑矢量、场景配方或教材制作工程。
+提供每讲的正文、课件、练习与答案、分享稿、术语词典、源码事实矩阵和二十张完整场景插图。不提供独立物件素材、可编辑矢量、场景配方或教材制作工程。
 
 离线 ZIP 完整解压后打开 index.html。下载本仓库时，入口是 reader/index.html。无需安装依赖或启动服务；源码、反馈和下载外链需联网。手机上的宽图可以在图片区域内左右滑动。
 

@@ -36,37 +36,37 @@
       article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
       article p>img { width:1080px; max-width:none; }
     }
-  </style><nav><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-05.html">第05讲</a></nav><main><article><h1>Lesson 05 Source Fact Matrix</h1>
+  </style><nav><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-05.html">第05讲</a></nav><main><article><h1>讲次 05 源码事实矩阵</h1>
 <blockquote>
-<p>Upstream commit：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
+<p>上游源码提交：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
 </blockquote>
 <table>
 <thead>
 <tr>
-<th>Claim ID</th>
-<th>Claim</th>
-<th>Exact evidence</th>
-<th>Evidence type</th>
-<th>Confidence</th>
-<th>Teaching simplification</th>
-<th>Boundary / uncertainty</th>
+<th>主张编号</th>
+<th>主张</th>
+<th>精确证据</th>
+<th>证据类型</th>
+<th>确认程度</th>
+<th>教学简化</th>
+<th>边界与不确定性</th>
 </tr>
 </thead>
 <tbody><tr>
 <td>L05-C01</td>
-<td>README 把 Session 定义为 append-only 日志、模型可见事实源，消息由日志派生</td>
+<td>README 把会话定义为仅追加日志、模型可见事实源，消息由日志派生</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/README.md#L10-L12"><code>README.md#L10-L12</code></a></td>
-<td>Maintainer documentation</td>
-<td>Confirmed intent</td>
+<td>维护文档</td>
+<td>已确认的设计意图</td>
 <td>包裹说明牌</td>
 <td>仍需实现和测试验证</td>
 </tr>
 <tr>
 <td>L05-C02</td>
-<td>manifest 声明主入口、类型入口和多个 subpath exports</td>
+<td>包清单声明主入口、类型入口和多个 subpath exports</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/package.json#L13-L38"><code>package.json#L13-L38</code></a></td>
-<td>Package contract</td>
-<td>Confirmed</td>
+<td>包契约</td>
+<td>已确认</td>
 <td>允许进入的门</td>
 <td>不证明门后行为</td>
 </tr>
@@ -74,44 +74,44 @@
 <td>L05-C03</td>
 <td>发布文件限制为 lib 下的 JS 与声明文件</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/package.json#L40-L45"><code>package.json#L40-L45</code></a></td>
-<td>Package contract</td>
-<td>Confirmed</td>
+<td>包契约</td>
+<td>已确认</td>
 <td>出货清单</td>
-<td>workspace 内可额外使用 src export</td>
+<td>包管理工作区内可额外使用 src 导出</td>
 </tr>
 <tr>
 <td>L05-C04</td>
-<td>Session 内部持有事件 log，append 在验证后按连续 seq 推入日志</td>
+<td>会话内部持有事件 log，追加在验证后按连续 seq 推入日志</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L423-L445"><code>src/index.ts#L423-L445</code></a>, <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L602-L646"><code>src/index.ts#L602-L646</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
+<td>实现</td>
+<td>已确认</td>
 <td>只追加的工作日志</td>
-<td>surface replace 改派生视图，不删除原日志</td>
+<td>消息投影结构 replace 改派生视图，不删除原日志</td>
 </tr>
 <tr>
 <td>L05-C05</td>
-<td>deriveMessages 从 surface 节点增量投影，返回新数组并复用冻结消息</td>
+<td>deriveMessages 从消息投影结构节点增量投影，返回新数组并复用冻结消息</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L699-L744"><code>src/index.ts#L699-L744</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
+<td>实现</td>
+<td>已确认</td>
 <td>从日志抄出模型工作单</td>
 <td>不是第二份独立历史</td>
 </tr>
 <tr>
 <td>L05-C06</td>
-<td>测试覆盖从日志派生、不可变性、非 JSON 拒绝和 append 快照</td>
+<td>测试覆盖从日志派生、不可变性、非 JSON 拒绝和追加快照</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/tests/session.spec.ts#L23-L61"><code>tests/session.spec.ts#L23-L61</code></a>, <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/tests/session.spec.ts#L437-L498"><code>tests/session.spec.ts#L437-L498</code></a>, <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/tests/session.spec.ts#L759-L777"><code>tests/session.spec.ts#L759-L777</code></a></td>
-<td>Tests</td>
-<td>Confirmed tested behavior</td>
-<td>压力测试报告</td>
+<td>测试</td>
+<td>已确认的测试契约</td>
+<td>契约与异常测试</td>
 <td>测试不能证明所有可能行为</td>
 </tr>
 <tr>
 <td>L05-C07</td>
-<td>agent-loop 在 turn/step 生命周期中 append 多种事件</td>
+<td>agent-loop 在 turn/step 生命周期中追加多种事件</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L252-L330"><code>agent.ts#L252-L330</code></a></td>
-<td>Caller implementation</td>
-<td>Confirmed</td>
+<td>调用方实现</td>
+<td>已确认</td>
 <td>真实买家写日志</td>
 <td>仅代表一个主要调用方</td>
 </tr>
@@ -119,28 +119,28 @@
 <td>L05-C08</td>
 <td>agent-loop 在模型请求前调用 deriveMessages</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L339-L366"><code>agent.ts#L339-L366</code></a></td>
-<td>Caller implementation</td>
-<td>Confirmed</td>
+<td>调用方实现</td>
+<td>已确认</td>
 <td>买家取工作单</td>
 <td>request 还包含 system/tools 等其他部分</td>
 </tr>
 <tr>
 <td>L05-C09</td>
-<td>SessionStore 是 Cordis Service，create 绑定调用 fiber 的生命周期</td>
+<td>会话存储服务是 Cordis 服务能力，create 绑定调用插件安装实例的生命周期</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L790-L838"><code>src/index.ts#L790-L838</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
+<td>实现</td>
+<td>已确认</td>
 <td>仓库管理员</td>
-<td>Agent 有更精细的 prepare/enter/announce 事务路径</td>
+<td>智能体有更精细的 prepare/enter/announce 事务路径</td>
 </tr>
 <tr>
 <td>L05-C10</td>
-<td>flush 等待所有 durability listener，并在全部 settled 后抛出首个失败</td>
+<td>持久化等待等待所有持久化完成约定监听器，并在全部已成功或失败后抛出首个失败</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L1010-L1036"><code>src/index.ts#L1010-L1036</code></a></td>
-<td>Implementation</td>
-<td>Confirmed</td>
+<td>实现</td>
+<td>已确认</td>
 <td>等仓储方确认落盘</td>
-<td>Session 本包不实现持久化后端</td>
+<td>会话本包不实现持久化后端</td>
 </tr>
 </tbody></table>
 </article></main></html>

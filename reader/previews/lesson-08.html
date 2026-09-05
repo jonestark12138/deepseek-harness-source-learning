@@ -47,271 +47,217 @@
 </head>
 <body>
   <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-08.html#doc-0">学习导航</a><a href="../previews/lesson-08.html#doc-1">视觉课件</a><a href="../previews/lesson-08.html#doc-2">逐步讲解</a><a href="../previews/lesson-08.html#doc-3">练习与答案</a><a href="../previews/lesson-08.html#doc-4">分享稿</a><a href="../previews/lesson-08.html#doc-5">术语词典</a></nav>
-  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第 8 次学习导航：车间调度台的五个按钮</h1>
-<blockquote>
-<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
-</blockquote>
-<p>本讲追问：<strong>同样叫“发事件”，什么时候是广播、并发、会签、抢答，什么时候又必须让监听器决定是否 <code>next()</code>？</strong></p>
-<h2>学习路径</h2>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第8讲学习导航 · 事件协作：通知、等待、裁决与接力</h1>
+<p>第七讲解决找到能力。现在继续到同一任务里的通知、等待和向用户追问，观察它们为何不能用同一种分发方式。</p>
+<p>本讲只追一个问题：<strong>一件事发生后，怎样让参与者按正确契约合作？</strong></p>
+<h2>怎样阅读</h2>
+<p>先看<a href="../previews/lesson-08.html#doc-1">视觉课件</a>建立画面，再读<a href="../previews/lesson-08.html#doc-2">逐步讲解</a>把证据接起来。用<a href="../previews/lesson-08.html#doc-3">练习</a>检查能否解释失败分支；最后借<a href="../previews/lesson-08.html#doc-4">分享稿</a>讲给别人听。<a href="../previews/lesson-08.html#doc-5">词典</a>是随用随查的工具，不需要预先背诵。</p>
+<p>现在必须懂的是本讲问题与答案；源码符号只在定位时保留原拼写，代码中的标识不作破坏性翻译。TypeScript 是本项目主要源码语言，JavaScript 是其运行语义基础；Cordis 是项目使用的插件组织框架。对照 Java 只帮助理解，不意味着机制逐项相同。</p>
+<h2>学会的判断标准</h2>
 <ol>
-<li><a href="../previews/lesson-08.html#doc-1">视觉课件</a>：先记五个按钮的动作。</li>
-<li><a href="../previews/lesson-08.html#doc-2">逐步讲解</a>：对照 <code>events.ts</code> 的真实算法。</li>
-<li>跟读 <code>user-questions/request</code>：声明 → waterfall → answerer/fallback。</li>
-<li><a href="../previews/lesson-08.html#doc-3">练习与答案</a>：做事件模式选型。</li>
+<li>区分发出通知与异步任务已完成。</li>
+<li>推导异步返回值在两种裁决中的不同结果。</li>
+<li>从继续函数和默认处理还原真实接力链。</li>
 </ol>
-<h2>完成标准</h2>
-<ul>
-<li><p>说清五种模式是否等待、何时停止。</p>
-</li>
-<li><p>记住 Cordis 的 bail 值规则。</p>
-</li>
-<li><p>解释 waterfall 不调用 <code>next()</code> 的后果。</p>
-</li>
-<li><p>从事件名定位声明、分发点和 listener。</p>
-</li>
-<li><p><a href="../previews/lesson-08.html">整讲浏览版</a></p>
-</li>
-<li><p><a href="../evidence/lesson-08.html">源码事实矩阵</a></p>
-</li>
-</ul>
+<h2>在全书中的位置</h2>
+<p>主线建议：第一讲 → 第五讲 → 第九讲 → 第六讲 → 第七讲 → 第八讲。第二至四讲是语法与工程地图补课；编号保留以兼容旧链接。这是学习顺序，不是程序执行顺序。</p>
+<p>下一阶段进入模型请求、工具执行与停止条件；第十讲以后目前只有计划，尚未发布正文。</p>
+<p><a href="../previews/lesson-08.html">本讲浏览版</a> · <a href="../evidence/lesson-08.html">源码证据</a></p>
 </article>
-<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第八讲视觉课件 · 同是发事件，调度规则完全不同</h1>
-<h2>1. 五个按钮先按意图选</h2>
-<p><img src="../assets/lesson-08/reader/fig-01-five-modes.png" alt="车间调度台用五个按钮表示 emit、parallel、serial、bail 和 waterfall"></p>
-<blockquote>
-<p>先问“要不要等、能否并发、谁有权停止、是否需要包裹下一层”，再选 API。</p>
-</blockquote>
-<h2>2. emit 只响铃，parallel 等全部回执</h2>
-<p><img src="../assets/lesson-08/reader/fig-02-emit-parallel.png" alt="emit 发出后立即返回，而 parallel 并发并等待全部监听器"></p>
-<blockquote>
-<p>parallel 收集所有 settled 结果；一个失败不会让其他监听器自动取消。</p>
-</blockquote>
-<h2>3. serial 会等，bail 不等；两者都可抢先结束</h2>
-<p><img src="../assets/lesson-08/reader/fig-03-serial-bail.png" alt="serial 顺序等待而 bail 同步抢答"></p>
-<blockquote>
-<p><code>0</code> 和空字符串也算 bail 值；<code>false</code>、<code>null</code>、<code>undefined</code> 才继续。</p>
-</blockquote>
-<h2>4. waterfall 是层层门卫，不是普通数据流水线</h2>
-<p><img src="../assets/lesson-08/reader/fig-04-waterfall-gates.png" alt="请求从外层 listener 经 next 进入内层，再把结果逐层带回"></p>
-<blockquote>
-<p>不调用 <code>next()</code>，后续 listener 和默认 inner 都不会执行。</p>
-</blockquote>
-<h2>5. 用户提问用 waterfall 选择回答者</h2>
-<p><img src="../assets/lesson-08/reader/fig-05-user-question-chain.png" alt="userQuestions 请求经过作用域内回答者，没人接单则进入 NO_PROVIDER 兜底"></p>
-<blockquote>
-<p>回答者可以直接接单，也可以调用 <code>next()</code> 让下一位尝试。</p>
-</blockquote>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第8讲视觉课件 · 事件协作：通知、等待、裁决与接力</h1>
+<p>第七讲解决找到能力。现在继续到同一任务里的通知、等待和向用户追问，观察它们为何不能用同一种分发方式。</p>
+<p>每张图只帮助回答一个问题。看完图后，请用一句话解释图中的动作或边界，再到<a href="../previews/lesson-08.html#doc-2">逐步讲解</a>核对源码。</p>
+<h2>1. 处理者怎样决定后面是否继续？</h2>
+<p><img src="../assets/lesson-08/reader/fig-04-waterfall-gates.png" alt="处理者怎样决定后面是否继续？"></p>
+<p>关卡表示处理控制，不表示物理安全；默认处理可能失败，例如没有可用回答者。</p>
+<h2>把图连成一句话</h2>
+<p>区分发出通知与异步任务已完成；推导异步返回值在两种裁决中的不同结果；从继续函数和默认处理还原真实接力链。这些不是互不相干的名词，而是在回答“一件事发生后，怎样让参与者按正确契约合作？”。</p>
+<p>下一阶段进入模型请求、工具执行与停止条件；第十讲以后目前只有计划，尚未发布正文。</p>
 </article>
-<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第八讲逐步讲解 · 五种分发模式不是五个近义词</h1>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第八讲逐步讲解 · 一件事发生后，怎样让多个插件合作？</h1>
 <blockquote>
-<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code></p>
+<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。下面的排障故事与简化代码用于教学；准确行为以链接中的分发实现为准。</p>
 </blockquote>
-<h2>一、用四个问题选模式</h2>
-<p><img src="../assets/lesson-08/reader/fig-01-five-modes.png" alt="五模式总览"></p>
-<table>
-<thead>
-<tr>
-<th>模式</th>
-<th align="right">等待异步</th>
-<th align="right">并发</th>
-<th align="right">提前停止</th>
-<th>主要用途</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>emit</td>
-<td align="right">否</td>
-<td align="right">否，调用本身同步遍历</td>
-<td align="right">否</td>
-<td>只观察通知</td>
-</tr>
-<tr>
-<td>parallel</td>
-<td align="right">是</td>
-<td align="right">是</td>
-<td align="right">否</td>
-<td>独立任务全部完成</td>
-</tr>
-<tr>
-<td>serial</td>
-<td align="right">是</td>
-<td align="right">否</td>
-<td align="right">遇 bail 值</td>
-<td>有顺序的异步裁决</td>
-</tr>
-<tr>
-<td>bail</td>
-<td align="right">否</td>
-<td align="right">否</td>
-<td align="right">遇 bail 值</td>
-<td>同步找第一个答案</td>
-</tr>
-<tr>
-<td>waterfall</td>
-<td align="right">由链决定</td>
-<td align="right">嵌套</td>
-<td align="right">不调用 next 即截断</td>
-<td>包裹、接管、fallback</td>
-</tr>
-</tbody></table>
-<h2>二、emit 与 parallel：都通知所有人，但完成语义不同</h2>
-<p><img src="../assets/lesson-08/reader/fig-02-emit-parallel.png" alt="emit 与 parallel"></p>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L189-L196"><code>emit</code></a> 同步调用 listener，却不等待 listener 返回的 Promise。函数返回只表示“通知动作已发出”，不表示异步工作完成。</p>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L177-L187"><code>parallel</code></a> 用 <code>Promise.allSettled</code> 等全部 listener。若有失败，它在所有工作 settled 后抛 <code>AggregateError</code>；并不会因为第一个失败就自动取消其他任务。</p>
-<h2>三、serial 与 bail：停止规则相同，时钟不同</h2>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L7-L15"><code>isBailed</code></a> 把除 <code>null</code>、<code>false</code>、<code>undefined</code> 之外的值都视为“已有结论”。因此 <code>0</code>、<code>&#39;&#39;</code>、对象和 Promise 都会停止链。</p>
-<p><img src="../assets/lesson-08/reader/fig-03-serial-bail.png" alt="serial 与 bail"></p>
-<ul>
-<li><code>serial</code> 对每个结果 <code>await</code>，适合异步会签；</li>
-<li><code>bail</code> 同步检查返回值，不会展开 Promise。监听器返回 Promise 时，Promise 对象本身已经是 bail 值。</li>
-</ul>
-<h2>四、waterfall 的核心是 around middleware</h2>
-<p><img src="../assets/lesson-08/reader/fig-04-waterfall-gates.png" alt="waterfall 门卫"></p>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L224-L243"><code>waterfall</code></a> 把最后一个参数取作默认 <code>inner</code>，再从后往前包装 listener。最先注册的 listener 位于最外层，因此最先进入：</p>
+<h2>一、能找到服务以后，还缺一种协作方式</h2>
+<p>第七讲解决“我要的能力在哪里”。但一次测试排查往往不只是调用一个服务：报告到达时，界面要更新；日志观察者要记录；某一步可能需要等待多个准备任务；如果要向用户追问信息，还得找到愿意回答的界面。</p>
+<p>把所有参与者直接写进同一个大函数当然能工作，却会让循环驱动知道太多外围细节。Event（事件）提供另一种组织方式：发起方用约定的事件名和参数表达一次协作，Listener（监听器）登记自己愿意参与的处理。</p>
+<p>这里的“事件”不必然是消息队列，也不保证持久化、跨进程投递或失败重试。Cordis 的这一层首先是进程内的调用与分发机制。要理解它，必须继续问：<strong>调用后等不等，按什么顺序，谁能让流程停下？</strong></p>
+<h2>二、只发通知，不等工作完成</h2>
+<p>假设报告到达后，两个观察者分别更新界面和发送异步统计。若主流程不需要它们的结果，可以考虑 emit（通知分发）（同步发出通知但不等待异步结果）。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L189-L196">通知实现</a> 同步遍历并调用监听器。监听器若返回异步结果凭据，这里不等待它。可以想成逐个按响门铃，不站在门口等每个人办完事情。</p>
+<p>有两个不能省略的边界。第一，异步工作被启动后可能重叠，不能因为“同步遍历”就说这些工作绝不并发。第二，如果前一个监听器直接同步抛错，遍历会被打断，后面的监听器可能没有被调用。这个方法没有为每个监听器做异常隔离。</p>
+<p>因此“全部通知成功”和“全部事情完成”都不能从函数名推出来。如果后续必须依赖工作完成，就要换一种契约。</p>
+<h2>三、需要所有人交卷，就等待全部结果</h2>
+<p>parallel（并行等待）（并行发起并等待全部完成）适合彼此独立、但后续需要一起等完的任务。像把两份检查单分别交给两个人，然后等两人都交卷。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L177-L187">并行实现</a> 等待所有监听器成功或失败，再统一检查结果；若存在失败，抛出 AggregateError（汇总错误）。一个人交了失败卷，不表示其他人的工作自动取消。</p>
+<p>这里的并行指异步任务可以共同推进，不保证每个监听器分配一条线程，也不能让耗时同步计算凭空并行。不要把 Java 线程池的执行模型直接套过来。</p>
+<h2>四、只需要一个裁决，为什么还分两种模式</h2>
+<p>有些问题不是“所有人做完”，而是“找到第一个明确结论就停”。例如逐个询问处理者有没有意见。同步裁决（bail（同步遇到结论就停））与逐个等待裁决（逐个等待后再判断结论）共享停止值规则，但等待方式不同。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L7-L15">停止值判定</a> 将 <code>null</code>、<code>false</code>、<code>undefined</code> 视为还没有结论，其他值都能停止。因此 <code>0</code> 和空字符串也能停止；不能把规则记成“真值才停止”。</p>
+<p>看 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L198-L222">两种遍历实现</a>：同步版本直接检查返回对象；逐个等待版本先等到异步最终值，再做判定。</p>
+<p>做一个思想实验：首个监听器返回 <code>Promise.resolve(false)</code>。同步版本拿到的是一个对象，因此立刻停止；逐个等待版本拿到最终的 <code>false</code>，因此继续。两种模式停止的不是同一个层次上的“值”。这也是第二讲异步知识在真实源码中的用处。</p>
+<h2>五、需要“进门前检查、出门后处理”，怎么办</h2>
+<p>前面的几种模式由分发器控制遍历。另一种场景是：处理者需要决定要不要把请求交给后面的人，并且还想加工返回结果。包裹式接力（可逐层包裹的接力链）在本项目中就承担这个角色。</p>
+<p><img src="../assets/lesson-08/reader/fig-04-waterfall-gates.png" alt="请求经过关卡，结果向外返回"></p>
+<p>继续函数（next（继续后续处理）的函数）像门卫手里的放行权。下面是教学示例，事件名和辅助函数为便于讲解而虚构：</p>
 <pre><code class="language-ts">ctx.on(&#39;request&#39;, async (input, next) =&gt; {
-  const checked = validate(input)
-  const result = await next(checked)
+  validate(input)
+  const result = await next()
   return audit(result)
 })
 </code></pre>
-<p>调用 <code>next()</code> 才进入下一层；返回时结果再向外冒。监听器可以：</p>
-<ul>
-<li>前置修改参数；</li>
-<li>后置处理结果；</li>
-<li>直接返回并接管；</li>
-<li>拒绝请求且不调用 <code>next()</code>。</li>
-</ul>
-<p>所以它不是简单的“把 value 依次传给数组函数”。</p>
-<h2>五、真实案例：谁来回答用户问题</h2>
-<p><img src="../assets/lesson-08/reader/fig-05-user-question-chain.png" alt="用户问题回答链"></p>
-<p><code>user-questions</code> 在类型中声明 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/interaction/user-questions/src/types.ts#L85-L90"><code>user-questions/request</code></a>，listener 获得 request 和 next。</p>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/interaction/user-questions/src/index.ts#L130-L142"><code>UserQuestionService.ask()</code></a> 把 <code>noAnswerer</code> 作为最终 inner：</p>
-<ol>
-<li>作用域内 answerer 先收到请求；</li>
-<li>能回答就直接返回；</li>
-<li>不负责则调用 <code>next()</code>；</li>
-<li>全部放行后，<code>noAnswerer</code> 抛 <code>NO_PROVIDER</code>。</li>
-</ol>
-<p>这比集中写一个 <code>if (uiA) else if (uiB)</code> 更可组合，answerer 又会作为 Fiber effect 自动清理。</p>
-<h2>六、从事件名读源码的三站法</h2>
-<ol>
-<li>搜索类型声明：参数、返回值、是否带 <code>next</code>；</li>
-<li>搜索 dispatch：用的是 emit/parallel/serial/bail/waterfall 哪一个；</li>
-<li>搜索 <code>ctx.on</code>：谁监听、是否 scope 过滤、是否调用 <code>next()</code>。</li>
-</ol>
-<p>只找到声明不能证明运行路径；只找到 listener 也不能证明它何时被触发。</p>
-<h2>七、一句话总结</h2>
-<p>事件 API 的差别不在名字，而在调度契约：是否等待、是否并发、何时停止，以及 listener 能否包裹下一层。</p>
-</article>
-<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第八讲练习与答案</h1>
-<h2>练习 1：只通知，不等待</h2>
-<p>缓存刷新后只想通知观察者，调用者不需要等待异步工作完成，应选什么？</p>
-<details><summary>展开答案</summary>
-
-<p><code>emit</code>。它同步调用监听器，但不等待监听器返回的 Promise。</p>
-</details>
-
-<h2>练习 2：独立任务全部完成</h2>
-<p>三个持久化后端都要收到 flush，最后再汇总失败，应选什么？</p>
-<details><summary>展开答案</summary>
-
-<p><code>parallel</code>。它并发执行并等待全部 settled，失败汇总为 AggregateError。</p>
-</details>
-
-<h2>练习 3：0 会不会停止</h2>
-<p>serial listener 返回 <code>0</code>，后续 listener 会继续吗？</p>
-<details><summary>展开答案</summary>
-
-<p>不会。Cordis 只有 <code>false</code>、<code>null</code>、<code>undefined</code> 视为未 bail；<code>0</code> 也是有效停止值。</p>
-</details>
-
-<h2>练习 4：Promise 与 bail</h2>
-<p>bail listener 返回一个 Promise，Cordis 会等待它解析后再判断吗？</p>
-<details><summary>展开答案</summary>
-
-<p>不会。bail 是同步模式，Promise 对象本身已经是非空返回值，因此立即停止并返回这个 Promise。</p>
-</details>
-
-<h2>练习 5：next</h2>
-<p>user-question answerer 不负责当前请求，却直接 <code>return undefined</code>，会自动进入下一位吗？</p>
-<details><summary>展开答案</summary>
-
-<p>不会。waterfall 是否继续由 <code>next()</code> 决定；不调用就截断后续链。应显式 <code>return next()</code>。</p>
-</details>
-</article>
-<article id="doc-4"><div class="doc-label">分享稿</div><h1>第八讲分享稿 · 五种事件不是五个近义词</h1>
-<h2>三分钟主线</h2>
-<ol>
-<li>emit 像广播铃：叫到所有人，但不等异步工作。</li>
-<li>parallel 像并发派工：全部开工，全部 settled 后汇总失败。</li>
-<li>serial 像顺序会签：逐个 await，遇有效答案停止。</li>
-<li>bail 像同步抢答：不 await，第一份有效返回立即获胜。</li>
-<li>waterfall 像层层门卫：<code>next()</code> 向里，结果向外；不 next 就接管。</li>
-</ol>
-<h2>真实例子</h2>
-<p><code>userQuestions.ask()</code> 通过 scoped waterfall 找回答者，最后以 <code>NO_PROVIDER</code> 作为默认 inner。回答者能处理就返回，不能处理就 <code>next()</code>。</p>
-<h2>收尾</h2>
-<p>读事件源码先找三处：类型声明、dispatch 方式、listener。只看到事件名，仍不知道调度契约。</p>
-</article>
-<article id="doc-5"><div class="doc-label">术语词典</div><h1>第八讲术语与比喻词典</h1>
+<p>进入时先校验；调用继续函数后，把控制交给剩余队列；结果回来再审计。也可以不调用继续函数而直接返回，此时后面的监听器和默认处理都不会执行。它很像拦截器的前置与后置处理，但具体参数契约要读这个项目，不能照搬别的框架。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L224-L243">接力链源码</a> 用队列依次取出下一项。这里的继续函数<strong>不接收替换参数</strong>，因此不能写成 <code>next(newInput)</code> 并声称它会把新参数传给下一层。闭包中的参数才是这条实现实际使用的参数。</p>
+<p>这一点修正了旧稿中的错误说法：本实现不是预先从后往前包装监听器，也没有通过继续函数替换参数的接口。可以讲“逐层进入、逐层返回”的可观察过程，但不能借别的中间件实现来补不存在的机制。</p>
+<h2>六、真实案例：谁来向用户追问缺失信息</h2>
+<p>回到测试排查。如果缺少复现条件，系统可能需要询问用户。负责发问的服务不该写死当前一定是网页界面。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/interaction/user-questions/src/types.ts#L85-L90">问题事件的类型契约</a> 说明请求和继续处理的形式。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/interaction/user-questions/src/index.ts#L130-L142">发问实现</a> 把“没有回答者”的函数放在链尾。</p>
+<p>作用域中某个处理者能回答，就返回结果；不负责，就交给后面。所有处理者都放行后，链尾抛出 <code>NO_PROVIDER</code>（没有可用回答者）。这不是默认成功，也不是模型已经得到用户同意。它只是一次提问没有找到承接方的明确失败。</p>
+<p>第七讲的服务解决“找到提问入口”；本讲的接力链解决“提问由哪个参与者承接”。二者不是互相替代的两套名词，而是在同一任务的不同位置分工。</p>
+<h2>七、用一张契约表选路，再回源码核对</h2>
 <table>
 <thead>
 <tr>
-<th>中文 / 英文</th>
-<th>比喻</th>
-<th>实际职责</th>
-<th>边界</th>
+<th>调用方式</th>
+<th>等待什么</th>
+<th>谁决定停止</th>
+<th>本讲的直觉</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>emit</td>
-<td>广播铃</td>
-<td>同步调用全部 listener，不等待 Promise</td>
-<td>不代表异步工作完成</td>
+<td><code>emit</code>（通知）</td>
+<td>不等监听器的异步结果</td>
+<td>同步异常仍可中断遍历</td>
+<td>按门铃</td>
 </tr>
 <tr>
-<td>parallel</td>
-<td>并发派工</td>
-<td>并发等待全部 settled，汇总失败</td>
-<td>不自动取消其他任务</td>
+<td><code>parallel</code>（并行等待）</td>
+<td>所有监听器的最终结果</td>
+<td>全部完成后汇总错误</td>
+<td>等所有人交卷</td>
 </tr>
 <tr>
-<td>serial</td>
-<td>顺序会签</td>
-<td>逐个 await，遇 bail 值停止</td>
-<td>有明确顺序</td>
+<td><code>bail</code>（同步裁决）</td>
+<td>不展开异步凭据</td>
+<td>首个停止值</td>
+<td>当场要答复</td>
 </tr>
 <tr>
-<td>bail</td>
-<td>同步抢答</td>
-<td>同步寻找第一个有效返回</td>
-<td>不 await Promise</td>
+<td><code>serial</code>（逐个等待裁决）</td>
+<td>当前监听器的最终值</td>
+<td>首个最终停止值</td>
+<td>等这人答完再问下一人</td>
 </tr>
 <tr>
-<td>bail value</td>
-<td>已有结论</td>
-<td>非 null、false、undefined 的返回值</td>
-<td><code>0</code>、空字符串也算</td>
-</tr>
-<tr>
-<td>waterfall</td>
-<td>层层门卫</td>
-<td>around middleware 组合</td>
-<td>不是普通流水线数组</td>
-</tr>
-<tr>
-<td>next</td>
-<td>放行按钮</td>
-<td>调用内层 listener 或默认处理</td>
-<td>不调用即截断</td>
-</tr>
-<tr>
-<td>inner</td>
-<td>最里层柜台</td>
-<td>全部 listener 放行后的默认处理</td>
-<td>可以抛兜底错误</td>
+<td><code>waterfall</code>（包裹式接力）</td>
+<td>由接力链返回值决定</td>
+<td>当前处理者是否继续</td>
+<td>门卫放行与回程处理</td>
 </tr>
 </tbody></table>
+<p>表里的顺序是比较顺序，不是一次任务依次经过五种模式。实际读源码时，先找事件类型，再找采用哪种分发方法，最后找监听者；缺任何一站都不能还原协作契约。</p>
+<p>现在，我们已经把同一个助手的记录、装配、清理、接线和协作串起来了。下一阶段将回到第一讲的主角——循环驱动，深入看一次模型请求如何组织、工具结果如何推动下一步以及何时真正停止。当前九讲只是进入核心机制的基础，不等于已经学完全部运行原理。</p>
+</article>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第八讲练习与答案</h1>
+<h2>1. 通知是否表示办完</h2>
+<p>首个通知监听器同步抛错，第二个一定会执行吗？异步监听器返回后又是否表示异步工作完成？</p>
+<details><summary>展开答案</summary>
+
+<p>都不能保证。同步异常会打断这段遍历；正常返回也不等待异步结果。先区分有没有调用，再区分有没有完成。</p>
+</details>
+
+<h2>2. 同样返回一个异步凭据</h2>
+<p>首个监听器返回 <code>Promise.resolve(false)</code>，同步裁决与逐个等待裁决有何不同？</p>
+<details><summary>展开答案</summary>
+
+<p>同步裁决看到凭据对象就停止；逐个等待裁决先得到最终的 <code>false</code>，按本项目规则继续问下一人。不要只凭方法名猜结果。</p>
+</details>
+
+<h2>3. 继续函数能换参数吗</h2>
+<p>在本项目接力链里写 <code>next(newInput)</code>，是否能让下一层收到新参数？</p>
+<details><summary>展开答案</summary>
+
+<p>不能。本实现的继续函数不读取替换参数，下一层使用闭包中原有参数。真实示例应调用 <code>next()</code>。这不是所有中间件框架的通用规则，而是本源码的契约。</p>
+</details>
+
+<h2>4. 所有人都放行</h2>
+<p>用户提问链中没有人接管，最后会怎样？</p>
+<details><summary>展开答案</summary>
+
+<p>到达末尾默认处理，抛出 <code>NO_PROVIDER</code>（没有可用回答者）。不能因此编造用户答复或授权。</p>
+</details>
+
+<h2>5. 回到整条任务</h2>
+<p>为什么“能从上下文找到提问服务”仍不等于“这次问题一定有人回答”？</p>
+<details><summary>展开答案</summary>
+
+<p>服务查找解决入口可用性，接力分发解决当前请求由谁承接。两层分别有失败边界；需要继续核对作用域、监听者与是否调用继续函数。</p>
+</details>
+</article>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第8讲分享稿 · 事件协作：通知、等待、裁决与接力</h1>
+<h2>开场：从同一任务说起</h2>
+<p>我们让助手排查一个 Java 测试失败。第七讲解决找到能力。现在继续到同一任务里的通知、等待和向用户追问，观察它们为何不能用同一种分发方式。 今天不讲一串孤立术语，只回答：一件事发生后，怎样让参与者按正确契约合作？</p>
+<h2>三分钟讲清</h2>
+<ol>
+<li>区分发出通知与异步任务已完成。先用下面的比喻建立直觉，再回到逐步讲解中的源码证据。</li>
+<li>推导异步返回值在两种裁决中的不同结果。先用下面的比喻建立直觉，再回到逐步讲解中的源码证据。</li>
+<li>从继续函数和默认处理还原真实接力链。先用下面的比喻建立直觉，再回到逐步讲解中的源码证据。</li>
+</ol>
+<p>Event（事件协作约定）：用事件名与参数组织处理，不自动等于可靠消息队列。</p>
+<p>Listener（监听器）：登记参与一次事件处理的函数，不是后台线程的同义词。</p>
+<p>emit（通知分发）：同步逐个调用但不等异步结果；同步异常仍可能中断。</p>
+<h2>把结论接回任务</h2>
+<p>下一阶段进入模型请求、工具执行与停止条件；第十讲以后目前只有计划，尚未发布正文。 这不是另换一个故事，而是继续追问当前答案还没解释的那一部分。</p>
+<p>分享结束请对方用自己的话复述一个正常过程，再提出一种失败情况。能念出定义不算完成；能指出该查哪个源码边界，才说明形成了可用理解。</p>
+</article>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第8讲术语与比喻词典</h1>
+<p>遇到陌生词，先回到这个问题：一件事发生后，怎样让参与者按正确契约合作？ 以下是查阅页，正文会在需要时解释关键概念。英文只用于和源码对照；它不是额外的背诵任务。</p>
+<table>
+<thead>
+<tr>
+<th>英文与中文</th>
+<th>直觉、实际职责与边界</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Event（事件协作约定）</td>
+<td>用事件名与参数组织处理，不自动等于可靠消息队列。</td>
+</tr>
+<tr>
+<td>Listener（监听器）</td>
+<td>登记参与一次事件处理的函数，不是后台线程的同义词。</td>
+</tr>
+<tr>
+<td>emit（通知分发）</td>
+<td>同步逐个调用但不等异步结果；同步异常仍可能中断。</td>
+</tr>
+<tr>
+<td>parallel（并行等待）</td>
+<td>等待全部参与者结束后汇总错误，不自动取消其余任务。</td>
+</tr>
+<tr>
+<td>bail（同步遇到结论就停）</td>
+<td>直接检查返回值，异步凭据对象本身也可能使它停止。</td>
+</tr>
+<tr>
+<td>serial（逐个等待后裁决）</td>
+<td>先得到当前最终值，再决定是否询问下一人。</td>
+</tr>
+<tr>
+<td>waterfall（包裹式接力链）</td>
+<td>处理者决定是否继续，并可处理回程结果。</td>
+</tr>
+<tr>
+<td>next（继续后续处理）</td>
+<td>本实现的继续函数不接收用于替换请求的参数。</td>
+</tr>
+<tr>
+<td>fallback（末尾默认处理）</td>
+<td>所有人都放行后才走到这里；默认处理可以抛错，未必成功。</td>
+</tr>
+</tbody></table>
+<h2>别让比喻越界</h2>
+<p>工单不是线程，通讯录不是模型的记忆，房间不是安全沙箱，图上的阅读箭头也不自动等于源码调用。遇到行为判断，回<a href="../previews/lesson-08.html#doc-2">逐步讲解</a>检查实现与异常分支。</p>
 </article></main>
 </body>
 </html>

@@ -47,120 +47,41 @@
 </head>
 <body>
   <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/lesson-01.html#doc-0">学习导航</a><a href="../previews/lesson-01.html#doc-1">视觉课件</a><a href="../previews/lesson-01.html#doc-2">逐步讲解</a><a href="../previews/lesson-01.html#doc-3">练习与答案</a><a href="../previews/lesson-01.html#doc-4">分享稿</a><a href="../previews/lesson-01.html#doc-5">术语词典</a></nav>
-  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第一讲 · 给聪明的大脑配一间工作室</h1>
-<blockquote>
-<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。比喻帮助理解，结论以该快照的源码与维护文档为准。</p>
-</blockquote>
-<p>你让助手“看看为什么测试失败”。它给出了一段很像样的分析——但它真的读过报告吗？谁执行了命令？如果查到一半，下一个动作又由谁组织？</p>
-<p>这一讲只追这个问题：<strong>模型怎样从“能给建议”走到“能借助环境持续做事”？</strong></p>
-<h2>先怎么学</h2>
-<p>第一次建议留出 60–80 分钟，不需要先背术语表，也不需要先运行项目。</p>
-<table>
-<thead>
-<tr>
-<th>时间</th>
-<th>做什么</th>
-<th>带走什么</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>8 分钟</td>
-<td>看 <a href="../previews/lesson-01.html#doc-1">视觉课件</a></td>
-<td>记住大脑、工具箱和工作台</td>
-</tr>
-<tr>
-<td>25 分钟</td>
-<td>读 <a href="../previews/lesson-01.html#doc-2">逐步讲解</a></td>
-<td>跟着一次测试排查，分清谁想、谁做、谁记</td>
-</tr>
-<tr>
-<td>15 分钟</td>
-<td>按讲解走五个源码站点</td>
-<td>从入口看到组装，在启动边界停下</td>
-</tr>
-<tr>
-<td>15 分钟</td>
-<td>做 <a href="../previews/lesson-01.html#doc-3">练习</a>，先别展开答案</td>
-<td>用预测和证据检验自己是否真懂</td>
-</tr>
-<tr>
-<td>5 分钟</td>
-<td>试讲 <a href="../previews/lesson-01.html#doc-4">分享稿</a></td>
-<td>不照读也能说明核心关系</td>
-</tr>
-</tbody></table>
-<p>遇到陌生英文时查 <a href="../previews/lesson-01.html#doc-5">术语与比喻词典</a>。正文第一次用到它时也会解释；词典不是前置考试。</p>
-<h2>学到哪一层就够了</h2>
-<p><strong>现在必须懂</strong>：模型负责推理生成；运行支撑组织动作、记录与后续过程；本项目的核心能力本身也按插件组合；第一次读源码先看装配，不钻进循环内部。</p>
-<p><strong>知道存在即可</strong>：工具、技能、会话、沙箱的区别；方案、套装、补丁如何参与组装；源码里的 Agent 和驱动它的循环不是同一个角色。</p>
-<p><strong>留到后面</strong>：插件生命周期、事件分发细节、工具审批、日志投影、上下文压缩和循环状态机。看到陌生实现先记位置，不必在第一讲全部解锁。</p>
-<h2>完成标准：合上教材做三件事</h2>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第1讲学习导航 · 一次测试排查：模型怎样成为能做事的助手</h1>
+<p>从你熟悉的 Java 测试失败现场出发。</p>
+<p>本讲只追一个问题：<strong>助手为什么不能只靠一次回答完成测试排查？</strong></p>
+<h2>怎样阅读</h2>
+<p>先看<a href="../previews/lesson-01.html#doc-1">视觉课件</a>建立画面，再读<a href="../previews/lesson-01.html#doc-2">逐步讲解</a>把证据接起来。用<a href="../previews/lesson-01.html#doc-3">练习</a>检查能否解释失败分支；最后借<a href="../previews/lesson-01.html#doc-4">分享稿</a>讲给别人听。<a href="../previews/lesson-01.html#doc-5">词典</a>是随用随查的工具，不需要预先背诵。</p>
+<p>现在必须懂的是本讲问题与答案；源码符号只在定位时保留原拼写，代码中的标识不作破坏性翻译。TypeScript 是本项目主要源码语言，JavaScript 是其运行语义基础；Cordis 是项目使用的插件组织框架。对照 Java 只帮助理解，不意味着机制逐项相同。</p>
+<h2>学会的判断标准</h2>
 <ol>
-<li>用“大脑、扳手、手册、日志”解释一个助手如何排查测试；说出比喻至少一个失效点。</li>
-<li>在源码中找到 CLI 的方案分支、补丁顺序和基础套装里的六个核心插件行；能说出这些证据不能证明什么。</li>
-<li>把“模型自己读了文件”“日志全量塞进模型”“清单后写就后启动”改成更准确的说法。</li>
+<li>区分生成请求与实际执行。</li>
+<li>用同一任务解释模型、工具、记录与约束。</li>
+<li>区分完整助手与源码中的运行句柄。</li>
 </ol>
-<p>不必背目录。能解释为什么去看那个文件，比背文件名更重要。</p>
-<h2>可直接打开的成品</h2>
-<ul>
-<li><a href="../previews/lesson-01.html">整讲浏览版</a>：六份材料集中阅读，手写图与文字配套。</li>
-<li><a href="../assets/lesson-01/reader/fig-02-five-objects.png">五个工作物件</a>：用扳手、手册、日志、资料夹和盾牌记住各自的职责。</li>
-<li><a href="../evidence/lesson-01.html">源码事实与边界</a>：想核对结论时再打开。</li>
-</ul>
-<blockquote>
-<p>本讲的“排查测试”是教学故事，不是一次已经执行过的真实测试记录。</p>
-</blockquote>
+<h2>在全书中的位置</h2>
+<p>主线建议：第一讲 → 第五讲 → 第九讲 → 第六讲 → 第七讲 → 第八讲。第二至四讲是语法与工程地图补课；编号保留以兼容旧链接。这是学习顺序，不是程序执行顺序。</p>
+<p>下一站：<a href="../previews/lesson-05.html#doc-2">第5讲</a>。报告已读到，下一次模型请求怎样记住它？</p>
+<p><a href="../previews/lesson-01.html">本讲浏览版</a> · <a href="../evidence/lesson-01.html">源码证据</a></p>
 </article>
-<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第一讲 · 一颗大脑，还缺什么？</h1>
-<blockquote>
-<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。比喻帮助理解，结论以该快照的源码与维护文档为准。</p>
-</blockquote>
-<h2>1. 它说得对，但它动过手吗？</h2>
-<p>你发来一句：“测试失败了，帮我看看。”如果只把这句话交给模型，它能推理和生成建议，却不能仅凭这句话知道磁盘上的实际报告。</p>
-<p>模型（Model）先想成一颗大脑；运行支撑系统（Harness）先想成它的工具箱和整套工作安排。两者配合，才形成我们平常说的“能做事的助手”。</p>
-<p><img src="../assets/lesson-01/reader/fig-01-brain-and-workshop.png" alt="小机器人约等于大脑加工具箱；大脑负责推理生成，工具箱代表连接能力、记录与规则的运行支撑"></p>
-<blockquote>
-<p>图 1：会想与能做不是一回事。这里的助手指整体智能体系统，不是源码 Agent 类型的定义；工具箱也不只有工具。</p>
-</blockquote>
-<p>先暂停三秒：<strong>图中如果只剩下大脑，哪件事不能据此声称已经发生？</strong> 答：真实读文件或运行测试。分析文字不等于执行证据。</p>
-<p>回到源码：模型调用、工具、会话和循环由不同包承担职责。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/llm/llm/README.md">模型调用包</a>；<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/architecture.md#core-packages">核心架构</a>。</p>
-<h2>2. 排查时，到底拿哪件东西？</h2>
-<p>我们打开箱子，不先背五个英文名。想象你真的走进工作间：材料在资料夹里，步骤在手册里，动作靠扳手，过程记在日志上，危险动作受护栏约束。</p>
-<p><img src="../assets/lesson-01/reader/fig-02-five-objects.png" alt="同一工作台上的五种物件：扳手做动作，手册教方法，日志记过程，资料夹放材料，盾牌代表执行约束"></p>
-<blockquote>
-<p>图 2：先分清“做、教、记、读、约束”，再记名字。并排是职责对照，不是运行顺序；护栏不意味着绝对安全。</p>
-</blockquote>
-<p>工具（Tool）是可调用的动作；技能（Skill）是可复用的任务指令；会话（Session）保存追加的事件记录；文件系统（Filesystem）提供访问文件材料的能力；沙箱（Sandbox）在本项目中主要约束子进程的文件影响范围。</p>
-<p><strong>小测：给助手一本“测试排查手册”，它就能跑测试了吗？</strong> 不能。还需要相应工具、执行环境和允许执行的条件。</p>
-<p>证据：<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/tools/README.md">工具</a>、<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/skill/README.md">技能</a>、<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/README.md">会话</a>、<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/README.md">文件能力</a>、<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/sandbox/README.md">沙箱</a>。</p>
-<h2>3. 为什么不把所有设备焊在一张台子上？</h2>
-<p>想加一个新模型、换一种日志保存方式，就去修改同一个巨大主函数，会让变化彼此牵连。这里的直觉不是“插件很多”，而是“能力之间留有装配边界”。</p>
-<p>插件（Plugin）像可安装的模块。Cordis 是管理这些模块的框架：让它们贡献服务、声明依赖、参与事件与回收副作用。先把它想成工作台的安装规矩，不把它想成另一个模型。</p>
-<p><img src="../assets/lesson-01/reader/fig-03-pluggable-workbench.png" alt="大脑、日志和扳手分别安在插拔模块上，落到共同工作台，表达核心能力也按插件组织"></p>
-<blockquote>
-<p>图 3：核心能力也用插件装配，不只是外围扩展才叫插件。接口、依赖和生命周期仍需匹配，不能理解成随便拔插。</p>
-</blockquote>
-<p>回到源码：<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/architecture.md#cordis">架构说明</a> 明确把模型适配器、工具注册、会话日志和循环列为插件；<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/cordis-primer.md#cordis-in-five-ideas">Cordis 入门</a> 解释它们如何协作。</p>
-<h2>4. 同一套零件，怎么装成不同工作室？</h2>
-<p>装配方案（Profile）决定采用哪些套装和调整；套装（Bundle）带来一组插件配置与代码；补丁（Patch）按规则调整配置。</p>
-<p><img src="../assets/lesson-01/reader/fig-04-assembly-sheets.png" alt="四张装配清单依次代表套装、方案、用户与命令行补丁，最后形成待启动的装配配置"></p>
-<blockquote>
-<p>图 4：这是配置应用顺序，不是插件激活顺序。实际 overlays 还包含启动代码合成的调整；图中只突出常见的命令行补丁入口。</p>
-</blockquote>
-<p>不用猜框架机制，先读 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/profile-boot.ts#L136">allPatches()</a>。四组展开顺序就是眼前这叠清单的源码依据。具体插件能否激活，还要看依赖等条件。</p>
-<h2>5. 第一次打开仓库，去哪里？</h2>
-<p><img src="../assets/lesson-01/reader/fig-05-reading-trail.png" alt="五站阅读路线：架构说明、命令行入口、方案组装、基础套装、回到启动调用；仅表示阅读顺序"></p>
-<blockquote>
-<p>图 5：我们去翻配置，再回到调用处；配置文件不是被函数“调用”的一站。</p>
-</blockquote>
-<p>准确文件和要找的符号在 <a href="../previews/lesson-01.html#doc-2">逐步讲解</a> 的“五站源码小旅行”。第一讲在 boot() 停下，把“怎么组起来”看清后，再学“怎么跑起来”。</p>
-<h2>6. 接到任务之后，不是一路直冲到底</h2>
-<p><img src="../assets/lesson-01/reader/fig-06-runtime-story.png" alt="四幕测试排查故事：接任务、模型提出工具请求、尝试获准动作并留下记录、带着结果继续判断或回答"></p>
-<blockquote>
-<p>图 6：动作结果回来以后，才有新的证据。需要工具只是一个可能分支，工具可能被拒绝，模型也可能直接回答。</p>
-</blockquote>
-<p>一步（Step）是一次模型请求及其工具调用；一轮（Turn）可以有零个或多个步骤。接收输入不应被画成某一步内部的模型调用。参见 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/architecture.md#turn-flow">运行过程</a>。</p>
-<p>合上这一页，试着说一句：<strong>大脑想，支撑系统组织做；日志留下证据，结果决定后续。</strong></p>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第1讲视觉课件 · 一次测试排查：模型怎样成为能做事的助手</h1>
+<p>从你熟悉的 Java 测试失败现场出发。</p>
+<p>每张图只帮助回答一个问题。看完图后，请用一句话解释图中的动作或边界，再到<a href="../previews/lesson-01.html#doc-2">逐步讲解</a>核对源码。</p>
+<h2>1. 聪明的大脑，怎样变成能干活的助手？</h2>
+<p><img src="../assets/lesson-01/reader/fig-01-brain-and-workshop.png" alt="聪明的大脑，怎样变成能干活的助手？"></p>
+<p>整体助手是教学近似，不是源码 Agent（源码中的运行句柄）类型的定义；工具箱也不只是工具集合。</p>
+<h2>2. 打开工具箱：这五样东西各做什么？</h2>
+<p><img src="../assets/lesson-01/reader/fig-02-five-objects.png" alt="打开工具箱：这五样东西各做什么？"></p>
+<p>并排只表达职责区分，不代表真实调用顺序；盾牌不是绝对安全保证。</p>
+<h2>3. 不把设备焊死：核心能力也能按模块装配</h2>
+<p><img src="../assets/lesson-01/reader/fig-03-pluggable-workbench.png" alt="不把设备焊死：核心能力也能按模块装配"></p>
+<p>只表示核心能力插件化；不是随意拔插、自动兼容或真实加载时序。</p>
+<h2>4. 工具结果怎样影响后续判断？</h2>
+<p><img src="../assets/lesson-01/reader/fig-06-runtime-story.png" alt="工具结果怎样影响后续判断？"></p>
+<p>这是数据与动作的简化循环，实际记账与请求由运行支撑组织，不是模型直接操作文件。</p>
+<h2>把图连成一句话</h2>
+<p>区分生成请求与实际执行；用同一任务解释模型、工具、记录与约束；区分完整助手与源码中的运行句柄。这些不是互不相干的名词，而是在回答“助手为什么不能只靠一次回答完成测试排查？”。</p>
+<p>报告已读到，下一次模型请求怎样记住它？</p>
 </article>
 <article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第一讲逐步讲解 · 跟着一次测试排查，走进工作室</h1>
 <blockquote>
@@ -170,312 +91,176 @@
 <p>假设我们正在维护一个 Java 服务，刚改完校验逻辑，一条测试失败了。你对助手说：“帮我找原因。”下面是为讲解而设计的场景，不代表教材生成时实际运行了这条测试。</p>
 <p>助手回答：“可能是边界条件没覆盖。”这句话听起来合理，但你会追问：哪条断言？预期值是什么？实际值是什么？它是否真的打开过报告？</p>
 <p>这个追问很重要。<strong>一句像样的解释，只能证明生成了这句话，不能证明读取或执行已经发生。</strong></p>
-<p>模型（Model）接收提供给它的上下文，推理并生成输出。输出可能是文字，也可能包含工具调用请求。模型像大脑：能判断“应该去看报告”，但这个判断还不是一次文件读取。</p>
-<p>让请求真的接到工具、把结果带回来、留下过程记录，再决定是否继续，需要模型之外的运行支撑系统（Harness）。</p>
-<p><img src="../assets/lesson-01/reader/fig-01-brain-and-workshop.png" alt="大脑与工具箱共同支撑机器人助手：模型推理生成，Harness 组织能力、记录和规则"></p>
+<p>Model（模型）接收提供给它的上下文，推理并生成输出。输出可能是文字，也可能包含Tool（工具）调用请求。模型像大脑：能判断“应该去看报告”，但这个判断还不是一次文件读取。</p>
+<p>让请求真的接到工具、把结果带回来、留下过程记录，再决定是否继续，需要模型之外的Harness（运行支撑系统）。</p>
+<p><img src="../assets/lesson-01/reader/fig-01-brain-and-workshop.png" alt="大脑与工具箱共同支撑机器人助手：模型推理生成，运行支撑系统组织能力、记录和规则"></p>
 <blockquote>
-<p>图 1：这里说的是整体助手的教学近似。源码中的 Agent 是具体运行对象的控制句柄，不能拿图中的等式直接定义它。</p>
+<p>本图：这里说的是整体助手的教学近似。源码中的智能体是具体运行对象的控制句柄，不能拿图中的等式直接定义它。</p>
 </blockquote>
-<p><strong>回到真实项目。</strong> <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/llm/llm/README.md">模型调用包</a> 负责不依赖具体厂商的调用接口和共享消息词汇；具体适配器处理厂商差异。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent/README.md">Agent 包</a> 提供运行对象的句柄、登记与事件，默认创建和驱动由 Agent Loop 提供。循环（Agent Loop）像安排“下一步做什么”的值班流程，但不是大脑本身，也不是整个 Harness。</p>
+<p><strong>回到真实项目。</strong> <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/llm/llm/README.md">模型调用包</a> 负责不依赖具体厂商的调用接口和共享消息词汇；具体适配器处理厂商差异。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent/README.md">智能体包</a> 提供运行对象的句柄、登记与事件，默认创建和驱动由 Agent Loop（智能体循环驱动）提供。这套循环像安排“下一步做什么”的值班流程，但不是大脑本身，也不是整个运行支撑系统。</p>
 <p>现在只记一个区别：<strong>会推理是模型的能力，把推理嵌进可持续工作过程是系统的工作。</strong></p>
-<h2>二、拿到手册，不等于拿到了扳手</h2>
-<p>继续这个测试故事。我们希望助手先看失败断言，再核对相关代码，最后用证据解释原因。这里开始需要五件不同的东西。</p>
+<h2>二、先看完整任务：证据怎样推动下一步</h2>
+<p>先暂时把工作台如何装好放到一边，假设所需能力已经可用。用户的排查请求到了，下面只展示“可能需要调用工具”的一种教学路径。</p>
+<p><img src="../assets/lesson-01/reader/fig-06-runtime-story.png" alt="接任务、模型判断缺什么证据、工具在策略内尝试动作并留下记录、模型读取结果后继续或回答"></p>
+<blockquote>
+<p>本图只画了需要工具的一种路径。模型不一定调用工具；工具也可能被拒绝或失败。故事次序不代表所有底层事件的精确发生顺序。</p>
+</blockquote>
+<p>先是输入被接收并进入处理流程。随后模型拿到本次提供的信息，可能提出工具请求。运行支撑组织一次受保护的执行尝试，结果或拒绝信息影响后续判断；相关过程进入Session（会话）记录。还有事情需要模型继续处理时，再发起后续模型请求。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/architecture.md#turn-flow">架构文档的一轮处理流程</a> 明确区分：Step（一步模型交互）是一次模型请求加上其工具调用；Turn（一轮处理）可以包含零个或多个步骤。输入接收不是一步模型交互的定义，模型直接回答也是正常分支。</p>
+<p>所以不要把助手想成“模型一次性吐出全部正确动作”的流水线。更有用的画面是：<strong>看证据，做一次受约束的尝试，再看结果。</strong> 本讲不保证它一定查对，也不保证每个请求都会被允许。</p>
+<p>接着把这条路径放进同一份教学案例：读到报告后，发现“预期拒绝负数，实际却通过”；助手再请求查看校验代码，比较断言与分支，然后说明原因。此时用户只授权排查，流程不能自行改代码。只有用户进一步同意修复，才进入修改与相关测试；测试失败就重新收集证据，测试通过也只说明已执行的检查通过，不能概括成所有问题消失。</p>
+<p>整个过程像工程师查故障时反复翻报告、看代码、做验证。不同之处是：模型负责提出判断和下一步请求，程序负责组织调用、接回结果和维持状态。一次模型输出既不是整次任务，也不是执行证明。</p>
+<h2>三、拿到手册，不等于拿到了扳手</h2>
+<p>我们已经看见完整路径，现在把每一步用到的东西从工作台上分开。我们希望助手先看失败断言，再核对相关代码，最后用证据解释原因。这里开始需要五件不同的东西。</p>
 <p><img src="../assets/lesson-01/reader/fig-02-five-objects.png" alt="工作台上的扳手、手册、日志、资料夹和护栏盾牌，分别对应动作、方法、记录、材料与执行约束"></p>
 <blockquote>
-<p>图 2：同一台面表示这些职责共同支撑任务，不表示它们在源码中依次调用。</p>
+<p>本图：同一台面表示这些职责共同支撑任务，不表示它们在源码中依次调用。</p>
 </blockquote>
 <h3>1. 扳手：动作真的发生在这里</h3>
-<p>工具（Tool）是对模型暴露的可调用动作及其受保护的执行路径。模型可能请求“读某个文件”，工具系统负责查找相应实现，并经过策略等环节尝试执行。</p>
-<p>联想到 Java 后端：方法签名说明“能请求什么”，实现才真正做事，拦截器或权限检查还可能拒绝请求。但这只是帮助入门，并不是说工具注册就是 Spring MVC。</p>
+<p>工具是对模型暴露的可调用动作及其受保护的执行路径。模型可能请求“读某个文件”，工具系统负责查找相应实现，并经过策略等环节尝试执行。</p>
+<p>联想到 Java 后端：方法签名说明“能请求什么”，实现才真正做事，拦截器或权限检查还可能拒绝请求。但这只是帮助入门，并不是说工具注册就是 Spring MVC（Java 网络请求处理框架）。</p>
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/tools/README.md">工具包的职责说明</a> 同时提到工具定义与执行管线，所以我们不能把“模型看到了工具说明”写成“它已经有权限执行”。</p>
 <h3>2. 手册：告诉它怎样做，不替它做</h3>
-<p>技能（Skill）是一组可复用的任务指令。可以像团队的故障排查手册：先收集什么证据、按什么顺序判断、如何输出结果。</p>
+<p>Skill（技能指令）是一组可复用的任务指令。可以像团队的故障排查手册：先收集什么证据、按什么顺序判断、如何输出结果。</p>
 <p>手册里写“运行相关测试”，不会自己启动进程。真正执行仍要靠工具；是否允许执行仍受执行策略约束。反过来，有测试工具但没有合适方法，助手也可能查错方向。</p>
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/skill/README.md">技能包</a> 还区分提供指令的来源、汇总目录和加载使用的一侧。第一讲知道“可发现、可加载的指令”即可，暂不拆内部机制。</p>
 <h3>3. 日志：记的是经过，不是凭空多一个大脑</h3>
-<p>会话（Session）像工作日志。用户输入、模型输出以及工作过程中相关事件形成可追加的记录。需要下一次模型请求时，可以从日志派生消息。</p>
-<p>这里有两个容易漏掉的限制。第一，<strong>日志不等于每次原样、全量送给模型的内容</strong>。第二，日志能力不等于已经可靠地落盘；持久化是独立后端的职责。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/README.md">会话包</a> 对追加事件、deriveMessages 和独立持久化有明确说明。</p>
+<p>会话像工作日志。用户输入、模型输出以及工作过程中相关事件形成可追加的记录。需要下一次模型请求时，可以从日志派生消息。</p>
+<p>这里有两个容易漏掉的限制。第一，<strong>日志不等于每次原样、全量送给模型的内容</strong>。第二，日志能力不等于已经可靠地落盘；持久化是独立后端的职责。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/README.md">会话包</a> 对追加事件、deriveMessages（消息派生方法） 和独立持久化有明确说明。</p>
 <p>你可以联想到事件日志与读模型：同一份历史可以组织成供特定用途读取的结果。不过本讲不把它与某个 Java 事件溯源框架画等号。</p>
 <h3>4. 资料夹与护栏：材料在哪儿，动作能到哪儿</h3>
-<p>文件系统（Filesystem）能力让系统读写文件材料；文件工具再把相关能力呈现为模型可请求的动作。它不是模型训练时记住的知识。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/README.md">文件能力组</a> 区分接口、实现和面向模型的工具。</p>
-<p>沙箱（Sandbox）在本项目的这组包中，主要对子进程执行的文件影响范围施加策略。护栏这个比喻只是说“有约束”，并不等于绝对安全。也不能把它直接换成 Docker：同一环境中的限制，与容器、虚拟机或远程执行环境的替换不是一回事。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/sandbox/README.md">沙箱边界说明</a>。</p>
+<p>文件系统能力让系统读写文件材料；文件工具再把相关能力呈现为模型可请求的动作。它不是模型训练时记住的知识。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/README.md">文件能力组</a> 区分接口、实现和面向模型的工具。</p>
+<p>沙箱在本项目的这组包中，主要对子进程执行的文件影响范围施加策略。护栏这个比喻只是说“有约束”，并不等于绝对安全。也不能把它直接换成 Docker（容器工具）：同一环境中的限制，与容器、虚拟机或远程执行环境的替换不是一回事。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/sandbox/README.md">沙箱边界说明</a>。</p>
 <p>把这个故事翻译成一句话：<strong>手册提示怎么查，工具尝试动作，资料夹提供材料，日志保留经过，护栏约束范围。大脑根据得到的证据继续判断。</strong></p>
-<h2>三、为什么连“核心”都做成插件？</h2>
+<h2>四、为什么连“核心”都做成插件？</h2>
 <p>想象一个主函数同时写死模型调用、工具列表、日志保存和循环逻辑。你只想更换日志后端，却要小心别碰坏整个工作流程。</p>
 <p>这并不是说本项目曾经这样实现过，而是一个用于理解设计价值的反例。可插拔的价值，在于让能力有相对稳定的边界，并由框架管理装配和生命周期，而不是每次都重写整台机器。</p>
 <p><img src="../assets/lesson-01/reader/fig-03-pluggable-workbench.png" alt="模型调用、会话记录与工具执行像三个安装模块，共同接到 Cordis 工作台"></p>
 <blockquote>
-<p>图 3：工作台比喻插件组织框架，不是硬件、操作系统或沙箱；模块化也不意味着任意实现都兼容。</p>
+<p>本图：工作台比喻插件组织框架，不是硬件、操作系统或沙箱；模块化也不意味着任意实现都兼容。</p>
 </blockquote>
-<p>插件（Plugin）可以贡献可调用的服务、类型化事件或可回收的副作用。服务（Service）在这里先理解成“通过稳定名称提供给其他插件的能力”；事件（Event）则让多个参与者围绕某件事协作。</p>
-<p>共享上下文（Context）是查找这些服务的入口，例如 ctx.tools、ctx.llm、ctx.sessions。注意，同样叫“上下文”，它不是每次交给模型的那份提示和消息。</p>
+<p>Plugin（插件定义）可以贡献可调用的服务、类型化事件或可回收的副作用。Service（服务能力）在这里先理解成“通过稳定名称提供给其他插件的能力”；Event（事件）则让多个参与者围绕某件事协作。</p>
+<p>Context（插件上下文）是查找这些服务的入口，例如 <code>ctx.tools</code>（工具服务）、<code>ctx.llm</code>（模型调用入口）、<code>ctx.sessions</code>（会话服务）。注意，同样叫“上下文”，它不是每次交给模型的那份提示和消息。</p>
 <p>Cordis 是组织这些插件的框架。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/cordis-primer.md#cordis-in-five-ideas">Cordis 入门</a> 给出三个现在就有用的规则：</p>
 <ul>
 <li>用稳定的服务键找到能力，不要求消费者直接导入某个具体实现。</li>
-<li>通过 inject 声明必需服务，依赖满足后才能激活，而不是仅看文件位置。</li>
+<li>通过声明必需服务，依赖满足后才能激活，而不是仅看文件位置。</li>
 <li>注册监听器、提示片段等副作用时保留回收机制，卸载或重载时能够清理。</li>
 </ul>
-<p>这和 Spring 的依赖注入、生命周期管理有相似的入门直觉；但别把 ApplicationContext、Bean、Cordis Context 和 Plugin 逐个机械对号入座。我们接下来读的是真实服务键、插件配置和注入声明。</p>
+<p>这和 Spring 的依赖注入、生命周期管理有相似的入门直觉；但别把 ApplicationContext（Spring 应用容器）、受容器管理的对象、Cordis 插件上下文和插件定义逐个机械对号入座。我们接下来读的是真实服务键、插件配置和注入声明。</p>
 <p>“核心也是插件”的直接证据在 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/architecture.md#cordis">架构说明</a>：模型适配器、工具注册、会话日志、循环本身都按插件组织。再去基础套装里找对应配置行，才能把这个说法落地。</p>
-<h2>四、装配方案不是另一种模型</h2>
-<p>同样一套零件，可以用于不同场景。装配方案（Profile）像工作室的选装单：采用哪些套装，再做哪些调整。套装（Bundle）是分发的一组配置行和代码。补丁（Patch）则按规则修改这份装配结果。</p>
-<p><img src="../assets/lesson-01/reader/fig-04-assembly-sheets.png" alt="套装、方案、用户与命令行清单依次应用，得到将要启动的配置；并非插件启动时序"></p>
-<blockquote>
-<p>图 4：图中的先后只说明配置应用。补丁按配置行 ID 定位，可能替换整份 config 或插入新行，不能想成任意嵌套键都自动递归合并。</p>
-</blockquote>
-<p>现在值得看几行源码了。我们不是为了记 TypeScript 语法，而是为了核实“几层清单按什么顺序叠”。</p>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/profile-boot.ts#L136">profile-boot.ts 的 allPatches()</a>：</p>
-<pre><code class="language-ts">function allPatches(composed: ComposedProfile): PatchOptions[] {
-  return [
-    ...composed.bundlePatches,
-    ...composed.profile.patches,
-    ...composed.homePatches,
-    ...composed.overlays,
-  ]
-}
-</code></pre>
-<p>只看四个名字和排列顺序：套装层、方案自己的补丁、用户层、叠加层。最后一层包括命令行 --patch，也包含当前启动逻辑合成的调整；图为第一印象只突出常见入口。</p>
-<p>运行时先准备有效装配配置，再交给启动流程。<strong>这段函数返回的是补丁列表，不是在这里挨个启动插件。</strong> “激活先后还要看依赖”这个结论，要回到 Cordis 的注入机制，不能从数组里猜出来。</p>
-<p>另一个边界：<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/architecture.md#profiles-and-bundles">架构文档</a> 说明常见入口复用 base 套装，但 sdk-minimal 是例外。因此本讲查 base 能帮助理解默认能力，不能由此推出所有方案都用同一套插件。</p>
-<h2>五、五站源码小旅行：每站只问一件事</h2>
-<p><img src="../assets/lesson-01/reader/fig-05-reading-trail.png" alt="面向读者的五站阅读路径，从架构、入口、组装到基础清单，再回启动边界"></p>
-<blockquote>
-<p>图 5：这不是函数调用链。读者中途去翻 YAML 配置，再返回启动函数。</p>
-</blockquote>
-<h3>第一站：先知道要找什么</h3>
-<p>打开 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/architecture.md">docs/architecture.md</a>，只读 Cordis、Profiles and bundles、Core packages。回答：“核心能力通过什么方式组起来？”</p>
-<p>不要被后面所有事件名称吸走。先画出大脑和工作台，才知道接下来找的是什么。</p>
-<h3>第二站：找到命令行的门</h3>
-<p>打开 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/bin.ts#L24">apps/cli/src/bin.ts</a>，找到 parseDshArgs() 和 profile 分支。这段是原文件分支的节选：</p>
-<pre><code class="language-ts">case &#39;profile&#39;: {
-  const { runProfile } = await import(&#39;./profile-boot.ts&#39;)
-  await runProfile({
-    environment: loadLayeredEnv(&#39;dsh&#39;),
-    profile: invocation.profile,
-    patchFiles: invocation.patches,
-    args: invocation.args,
-  })
-  break
-}
-</code></pre>
-<p>看三件事：这是 profile 分支；它把选中的方案与补丁传下去；它调用 runProfile()。这份文件是门口分流，不是把所有核心能力写在一起的巨型循环。</p>
-<h3>第三站：看谁整理装配单</h3>
-<p>进入 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/profile-boot.ts">apps/cli/src/profile-boot.ts</a>，先搜索 composeProfile、allPatches、runProfile。</p>
-<p>composeProfile() 准备方案及相关层；allPatches() 提供应用顺序；runProfile() 把组装工作接到启动。具体配置加载器如何处理依赖，先不追。我们要认识这一层的职责，不是背完每个辅助函数。</p>
-<h3>第四站：去货架核对“核心也是插件”</h3>
-<p>暂时离开调用代码，翻 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/bundle/base/cordis.patch.yml">packages/bundle/base/cordis.patch.yml</a>。</p>
+<h2>五、现在只找三处证据，不必先读完整启动器</h2>
+<p>第一处看<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L339-L366">默认循环的请求边界</a>：循环先从会话取得派生消息，再组装模型请求。这里证明“模型看到什么”需要程序准备，不是日志自己跑去找模型。</p>
+<p>第二处看<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L602-L646">会话追加记录</a>：发生的事情进入日志。第五讲会沿这处入口解释为何要快照、验证与冻结。</p>
+<p>第三处看<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/bundle/base/cordis.patch.yml">基础套装的配置</a>：模型、会话、工具和循环以插件配置出现。它证明装配意图，不证明插件已经运行成功。</p>
+<p>如果此时被类型语法挡住，去第二、三讲补对应语法；如果被目录层次挡住，去第四讲补工程地图。不要为了“按编号学完”而忘掉最初的测试问题。</p>
+<h2>六、装配留给第九讲，先知道它解决什么</h2>
+<p>装配方案决定选择哪些插件套装；配置补丁调整清单；装配器把清单接到插件安装。像按选装单把工作台搭好，而不是给模型换一种推理算法。</p>
+<p>这里先记住两个边界：配置补丁应用顺序不等于插件激活顺序；替换整份配置也不等于逐项深合并。第九讲会用同一张清单把这两个问题展开。现在无需背启动器所有函数名。</p>
+<h2>七、下一讲不是又开一个新故事</h2>
+<p>你应该能解释：助手为什么要先看报告，为什么工具请求不等于执行成功，为什么要记录结果，以及授权修复后为何仍要测试。这样就已抓到可迁移的Agent（智能体）工作直觉：围绕任务组织信息、提出动作、受约束地执行、观察结果并决定继续或停止。</p>
+<p>不同系统在模型接口、记忆、权限、调度和执行环境上会有区别，不能从这个共同直觉推出实现完全相同。我们用 DeepSeek Harness 学的是可核对的机制，不是宣布所有产品内部都一样。</p>
+<p>主线下一站是<a href="../previews/lesson-05.html#doc-2">第五讲：沿会话日志读懂一个包</a>。问题顺势变成：第一次读到的报告，怎样进入第二次请求？<a href="../previews/lesson-01.html#doc-3">练习</a>与<a href="../previews/lesson-01.html#doc-5">词典</a>都围绕这条任务链使用。</p>
+</article>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第1讲练习与答案</h1>
+<p>先独立解释，再展开答案。每题都要求把结论接回任务，不以记住英文拼写作为通过标准。</p>
+<h2>1. 只让排查，能直接改代码吗？</h2>
+<p>助手已找到可疑校验逻辑，是否可以马上修复？</p>
+<details><summary>展开答案与理由</summary>
+
+<p>不能仅凭“帮我找原因”推断用户授权修改。先解释证据和原因；用户同意修复后，才进入修改与验证。推理到一个动作，与获得执行授权是两回事。</p>
+</details>
+
+<h2>2. 手册等于工具吗？</h2>
+<p>已经加载排查手册，但没有执行命令的工具，能运行测试吗？</p>
+<details><summary>展开答案与理由</summary>
+
+<p>不能。手册提示方法，工具实现动作；执行还需要相应环境与允许条件。</p>
+</details>
+
+<h2>3. 报告为什么还要记录？</h2>
+<p>第一次模型请求读到了报告，第二次是否天然还能看到？</p>
+<details><summary>展开答案与理由</summary>
+
+<p>不能假定。程序需要保存相关经过，并组织下一次请求提供的消息。会话日志支撑这一点，但不等于每次把全部日志原样发送。</p>
+</details>
+
+<h2>4. 模型直接回答是否出错？</h2>
+<p>一次简单问题没有任何工具请求，是否说明循环失败？</p>
+<details><summary>展开答案与理由</summary>
+
+<p>不一定。模型可以直接作答。工具是按任务需要选择的路径；是否正确要看证据需求，而不是工具调用次数。</p>
+</details>
+
+<h2>5. 把一句话拆成证据链</h2>
+<p>“助手说修好了，所以问题已解决”，缺了哪些证据？</p>
+<details><summary>展开答案与理由</summary>
+
+<p>至少区分修改是否获准、是否真正写入、哪些验证实际执行、结果是什么。部分测试通过不等于所有场景正确。请回正文定位模型、工具、日志分别承担什么职责。</p>
+</details>
+
+<p><a href="../previews/lesson-01.html#doc-2">回逐步讲解核对源码</a></p>
+</article>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第1讲分享稿 · 一次测试排查：模型怎样成为能做事的助手</h1>
+<h2>开场：从同一任务说起</h2>
+<p>我们让助手排查一个 Java 测试失败。从你熟悉的 Java 测试失败现场出发。 今天不讲一串孤立术语，只回答：助手为什么不能只靠一次回答完成测试排查？</p>
+<h2>三分钟讲清</h2>
+<ol>
+<li>区分生成请求与实际执行。先用下面的比喻建立直觉，再回到逐步讲解中的源码证据。</li>
+<li>用同一任务解释模型、工具、记录与约束。先用下面的比喻建立直觉，再回到逐步讲解中的源码证据。</li>
+<li>区分完整助手与源码中的运行句柄。先用下面的比喻建立直觉，再回到逐步讲解中的源码证据。</li>
+</ol>
+<p>Model（模型）：拿到材料后推理并生成输出，像分析问题的大脑；不会凭一句话证明动作已执行。</p>
+<p>Harness（运行支撑系统）：像带工具、日志和规则的工作室，把推理接入实际工作过程；不只是工具列表。</p>
+<p>Agent（智能体）：通常指围绕任务持续判断与行动的系统；源码同名对象还可能专指运行句柄，必须看语境。</p>
+<h2>把结论接回任务</h2>
+<p>报告已读到，下一次模型请求怎样记住它？ 这不是另换一个故事，而是继续追问当前答案还没解释的那一部分。</p>
+<p>分享结束请对方用自己的话复述一个正常过程，再提出一种失败情况。能念出定义不算完成；能指出该查哪个源码边界，才说明形成了可用理解。</p>
+</article>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第1讲术语与比喻词典</h1>
+<p>遇到陌生词，先回到这个问题：助手为什么不能只靠一次回答完成测试排查？ 以下是查阅页，正文会在需要时解释关键概念。英文只用于和源码对照；它不是额外的背诵任务。</p>
 <table>
 <thead>
 <tr>
-<th>配置行 ID</th>
-<th align="right">快照行号</th>
-<th>先记哪个角色</th>
+<th>英文与中文</th>
+<th>直觉、实际职责与边界</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>llm</td>
-<td align="right">27</td>
-<td>模型调用能力</td>
+<td>Model（模型）</td>
+<td>拿到材料后推理并生成输出，像分析问题的大脑；不会凭一句话证明动作已执行。</td>
 </tr>
 <tr>
-<td>session</td>
-<td align="right">33</td>
-<td>会话记录</td>
+<td>Harness（运行支撑系统）</td>
+<td>像带工具、日志和规则的工作室，把推理接入实际工作过程；不只是工具列表。</td>
 </tr>
 <tr>
-<td>agent</td>
-<td align="right">67</td>
-<td>运行对象句柄与登记</td>
+<td>Agent（智能体）</td>
+<td>通常指围绕任务持续判断与行动的系统；源码同名对象还可能专指运行句柄，必须看语境。</td>
 </tr>
 <tr>
-<td>tools</td>
-<td align="right">474</td>
-<td>工具注册与执行路径</td>
+<td>Agent Loop（智能体循环驱动）</td>
+<td>组织一次次请求与结果的值班流程，不是模型本身。</td>
 </tr>
 <tr>
-<td>system-prompt</td>
-<td align="right">479</td>
-<td>系统提示组装</td>
+<td>Tool（工具）</td>
+<td>可请求的动作与执行路径，像扳手；是否执行还受策略与参数影响。</td>
 </tr>
 <tr>
-<td>agent-loop</td>
-<td align="right">486</td>
-<td>默认运行驱动</td>
+<td>Skill（技能指令）</td>
+<td>可复用的做事方法，像排查手册；手册不替代工具和权限。</td>
+</tr>
+<tr>
+<td>Session（会话）</td>
+<td>记录工作经过的日志及相关状态，不等于每次全量送给模型。</td>
+</tr>
+<tr>
+<td>Sandbox（沙箱）</td>
+<td>约束执行影响范围的机制；护栏并不等于绝对安全。</td>
 </tr>
 </tbody></table>
-<p>这些行足以证明基础套装声明了相关插件配置，<strong>不足以证明</strong>它们在本机成功加载、实际激活顺序如何、某个工具已经执行。配置存在和运行成功是两种证据。</p>
-<h3>第五站：回到启动边界，停下</h3>
-<p>返回 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/profile-boot.ts#L251">runProfile() 内的 boot() 调用</a>。只看调用前部，以下用省略号标记本讲不展开的回调：</p>
-<pre><code class="language-ts">const ctx = await boot(
-  NAME,
-  rootConfig,
-  structuredClone(allPatches(composed)),
-  /* 原文件此处还有初始化回调，本讲暂不展开 */
-)
-</code></pre>
-<p>这是便于观察参数的删节示意，不是可直接替换原文件的完整代码。现在只看 rootConfig 和 allPatches(composed) 如何交到 boot()。回调中的环境注入、命令行服务及就绪处理留给后续入口专题。</p>
-<p>至此，你已有一条可靠的阅读路线：从入口识别方案，去组装函数看清补丁，再到清单核对核心角色，最后返回启动边界。<strong>路线是导航建议，源码事实是每一站亲眼看到的证据。</strong></p>
-<h2>六、台子搭好以后，一次排查怎么往前走？</h2>
-<p>回到开头的测试。工作台已经装好，用户输入也到了。下面只展示“可能需要调用工具”的一种教学路径。</p>
-<p><img src="../assets/lesson-01/reader/fig-06-runtime-story.png" alt="接任务、模型判断缺什么证据、工具在策略内尝试动作并留下记录、模型读取结果后继续或回答"></p>
-<blockquote>
-<p>图 6：虚线是可选的工具路径。模型不一定调用工具；工具也可能被拒绝或失败。故事次序不代表所有底层事件的精确发生顺序。</p>
-</blockquote>
-<p>先是输入被接收并进入处理流程。随后模型拿到本次提供的信息，可能提出工具请求。运行支撑组织一次受保护的执行尝试，结果或拒绝信息影响后续判断；相关过程进入会话记录。还有事情需要模型继续处理时，再发起后续模型请求。</p>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/architecture.md#turn-flow">架构文档的 Turn flow</a> 明确区分：一步（Step）是一次模型请求加上其工具调用；一轮（Turn）可以包含零个或多个步骤。输入接收不是 Step 的定义，模型直接回答也是正常分支。</p>
-<p>所以不要把助手想成“模型一次性吐出全部正确动作”的流水线。更有用的画面是：<strong>看证据，做一次受约束的尝试，再看结果。</strong> 本讲不保证它一定查对，也不保证每个请求都会被允许。</p>
-<h2>七、拿掉图片，你现在应该能说什么？</h2>
-<p>模型负责推理生成；Harness 把模型调用、工具执行、状态记录、策略和继续工作组织起来。DeepSeek Harness 用 Cordis 插件组合核心能力，方案和补丁决定要装哪些配置。第一次读源码看清装配，在 boot() 停下，下一步再进入真实运行机制。</p>
-<p>如果你能用测试排查故事解释这些关系，并指出“配置顺序不是激活顺序”，第一讲已经达到目标。不用再为记不住十几个英文单词而重读一遍。</p>
-<p>需要查词时去 <a href="../previews/lesson-01.html#doc-5">词典</a>；想验证自己是否真的理解，去 <a href="../previews/lesson-01.html#doc-3">练习</a>；想核对边界，查 <a href="../evidence/lesson-01.html">事实矩阵</a>。</p>
-</article>
-<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第一讲练习 · 不是背词，而是判断下一步</h1>
-<blockquote>
-<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。先作答，再核对证据。</p>
-</blockquote>
-<p>准备一张纸，给自己 15–20 分钟。先写答案，再展开。答得不完整没有关系，重点是知道哪项结论需要什么证据。</p>
-<h2>1. 找出缺失的那件物品</h2>
-<p>助手已经加载“测试排查手册”，却没有可执行命令的工具。你说：“既然学会了方法，现在就能运行测试。”</p>
-<p>这句话哪里不成立？用“手册”和“扳手”回答，再翻译成真实术语。</p>
-<details>
-<summary>展开答案与理由</summary>
-
-<p>手册提示怎么做，不会自己拧螺丝。Skill 是可复用指令，不会凭空提供命令执行能力；仍需工具、相应执行环境和允许执行的条件。即使工具已注册，也不能据此保证某次调用一定获准。</p>
-<p>证据：<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/skill/README.md">技能职责</a>、<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/tools/README.md">工具注册与执行路径</a>。</p>
-</details>
-
-<h2>2. 不看图，重新摆一遍工作台</h2>
-<p>参考课件中的大脑、扳手、手册、日志和资料夹，在纸上用自己的简笔画摆出“读取测试报告，再判断原因”的场景。最多画两条有名字的箭头。</p>
-<p>给每个物件写一个动词，并说明：你画的是职责关系，还是严格运行顺序？</p>
-<details>
-<summary>展开一种参考摆法</summary>
-
-<p>大脑“判断”，手册“指导”，扳手“执行”，资料夹“供给材料”，日志“记录”。</p>
-<p>可以画“大脑 → 工具：提出读取请求”和“动作结果 → 后续模型请求：提供新的证据”。第二条箭头是教学简化，真实系统由运行支撑组织结果、历史和后续请求，并非工具直接驱动大脑。</p>
-<p>手册放在旁边表示指导，不要画成替代执行器。没有证据时不要把每个物件串成唯一时序。重要的是能解释箭头，不是箭头画得多。</p>
-</details>
-
-<h2>3. 谁的“上下文”？</h2>
-<p>同事说：“Cordis Context 里有 ctx.sessions，所以它就是给模型看的聊天记录。”</p>
-<p>请指出混淆了哪两件事。</p>
-<details>
-<summary>展开答案与理由</summary>
-
-<p>Cordis Context 是插件取得共享服务的入口；模型上下文是某次请求里实际提供给模型的信息，两者不是同一概念。</p>
-<p>Session 是追加事件日志，模型消息可由日志派生；不是每次必定把全部日志照搬过去。ctx.sessions 表示上下文中可取得的会话服务，不是把容器等同于聊天消息数组。</p>
-<p>证据：<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/cordis-primer.md#cordis-in-five-ideas">Cordis 五个概念</a>、<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/README.md">会话职责</a>。</p>
-</details>
-
-<h2>4. 带着一个问题去定位源码</h2>
-<p>只做读取，不运行项目、不修改源码。沿第一讲路线找到：</p>
-<ol>
-<li>CLI 的 profile 分支把哪三个与方案/调用有关的字段交给 runProfile()？</li>
-<li>allPatches() 的四层顺序是什么？</li>
-<li>在 base 清单中找到 llm、session、agent、tools、system-prompt、agent-loop。</li>
-<li>回到调用 boot() 的地方，指出传入的配置与补丁参数。</li>
-</ol>
-<details>
-<summary>展开定位答案</summary>
-
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/bin.ts#L24">bin.ts</a> 传下 profile、patchFiles、args，并另外传下 environment。</p>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/profile-boot.ts#L136">allPatches()</a> 依次组合 bundlePatches、profile.patches、homePatches、overlays。</p>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/bundle/base/cordis.patch.yml">base 清单</a> 当前快照中，六行 ID 分别在 27、33、67、474、479、486 行。行号只适用于本讲快照；遇到新提交应按 ID 搜索。</p>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/profile-boot.ts#L251">boot() 调用</a> 接收 rootConfig，以及 structuredClone(allPatches(composed))，还包括名称和初始化回调。看到这里就可以停。</p>
-<p>这组检查证明了代码和配置关系，不能证明本机已经成功启动。</p>
-</details>
-
-<h2>5. 预测变化，而不是猜结果</h2>
-<p>如果替换文件能力的实现，文件工具是否一定要全部重写？如果替换后工具执行失败，能不能马上判定“插件化没用”？</p>
-<details>
-<summary>展开答案与边界</summary>
-
-<p>在提供者遵守相同能力契约、路径与执行环境相互匹配的前提下，消费者通常不应依赖具体实现，这是保持边界的价值。但“可替换”不代表任意实现都兼容，更不保证权限、环境、行为细节全相同。</p>
-<p>出现失败时需要核对服务契约、挂载配置、执行环境和具体错误，不能仅凭结果否定设计，也不能承诺替换一定零成本。</p>
-<p>证据：<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/README.md">文件能力组</a>。这是有条件的设计推断，不是本讲执行过的替换实验。</p>
-</details>
-
-<h2>6. 修正三句“听着很对”的话</h2>
-<ul>
-<li>A：“模型说已经读过文件，所以文件一定读成功了。”</li>
-<li>B：“补丁清单中的后一个插件，会比前一个晚启动。”</li>
-<li>C：“一个 Turn 至少有一个 Step；每个 Step 都一定执行工具。”</li>
-</ul>
-<details>
-<summary>展开准确表述</summary>
-
-<p>A：模型生成了一项声明。确认读取成功需要实际工具结果或相应运行证据，不能只看文字承诺。</p>
-<p>B：补丁的配置应用顺序不等于插件激活顺序；服务依赖和其他机制也影响激活。</p>
-<p>C：Turn 可以包含零个或多个 Step；Step 是一次模型请求及其工具调用，模型可能不请求工具，工具请求也可能被拒绝。</p>
-<p>证据：<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/cordis-primer.md#cordis-in-five-ideas">Cordis 依赖</a>、<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/architecture.md#turn-flow">运行过程</a>。</p>
-</details>
-
-<h2>7. 用五句话教给另一个 Java 工程师</h2>
-<p>不看稿，依次说清：模型、大脑之外的支撑、五件物品、插件工作台、第一条源码路线。至少提醒听众一个比喻失效点。</p>
-<details>
-<summary>展开自评标准</summary>
-
-<p>能够说清“会想”和“真正执行”的差别；不把 Skill 与 Tool 混淆；不把 Session 与模型上下文混淆；能解释核心也是插件；读源码时能定位组装和 boot() 边界。这五项比复述英文定义更重要。</p>
-<p>如果卡在术语，到 <a href="../previews/lesson-01.html#doc-5">词典</a> 找相应物件；如果卡在证据，回到第 4 题亲自定位。</p>
-</details>
-</article>
-<article id="doc-4"><div class="doc-label">分享稿</div><h1>第一讲分享稿 · 五分钟把工作室讲清楚</h1>
-<blockquote>
-<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。先作答，再核对证据。</p>
-</blockquote>
-<p>这是一份演讲提词，不是另一份完整教材。只用三张主图，其他细节留给提问。</p>
-<h2>0:00–1:00 · 用一个追问开场</h2>
-<p>“假如助手告诉你：测试可能因为边界条件失败。你先问它什么？”</p>
-<p>等对方回答。然后接：“我会问——你真的打开过测试报告吗？分析文字与执行证据不是一回事。”</p>
-<p>展示 <a href="../assets/lesson-01/reader/fig-01-brain-and-workshop.png">大脑与工具箱</a>。</p>
-<p>“模型像大脑，负责推理生成；Harness 是模型外的运行支撑，组织能力、记录与后续过程。两者配合才形成能持续工作的整体助手。这是教学近似，不是源码 Agent 类型的公式。”</p>
-<h2>1:00–2:20 · 打开工具箱</h2>
-<p>展示 <a href="../assets/lesson-01/reader/fig-02-five-objects.png">五件独立物品</a>。</p>
-<p>“扳手是工具，真正执行动作；手册是技能，指导方法；日志是会话，保留经过；资料夹代表文件材料；护栏代表执行约束。”</p>
-<p>停一下，让听众选：“只有手册没有扳手，能跑测试吗？”接着强调：“不能。工具还可能被策略拒绝，护栏也不承诺绝对安全。”</p>
-<p>“还有一处常见混淆：日志不是每次原封不动塞给模型的全部内容，落盘也有独立后端。”</p>
-<h2>2:20–3:30 · 工作台为什么能换装</h2>
-<p>展示 <a href="../assets/lesson-01/reader/fig-03-pluggable-workbench.png">插拔模块工作台</a>。</p>
-<p>“核心能力不全焊在主函数里。模型适配器、工具注册、会话日志和循环本身也通过插件组织。Cordis 管理服务、依赖、事件和生命周期。它类似提供装配规矩的工作台，不是另一颗大脑。”</p>
-<p>“Java 工程师可以借助依赖注入与生命周期理解它，但不要机械地把 Cordis 当成 Spring。”</p>
-<h2>3:30–4:30 · 让比喻落到源码</h2>
-<p>“先读架构说明，再从 bin.ts 的 profile 分支找到 runProfile()。看 composeProfile() 和 allPatches() 如何整理配置，到 base 的 YAML 核对核心插件行，最后回到 boot() 停下。”</p>
-<p>提醒一句：“我刚才描述的是阅读路线，不是说 YAML 是被调用的函数。清单应用顺序，也不是插件激活顺序。”</p>
-<p>出处：<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/bin.ts#L24">入口</a>、<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/profile-boot.ts#L136">配置层</a>、<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/bundle/base/cordis.patch.yml">基础清单</a>。</p>
-<h2>4:30–5:00 · 用一句话收尾</h2>
-<p>“模型负责想，支撑系统组织做；日志留下证据，结果影响后续。我们先看工作室怎样装起来，再深入研究它怎样一步步跑起来。”</p>
-<p>最后请听众复述“手册和扳手有什么不同”。如果能答出，这次分享就留下了一个能继续长大的心智模型。</p>
-</article>
-<article id="doc-5"><div class="doc-label">术语词典</div><h1>第一讲词典 · 先认物件，再认名字</h1>
-<blockquote>
-<p>源码快照：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。按需查阅，不要求先背下来。</p>
-</blockquote>
-<p>英文保留是为了能在源码中搜索；中文名和物件是帮助理解的入口。下列概念属于本讲语境，不应当作所有 Agent 框架的统一定义。</p>
-<h2>大脑与整个助手</h2>
-<p><strong>模型 / Model</strong>：像负责思考的大脑，接收提供的信息并推理生成输出，包括可能的工具请求。边界：并非有人的意识，也不等于它亲自读写文件。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/llm/llm/README.md">源码依据</a>。</p>
-<p><strong>大语言模型 / LLM</strong>：Large Language Model 的缩写。本项目的 llm 服务把不同模型提供方的调用与共享消息形式隔开；这个服务不是模型参数本身。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/llm/llm/README.md">源码依据</a>。</p>
-<p><strong>运行支撑系统 / Harness</strong>：像工具箱加整套工作安排，把模型、工具、记录、策略和继续执行组织起来。不要直译“马具”后就停止理解，也不要把它缩成一份工具列表。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/architecture.md">架构依据</a>。</p>
-<p><strong>整体智能体系统 / Agentic system</strong>：图中的小机器人，代表面向用户的完整助手。“Model + Harness”是第一印象，不是严格类型等式。</p>
-<p><strong>运行对象 / Agent</strong>：源码里有更窄的意义，是用来交互和控制一次运行对象的句柄，相关包还管理登记和事件。句柄（handle）可以先理解为“操作对象的把手”，不代表它里面装了所有实现。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent/README.md">源码依据</a>。</p>
-<p><strong>运行循环 / Agent Loop</strong>：默认的创建与驱动实现，组织运行往后进行。像安排工序的流程，不是大脑，也不是整个 Harness。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent/README.md">源码依据</a>。</p>
-<h2>工作台上的五件物品</h2>
-<p><strong>工具 / Tool → 扳手</strong>：可请求的动作定义与受保护的执行路径。像后端有名字和参数的能力调用，但是否执行还要看策略、环境与结果。误解：有工具说明就等于获准执行。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/tools/README.md">源码依据</a>。</p>
-<p><strong>技能 / Skill → 操作手册</strong>：可发现、可加载的可复用指令，类似团队的操作规程。SOP 是 Standard Operating Procedure，指标准操作规程。误解：加载技能就自动拥有它描述的工具或权限。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/skill/README.md">源码依据</a>。</p>
-<p><strong>会话 / Session → 工作日志</strong>：追加的事件历史，可从中派生模型消息。误解：它只是聊天气泡数组、每次全部传给模型，或者天然已经落盘。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/README.md">源码依据</a>。</p>
-<p><strong>文件系统 / Filesystem → 资料夹</strong>：访问文件材料的能力及实现，模型可见的文件工具再使用这些能力。误解：文件内容属于模型内置知识；或工具直接绑定唯一的一种本地实现。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/fs/README.md">源码依据</a>。</p>
-<p><strong>沙箱 / Sandbox → 护栏盾牌</strong>：本项目中有关子进程文件影响策略的能力组。误解：它必然就是 Docker 或虚拟机，或者出现盾牌就代表绝对安全。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/sandbox/README.md">源码依据</a>。</p>
-<h2>为什么模块能一起工作</h2>
-<p><strong>插件 / Plugin → 插拔模块</strong>：挂载后贡献能力的单元，不仅指下载的第三方扩展。核心模型适配、工具、会话、循环也能是插件。边界：模块替换仍有契约和依赖，不是任意热拔插。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/architecture.md#cordis">架构依据</a>。</p>
-<p><strong>Cordis → 工作台的组织机制</strong>：本项目使用的插件框架。管理上下文中的服务、依赖、事件与可回收副作用。Java 类比：依赖注入和生命周期是入口；不能认定其机制与 Spring 完全一致。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/cordis-primer.md#cordis-in-five-ideas">源码依据</a>。</p>
-<p><strong>共享上下文 / Context → 能力登记与取用处</strong>：通过 ctx.tools 等稳定键取得服务。特别注意：<strong>Cordis Context 不是模型上下文</strong>；后者是某次模型请求得到的提示、消息等信息。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/cordis-primer.md#cordis-in-five-ideas">依据</a>。</p>
-<p><strong>服务 / Service → 对外提供的能力</strong>：其他插件通过稳定键使用它。<strong>提供者 / Provider</strong> 是具体提供该能力的一侧，<strong>消费者 / Consumer</strong> 是使用的一侧。<strong>注入 / inject</strong> 表示声明服务依赖；<strong>适配器 / Adapter</strong> 负责接到某个具体提供方。不要把 Service 只理解成一个 Java interface。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/glossary.md#capability-seam">能力边界</a>。</p>
-<p><strong>事件 / Event → 工作中的协作通知或交接点</strong>：不同事件有不同分发语义，并非所有事件都等于“发出去就不管”。<strong>可回收副作用 / reversible effect</strong> 指注册监听器等行为能够在卸载时清理，不是自动撤销任意文件或业务数据修改。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/cordis-primer.md">依据</a>。</p>
-<h2>装配清单与时间单位</h2>
-<p><strong>装配方案 / Profile</strong>：选择套装并附带自身调整的方案。<strong>套装 / Bundle</strong>：带配置行和代码的一组分发单元。<strong>配置补丁 / Patch</strong>：按规则修改装配配置的调整。<strong>叠加层 / Overlay</strong>：用于当前调用等场景的额外补丁层。误解：所有方案都必用 base、所有配置键都递归合并、清单顺序就是激活顺序。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/architecture.md#profiles-and-bundles">依据</a>。</p>
-<p><strong>命令行入口 / CLI</strong>：Command-Line Interface，命令行界面。本讲在 bin.ts 中跟随 profile 分支。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/bin.ts">源码</a>。</p>
-<p><strong>启动 / boot()</strong>：本讲停止阅读的启动调用边界；不要把名字当成它已运行成功的证据。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/apps/cli/src/profile-boot.ts#L251">源码</a>。</p>
-<p><strong>一步 / Step</strong>：一次模型请求及其工具调用；可以没有工具。<strong>一轮 / Turn</strong>：零个或多个步骤。输入接收不属于 Step 的定义。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/architecture.md#turn-flow">依据</a>。</p>
-<hr>
-<p>想用图记忆：回看 <a href="../assets/lesson-01/reader/fig-02-five-objects.png">五个工作物件</a>。同一个物件可以换位置，但职责与比喻边界不能跟着随意变化。</p>
+<h2>别让比喻越界</h2>
+<p>工单不是线程，通讯录不是模型的记忆，房间不是安全沙箱，图上的阅读箭头也不自动等于源码调用。遇到行为判断，回<a href="../previews/lesson-01.html#doc-2">逐步讲解</a>检查实现与异常分支。</p>
 </article></main>
 </body>
 </html>
