@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
+  <meta charset="utf-8"><meta name="textbook-version" content="4.0.0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第09讲-长材料与压缩</title>
@@ -21,7 +21,7 @@
     h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
     h3 { margin:1.7em 0 .6em; font-size:20px; }
     p,li { font-size:20px; }
-    article { scroll-margin-top:82px; }
+    article { scroll-margin-top:82px; overflow-wrap:anywhere; }
     a { color:#2e5aa8; overflow-wrap:anywhere; }
     blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
     code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
@@ -60,6 +60,8 @@
 <p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
 <h2>本讲交接</h2>
 <p>保留可追溯摘要、关键边界和工具调用结果配对。但下一步还要解决：一个查契约，一个查实现，结果怎样合回来。</p>
+<h2>工程深度验收</h2>
+<p>能逐值计算保留范围，解释压力与确认溢出两条入口，追踪摘要生成、稳定性检查、提交和再次计量。 正文提供对应上游局部测试命令，练习要求先预测再读断言，不用付费模型也能观察机制。</p>
 <p><a href="../previews/chapter-08.html#doc-2">← 第08讲：中断恢复</a> · <a href="../previews/chapter-10.html#doc-2">第10讲：分工与后台 →</a></p>
 </article>
 <article id="doc-1"><div class="doc-label">视觉课件</div><h1>第09讲 · 材料多到一次看不完，怎样留下关键证据</h1>
@@ -74,6 +76,10 @@
 <p>本讲最容易误会的是：摘要说已授权，而可信执行状态没有许可，应该听谁？ 执行器不能把摘要当新权限。回查可信授权；摘要用于理解，不授予动作能力。</p>
 <h2>从图返回源码</h2>
 <p>图只表达教学关联与状态变化，不代替完整调用顺序。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/compaction/compaction/src/index.ts#L145-L170">源码定位</a>提供实现或契约证据，<a href="../previews/chapter-09.html#doc-2">正文</a>解释映射和边界。</p>
+<h2>从场景走到内部机制</h2>
+<p><img src="../assets/chapter-09/reader/fig-02-pressure-flow.png" alt="压力触发、计量与压缩重试"></p>
+<p><img src="../assets/chapter-09/reader/fig-03-balanced-cut.png" alt="具体预算下的配对切口回退"></p>
+<p>沿正文给出的具体时刻、条件或数据解释图，不把箭头都当成同一种关系。</p>
 <p><a href="../previews/chapter-08.html#doc-2">← 第08讲：中断恢复</a> · <a href="../previews/chapter-10.html#doc-2">第10讲：分工与后台 →</a></p>
 </article>
 <article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第09讲 · 材料多到一次看不完，怎样留下关键证据</h1>
@@ -124,12 +130,32 @@
 <p>接口明确要求压缩范围按消息投影位置选择，而不是简单按事件编号大小截断；边界必须平衡，不能留下工具结果却丢掉其调用，或留下调用却把结果剪掉。压缩后的摘要也要携带对应事务标识。</p>
 <p>想象接班记录只剩“成功”，却不知道成功的是读取报告、编辑代码还是测试。调用与结果配对，就是让结果仍有归属。它不是形式洁癖，而是避免模型和读者将某个成功错误归给别的动作。</p>
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/compaction/compaction-basic/src/index.ts#L97-L150">基础压缩后端</a> 使用计量能力和模型相关配置，并挂到请求前等扩展点。服务声明规定契约，具体后端实现策略；不要把接口本身说成已经完成摘要生成。</p>
+<h3>3.1 先计量完整请求，再决定是否摘要</h3>
+<p>现在真正走进<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/compaction/compaction-basic/src/index.ts#L258-L332">基础后端的自动压缩算法</a>。它先根据已记录的实际模型路由取对应策略，再用统一计量结果估算请求压力。不能只把用户和助手正文的字数加起来：模型路由、系统规则、工具目录等请求外围也占空间。若占用来自巨大的工具目录，剪聊天历史不一定够。</p>
+<p><img src="../assets/chapter-09/reader/fig-02-pressure-flow.png" alt="正常压力入口中的计量、裁剪、摘要及再次计量流程"></p>
+<p>正常 Pressure（容量压力）入口先解析当前模型容量和目标阈值；没有容量信息不能擅猜，未达到阈值就返回。达到后可先运行不调用模型的工具结果裁剪，再重新计量；若已降到阈值以下，就省掉摘要模型调用。裁剪能力是可选插件，不是基础压缩能独立使用的硬前提。</p>
+<p>仍然超过阈值，才选可压缩范围、生成摘要并提交，再次计量。如果一次摘要虽然更短但仍然超限，可以在明确次数内继续。重试预算耗尽仍超限会报错，不能因为“已经生成摘要”就宣布问题解决。像整理行李要重新称重，不是扔掉一个袋子就必然能登机。</p>
+<p>另一个入口是 Context Overflow（模型服务确认上下文溢出）。它跳过正常阈值和常规保留尾部策略，尝试一次有用的平衡缩减；这与提前预防的压力入口不同。保留预算传零不等于可以删光全部材料：范围选择仍受最近节点和工具配对约束，整段只有不可拆工具对时可以没有可压缩范围。</p>
+<h3>3.2 用六个具体节点推演切口如何移动</h3>
+<p>接口里“范围平衡”不是一句抽象要求。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/compaction/compaction-basic/src/region.ts#L100-L139">范围选择实现</a>先确认计量节点与当前可见节点在数量和位置上完全一致，避免拿旧计量给新视图做手术。再从最新节点向前累加到最低保留预算，最后把切口往历史开头方向移动，直到工具调用与结果不被拆开。</p>
+<p><img src="../assets/chapter-09/reader/fig-03-balanced-cut.png" alt="从尾部累计保留预算并向前修正工具配对切口"></p>
+<p>按图中数字算：最新节点 15 代价 100，不够保留预算 200；再保留节点 14 的 150，总计 250，预算够了。可是 14 是节点 13 那次工具调用的结果，此时切口放在 13 与 14 之间会断开配对，于是继续向前，把 13 也留在原样尾部。最终压缩 10、11、12，保留 13、14、15。最低保留预算不是精确截断长度，多保留一些比破坏消息关系安全。</p>
+<p>这里的数字是教学计量，不代表任何供应商的真实分词。更重要的是位置：第五讲已经知道可见视图可以被替换，新摘要的事件序号可能大于后面仍保留的旧节点。因此按事件数字排序再选区间会改变真实上下文顺序，必须沿当前表面的位置取范围。</p>
+<h3>3.3 模型正在写摘要，旧材料又变了怎么办</h3>
+<p>确定切口后还没完成事务。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/compaction/compaction-basic/src/region.ts#L154-L270">压缩事务实现</a>先验证范围与当前事务状态，记录压缩开始，再准备摘要输入并调用摘要器。摘要返回后重新检查选区或整个可见表面的稳定性，只有仍满足对应稳定性规则，才提交替换并记录结束。</p>
+<p>可以把它类比 Java 的乐观并发控制：先读版本，处理可能耗时的工作，提交前确认版本没有被别人改过。不过这里记录的是会话压缩生命周期，不等于数据库已经提供原子事务。失败路径会尝试记一条结束错误；若连结束记录也写失败，未匹配开始标记仍可检测，不能偷偷洗成成功。</p>
+<p>这也说明“让另一个模型帮忙总结一下”还不够。真正机制包括选择依据、模型调用、并发稳定性、提交身份、失败收束和后续计量。摘要的措辞质量只是其中一部分。</p>
 <h2>四、什么情况压缩也救不了</h2>
 <p>如果当前必须保留的一份材料本身就超过窗口，或者工具目录和请求外层已经太大，只压旧历史不一定够。此时需要更精确地读取范围、筛选相关内容，或明确说明还缺哪些材料。</p>
 <p>摘要还可能错。对足以改变权限、补丁或验收的事实，应保留出处并允许回读原记录；执行器也不应因为一张摘要卡写着“已授权”就跳过自己的权限状态。本书的反例测试会故意伪造这句话，确认它不能产生写许可。</p>
 <h2>五、用本例检验一张摘要卡</h2>
 <p>一份合格的教学摘要可以写：“测试 10000→0 实际得 800；约定含等于；当前实现严格大于；只获准排查；尚未修改和重测。证据见对应报告和源码读取结果。”</p>
 <p>看起来不华丽，但它保住了下一步选择所需的信息。若已经获得修改授权，应写清范围而非泛化成“用户同意所有操作”。若测试在旧版本运行，也必须保留版本关系。</p>
+<p>先做纸面反例：把摘要里的“只获准排查”删掉，后续模型会少掉哪条边界？再做执行侧反例：让摘要谎称“已授权”，本书执行器仍应拒绝未授权写入。第一项测摘要是否保真，第二项测权限是否独立；二者不能互相替代。</p>
+<p>最后运行上游基础压缩测试，重点核对阈值下不压缩、裁剪足够时不调用摘要器、计量不匹配时拒绝、配对切口回退、重试有界与提交稳定性：</p>
+<pre><code class="language-powershell">node node_modules/vitest/vitest.mjs run packages/compaction/compaction-basic/tests/compaction-basic.spec.ts --maxWorkers=1 --no-file-parallelism
+</code></pre>
+<p>作者已在第八至十讲四文件合计 274 项的验证批次中执行该文件，全部通过。上游使用受控计量和摘要替身，验证算法分支；不能据此声称任意真实模型生成的摘要都保真。相比每次放完整历史，压缩降低请求压力，却增加摘要失真与缓存失效风险，所以出处、回读与独立权限必须同时保留。</p>
 <h2>六、材料分得开，任务也可以分开吗</h2>
 <p>压缩解决一次请求的容量，不直接解决多模块阅读的耗时。假设业务约定、运费实现和调用链分散在不同模块，第十讲会把独立证据任务分给帮手，再由主助手合并，而不是期待更长上下文自动解决所有复杂度。</p>
 <p><a href="../previews/chapter-08.html#doc-2">← 第08讲：中断恢复</a> · <a href="../previews/chapter-10.html#doc-2">第10讲：分工与后台 →</a></p>
@@ -164,6 +190,19 @@
 <p>在 <code>compactRegion</code> 契约中找按投影位置选范围、两端调用结果平衡、摘要事务标识三项约束。图里的摘要保留出处和未知项；它不是新授权，也不替代原档案。</p>
 </details>
 
+<h2>工程练习：亲自计算切口与重试</h2>
+<ol>
+<li>沿正文六节点，保留预算 200，为什么最终保留代价会大于 250？如果只按数字序号排序再截断，替换过的历史会怎样？</li>
+<li>工具目录已经占满请求外围，历史没有可压缩的平衡范围，再调用一次摘要模型一定有效吗？</li>
+<li>开始生成摘要后可见历史变了，直接提交旧摘要会有什么风险？应该在哪个阶段检查？</li>
+<li>一次摘要已变短，但请求仍在阈值以上。你会报告成功、无限重试，还是检查剩余预算？设计预期断言。</li>
+</ol>
+<details>
+<summary>参考答案</summary>
+
+<p>要把工具调用与结果一起保留，不能凑预算拆配对。序号数值不代表当前表面位置，旧视图替换后必须按可见顺序处理。没有安全范围时摘要不保证有效，应回到请求外围与读取范围。摘要返回后、提交前验证稳定性。每次摘要后重新计量，在有限预算内继续，否则明确错误；断言检查尝试上界和最终计量，不只检查存在摘要字符串。</p>
+</details>
+
 <p><a href="../previews/chapter-08.html#doc-2">← 第08讲：中断恢复</a> · <a href="../previews/chapter-10.html#doc-2">第10讲：分工与后台 →</a></p>
 </article>
 <article id="doc-4"><div class="doc-label">分享稿</div><h1>第09讲 · 材料多到一次看不完，怎样留下关键证据</h1>
@@ -175,6 +214,8 @@
 <p>如果不补这一层，会遇到的问题是：压缩时只留下一个成功结果，删掉对应调用可以吗？ 不可以。失去调用身份会无法判断成功属于什么动作，范围必须保持工具调用结果配对。 所以本讲新增的不是要背的名词，而是任务中一项明确的责任。</p>
 <p>现在能做到：保留可追溯摘要、关键边界和工具调用结果配对。但还要守住反例：摘要说已授权，而可信执行状态没有许可，应该听谁？ 执行器不能把摘要当新权限。回查可信授权；摘要用于理解，不授予动作能力。</p>
 <p>请结合<a href="../previews/chapter-09.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/compaction/compaction/src/index.ts#L145-L170">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“一个查契约，一个查实现，结果怎样合回来”继续。</p>
+<h2>深入一层再收尾</h2>
+<p>能逐值计算保留范围，解释压力与确认溢出两条入口，追踪摘要生成、稳定性检查、提交和再次计量。 分享时选一个故障分支，把正常路径与异常路径的证据区别讲清楚。作者验证来自受控测试，不冒充真实模型生产评测。</p>
 </article>
 <article id="doc-5"><div class="doc-label">术语词典</div><h1>第09讲 · 材料多到一次看不完，怎样留下关键证据</h1>
 <blockquote>
@@ -189,6 +230,35 @@
 <p>用更短的模型可见材料替换历史视图的一部分，像把厚卷宗整理成带出处的交接页。压缩可能丢细节；原始事件仍保留，摘要不能新授权限。</p>
 <h2>核对来源</h2>
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/compaction/compaction/src/index.ts#L145-L170">本讲源码定位</a>与<a href="../previews/chapter-09.html#doc-2">完整正文</a>。本例报告和金额属于教学夹具，不来自这份上游源码。</p>
+<h2>新增工程术语</h2>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>定义、比喻与边界</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Pressure</td>
+<td>容量压力：请求估计占用达到当前路由策略阈值，像行李接近承重线</td>
+</tr>
+<tr>
+<td>Context Overflow</td>
+<td>上下文溢出：服务确认请求装不下，与主动预防阈值不是同一个触发条件</td>
+</tr>
+<tr>
+<td>Retained Tail</td>
+<td>原样保留尾部：最近的一段材料，达到最低预算还要维持工具配对，可能保留更多</td>
+</tr>
+<tr>
+<td>Balanced Range</td>
+<td>平衡范围：切口不把工具调用与对应结果剪开，像保留带单号的一整份回执</td>
+</tr>
+<tr>
+<td>Compaction Transaction</td>
+<td>压缩事务：开始、摘要、稳定性核验、替换、结束的一组状态责任；不等同数据库自动原子提交</td>
+</tr>
+</tbody></table>
 </article></main>
 </body>
 </html>

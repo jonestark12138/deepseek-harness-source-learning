@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="textbook-version" content="3.0.1"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第06讲 · 源码事实矩阵</title><link rel="icon" href="data:,"><style>
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="textbook-version" content="4.0.0"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第06讲 · 源码事实矩阵</title><link rel="icon" href="data:,"><style>
     @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
     :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
     * { box-sizing:border-box; }
@@ -14,7 +14,7 @@
     h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
     h3 { margin:1.7em 0 .6em; font-size:20px; }
     p,li { font-size:20px; }
-    article { scroll-margin-top:82px; }
+    article { scroll-margin-top:82px; overflow-wrap:anywhere; }
     a { color:#2e5aa8; overflow-wrap:anywhere; }
     blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
     code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
@@ -37,6 +37,11 @@
       article p>img { width:1080px; max-width:none; }
     }
   </style><nav><a href="../index.html">← 阅读首页</a><a href="../previews/chapter-06.html">第06讲</a></nav><main><article><h1>第06讲源码证据</h1>
+<h2>工程深化补充</h2>
+<ul>
+<li>C06-F02：按当前作用域发现和加载技能；模型调用资格再次核验；外部目录先准备后交换，各阶段失败语义不同。 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/skill/tool-skill/src/index.ts#L128-L211">固定基线实现</a>。图中业务为教学推演。</li>
+<li>2026-09-06：手册加载与外部桥接两个上游测试文件共 87 项通过。</li>
+</ul>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。源码在本轮重新读取；引用不等于运行上游全部测试。Java 运费任务为独立教学夹具。</p>
 <table>
 <thead>

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
+  <meta charset="utf-8"><meta name="textbook-version" content="4.0.0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第10讲-分工与后台</title>
@@ -21,7 +21,7 @@
     h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
     h3 { margin:1.7em 0 .6em; font-size:20px; }
     p,li { font-size:20px; }
-    article { scroll-margin-top:82px; }
+    article { scroll-margin-top:82px; overflow-wrap:anywhere; }
     a { color:#2e5aa8; overflow-wrap:anywhere; }
     blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
     code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
@@ -60,6 +60,8 @@
 <p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
 <h2>本讲交接</h2>
 <p>把独立证据任务分开，主助手负责核对与授权边界。但下一步还要解决：哪些步骤可以固定，哪些要继续判断。</p>
+<h2>工程深度验收</h2>
+<p>能解释新建子任务的上下文和权限边界，沿实际提供者追踪启动、发布、等待结果与清理的责任移交。 正文提供对应上游局部测试命令，练习要求先预测再读断言，不用付费模型也能观察机制。</p>
 <p><a href="../previews/chapter-09.html#doc-2">← 第09讲：长材料与压缩</a> · <a href="../previews/chapter-11.html#doc-2">第11讲：固定流程与动态决策 →</a></p>
 </article>
 <article id="doc-1"><div class="doc-label">视觉课件</div><h1>第10讲 · 一个查契约，一个查实现，结果怎样合回来</h1>
@@ -74,6 +76,9 @@
 <p>本讲最容易误会的是：获得子会话编号，就可以把它的任务算完成吗？ 不可以。启动接受、消息入队、开始执行和结果完成是不同状态；要等待并检查实际报告。</p>
 <h2>从图返回源码</h2>
 <p>图只表达教学关联与状态变化，不代替完整调用顺序。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/subagent/subagent/src/index.ts#L542-L563">源码定位</a>提供实现或契约证据，<a href="../previews/chapter-10.html#doc-2">正文</a>解释映射和边界。</p>
+<h2>从场景走到内部机制</h2>
+<p><img src="../assets/chapter-10/reader/fig-02-child-lifecycle.png" alt="子任务发布与结果清理的时序"></p>
+<p>沿正文给出的具体时刻、条件或数据解释图，不把箭头都当成同一种关系。</p>
 <p><a href="../previews/chapter-09.html#doc-2">← 第09讲：长材料与压缩</a> · <a href="../previews/chapter-11.html#doc-2">第11讲：固定流程与动态决策 →</a></p>
 </article>
 <article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第10讲 · 一个查契约，一个查实现，结果怎样合回来</h1>
@@ -110,6 +115,16 @@
 </code></pre>
 <p>这段先找提供者，再检查能力、最大深度和结构化输出要求，然后生成子任务描述并调用提供者。不是任意后端都支持相同选项；调用者请求了不支持的能力，服务会拒绝，而不是静默丢弃要求。</p>
 <p>Provider（子智能体提供者）可能创建进程内助手，也可能通过另一运行环境委派任务。能力是否隔离、工作区怎样传递、取消如何落实，必须看所选实现。不能由“子”这个字推断它有独立容器或独立磁盘。</p>
+<h3>3.1 这次选进程内新建，沿提供者继续追下去</h3>
+<p>本例选择 Spawn（从新会话开始创建）式的进程内提供者，不默认复制父会话。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/subagent/subagent-spawn-in-process/src/index.ts#L39-L69">提供者实现</a>明确声明不继承父对话，并把请求交给共享驱动。它有自己的会话和提示，但仍在同一进程、同一服务环境中运行，因此独立会话不等于独立文件系统或安全隔离。</p>
+<p>这会直接影响怎么交代任务：父助手不能只说“照刚才的要求查一下”。甲收到的请求至少要有运费案例的范围、约定位置、要求输出阈值是否含等于以及不修改的限制。乙同样要有实现与报告的定位。新建子会话不会凭空知道父助手刚读过哪份文件；这和第三讲“磁盘存在不等于模型看见”是同一条原则。</p>
+<p>继续看<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/subagent/subagent-in-process-driver/src/index.ts#L80-L206">共享进程内驱动</a>：它检查深度和取消，生成子会话身份，捕获委派时的策略覆盖，再通过代理工厂创建子实例。创建窗口内施加工具过滤、角色提示和可选结构化输出约束，发布成功后交给运行包装器驱动一轮工作。</p>
+<p>工具过滤与角色提示不在同一个层级。过滤决定这个子实例实际可使用什么；提示告诉模型应如何判断和表达。把“只读”写进任务可以帮助理解，但不应该因此省略执行侧限制。父助手之后切换配置，也不能反过来改写子任务启动时已经捕获的策略快照。</p>
+<h3>3.2 为什么返回一个运行句柄，而不是只返回字符串</h3>
+<p><img src="../assets/chapter-10/reader/fig-02-child-lifecycle.png" alt="子任务创建、发布、结果等待与清理的时序"></p>
+<p>Run Handle（运行句柄）像领走一张工位使用票：它既告诉你是哪项工作，也带着等待结果、取消和清理的责任。提供者启动承诺完成，意味着子实例已经发布并把这些责任交给持有者；不代表子任务结果已经完成。启动承诺拒绝，则尚未交出句柄，不能要求调用者清理一个从没拿到的运行对象。</p>
+<p>发布后的驱动把父取消信号接到子实例，补做一次信号检查来覆盖创建与运行监听交接的空隙，然后投递子任务提示并等待空闲。结果从这次激活边界之后的事件中读取，避免把历史输出当成本次交卷。清理时要等待实例处置与结果通道都收束；不能在子任务还持有资源时先报告“结束了”。</p>
+<p>上游<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/subagent/subagent/tests/run-settlement.spec.ts">结果收束测试</a>区分正常完成、被取消、错误、输出上限等原因，还验证报告前的清理以及清理失败不会伪装成普通成功。这与第十三讲的资源生命周期形成衔接：分工带来的不只是多一个回答，还多了一份资源责任。</p>
 <h2>四、一次性交卷与能继续对话的子助手</h2>
 <p>一次性子任务适合甲乙各交一份证据报告。Continuable Subagent（可继续的子智能体）则保留可持续追问的子会话；例如乙查完收费实现后，还要继续查调用方如何转换金额。</p>
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/subagent/subagent/src/index.ts#L225-L264">继续子任务入口</a> 明确区分“消息被收件队列接受”和“轮次已经执行或完成”。得到子会话编号不是得到结果；后续消息也不是任意插入当前推理，而是按其队列契约进入后续轮次。</p>
@@ -120,6 +135,12 @@
 <p>Schedule（定时提醒）解决未来何时投递跟进消息，不保证关闭会话后后台一直有活跃模型。固定源码的 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/schedule/schedule/README.md#L10-L12">提醒说明</a> 说明冷会话的到期提醒要等后续活跃实例承接。</p>
 <h2>六、合并以后仍由主助手负责验真</h2>
 <p>两份报告要给同一案例的文件、版本、关键行与未验证部分。结论冲突时回到原材料，不按谁说得更自信投票。子任务说“测试全过”也不能替代当前代码上的测试结果。</p>
+<p>具体交卷可以要求四个字段：观察到的事实、文件及版本、支持事实的位置、尚未验证之处。甲说“约定包含等于”，乙说“实现使用严格大于”，主助手才能结合失败输入推导边界缺陷；如果乙读到的是另一个分支的代码，两个流畅结论仍然不能拼出可靠诊断。</p>
+<p>是否值得分工也要计算。本例文件很少，单助手顺读更简单；当约定、调用链与实现分散且彼此可独立检索时，才可能节省时间。理想并行耗时接近最慢子任务加交接与核对，而不是零成本除以人数。共享模型限额、重复读取和汇总失败还可能让它更慢。真正的优化对象是独立工作量，不是机器人数量。</p>
+<p>本讲不为展示而真的启动付费多模型任务。作者实际执行的是上游可控测试：</p>
+<pre><code class="language-powershell">node node_modules/vitest/vitest.mjs run packages/subagent/subagent/tests/run-settlement.spec.ts packages/subagent/subagent-spawn-in-process/tests/subagent-spawn-in-process.spec.ts --maxWorkers=1 --no-file-parallelism
+</code></pre>
+<p>它们已包含在第八至十讲四文件 274 项通过的验证批次中。练习请预测“启动前失败”“发布后失败”“结果正常但清理失败”三种所有权与最终结果，再读断言验证；不要把创建了子会话编号当成任务已经完成。</p>
 <p>下一讲让这套分工更可重复：哪些步骤可以编成固定流程，哪些必须继续由模型根据新证据判断？</p>
 <p><a href="../previews/chapter-09.html#doc-2">← 第09讲：长材料与压缩</a> · <a href="../previews/chapter-11.html#doc-2">第11讲：固定流程与动态决策 →</a></p>
 </article>
@@ -153,6 +174,19 @@
 <p>在 <code>start</code> 中先找能力与深度检查，再找 <code>provider.start</code>。图中甲乙分别取得约定和实现证据，主助手才合并；子任务报告不是当前版本三测的替代品。</p>
 </details>
 
+<h2>工程练习：不是多开两个窗口就叫分工</h2>
+<ol>
+<li>新建式子助手不继承父对话，父助手只发“按刚才说的查约定”，会缺什么？写一份包含材料定位、只读范围、输出证据与未验证项的完整任务。</li>
+<li>启动前提供者拒绝、发布后执行失败、结果正常但清理失败，分别由谁负责，能报告同一种成功吗？</li>
+<li>两个子助手结论相同，但源码版本不同，主助手能直接采纳吗？</li>
+<li>约定和实现只有几十行，为什么不一定值得分工？列出新增耗时和资源责任。</li>
+</ol>
+<details>
+<summary>参考答案</summary>
+
+<p>不能依赖未继承的“刚才”。发布前没有句柄交给调用者，提供者负责未发布资源；发布后句柄持有者负责结果与处置，清理失败也不能藏成普通成功。版本冲突要回原材料核对，不靠投票。启动、重复上下文、等待最慢子任务、结果合并、取消和清理都是成本。独立任务量大于这些成本时才值得采用。</p>
+</details>
+
 <p><a href="../previews/chapter-09.html#doc-2">← 第09讲：长材料与压缩</a> · <a href="../previews/chapter-11.html#doc-2">第11讲：固定流程与动态决策 →</a></p>
 </article>
 <article id="doc-4"><div class="doc-label">分享稿</div><h1>第10讲 · 一个查契约，一个查实现，结果怎样合回来</h1>
@@ -164,6 +198,8 @@
 <p>如果不补这一层，会遇到的问题是：主任务有哪些部分适合分给两个帮手？ 业务约定与实现证据可独立读取，各交出处；最终归因、授权和验收由主助手核对。 所以本讲新增的不是要背的名词，而是任务中一项明确的责任。</p>
 <p>现在能做到：把独立证据任务分开，主助手负责核对与授权边界。但还要守住反例：获得子会话编号，就可以把它的任务算完成吗？ 不可以。启动接受、消息入队、开始执行和结果完成是不同状态；要等待并检查实际报告。</p>
 <p>请结合<a href="../previews/chapter-10.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/subagent/subagent/src/index.ts#L542-L563">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“哪些步骤可以固定，哪些要继续判断”继续。</p>
+<h2>深入一层再收尾</h2>
+<p>能解释新建子任务的上下文和权限边界，沿实际提供者追踪启动、发布、等待结果与清理的责任移交。 分享时选一个故障分支，把正常路径与异常路径的证据区别讲清楚。作者验证来自受控测试，不冒充真实模型生产评测。</p>
 </article>
 <article id="doc-5"><div class="doc-label">术语词典</div><h1>第10讲 · 一个查契约，一个查实现，结果怎样合回来</h1>
 <blockquote>
@@ -184,6 +220,31 @@
 <p>在满足时间条件时触发提醒或输入的调度能力，像日历闹钟。它不替代目标、作业或真实进程，离线期间的处理需看具体恢复契约。</p>
 <h2>核对来源</h2>
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/subagent/subagent/src/index.ts#L542-L563">本讲源码定位</a>与<a href="../previews/chapter-10.html#doc-2">完整正文</a>。本例报告和金额属于教学夹具，不来自这份上游源码。</p>
+<h2>新增工程术语</h2>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>定义、比喻与边界</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Spawn</td>
+<td>从新会话开始创建：像另开空白案卷，不能默认知道父会话刚讨论的材料；不代表独立容器</td>
+</tr>
+<tr>
+<td>Run Handle</td>
+<td>运行句柄：已发布子工作的身份及等待、取消、清理入口，像领走工位票并接下责任</td>
+</tr>
+<tr>
+<td>Publication</td>
+<td>发布：子实例成为可访问的正式资源，是创建方与持有者责任交接的边界</td>
+</tr>
+<tr>
+<td>Settlement</td>
+<td>结果收束：把完成、错误、取消和清理状态明确归结，不能只抽取最后一句话</td>
+</tr>
+</tbody></table>
 </article></main>
 </body>
 </html>

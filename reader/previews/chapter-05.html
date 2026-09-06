@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
+  <meta charset="utf-8"><meta name="textbook-version" content="4.0.0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第05讲-会话日志</title>
@@ -21,7 +21,7 @@
     h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
     h3 { margin:1.7em 0 .6em; font-size:20px; }
     p,li { font-size:20px; }
-    article { scroll-margin-top:82px; }
+    article { scroll-margin-top:82px; overflow-wrap:anywhere; }
     a { color:#2e5aa8; overflow-wrap:anywhere; }
     blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
     code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
@@ -60,6 +60,8 @@
 <p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
 <h2>本讲交接</h2>
 <p>日志记录事实，再派生下一次请求的消息。但下一步还要解决：有工具却总漏步骤，怎样带上排查手册。</p>
+<h2>深化后的验收补充</h2>
+<p>能用具体事件序号推演可见消息；能解释增量缓存什么时候必须失效，以及新数组与共享冻结元素为什么可以并存。 先预测，后运行正文给出的固定基线上游局部测试。测试命令通过只证明被断言的行为；完成练习中的反例解释才算本讲验收。</p>
 <p><a href="../previews/chapter-04.html#doc-2">← 第04讲：受控工具</a> · <a href="../previews/chapter-06.html#doc-2">第06讲：技能与外部接入 →</a></p>
 </article>
 <article id="doc-1"><div class="doc-label">视觉课件</div><h1>第05讲 · 这次读到的证据，下次从哪里取</h1>
@@ -74,6 +76,9 @@
 <p>本讲最容易误会的是：日志在内存里有新事件，能保证重启后还在吗？ 不能。要看持久化后端是否存在以及保存是否完成；会话包的等待入口不是磁盘实现。</p>
 <h2>从图返回源码</h2>
 <p>图只表达教学关联与状态变化，不代替完整调用顺序。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L602-L646">源码定位</a>提供实现或契约证据，<a href="../previews/chapter-05.html#doc-2">正文</a>解释映射和边界。</p>
+<h2>用机制图继续往里看</h2>
+<p><img src="../assets/chapter-05/reader/fig-02-log-projection.png" alt="仅追加日志与消息派生缓存"></p>
+<p>图不是替代源码的摘要：请指出输入、执行者、条件与返回，以及图中明确省略的边界；再用<a href="../previews/chapter-05.html#doc-3">工程练习</a>验证。</p>
 <p><a href="../previews/chapter-04.html#doc-2">← 第04讲：受控工具</a> · <a href="../previews/chapter-06.html#doc-2">第06讲：技能与外部接入 →</a></p>
 </article>
 <article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第05讲 · 这次读到的证据，下次从哪里取</h1>
@@ -92,8 +97,10 @@
 <pre><code class="language-text">用户请求：只排查
 调用 1：读取报告
 结果 1：10000 分，预期 0，实际 800
-调用 2：读取代码与约定
-结果 2：严格大于；约定却包含等于
+调用 2：读取约定
+调用 3：读取源码
+结果 2：约定包含等于
+结果 3：实现却只有严格大于
 助手回复：原因已定位，等待修改授权
 </code></pre>
 <p>这不是上游事件的完整序列化格式，而是方便人阅读的投影。真实日志还包含轮次、步骤、流式片段等事件。调用和结果要靠标识关联；“助手回复说已读取”不能替代读取结果。</p>
@@ -120,6 +127,30 @@
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L699-L744">消息派生</a> 根据当前消息投影结构生成消息数组。原始流式片段和内部边界事件有自己的用途，不必都原样放进每一次模型请求。</p>
 <p>这既减少无关材料，也让后面的压缩成为可能：原始事实仍在，模型下一次看到的视图可以经过明确的替换。不能把“模型现在不再看这段旧内容”解释成“历史事实被删除了”。</p>
 <p>第五讲先记住两个问题：证据是否被记录？当前请求是否实际取用了对应投影？二者都需要查，不能只看内存里有个会话对象。</p>
+<h3>4.1 从序号走到消息，补齐真正的算法</h3>
+<p>Surface（当前消息表面）可以理解为记录簿旁的“本次阅读页签”：它保存哪些消息生产事件参与当前模型历史，而不是把全部内部事件直接交给模型。轮次开始、流式片段各有观察用途，却不是一条条独立的模型消息。</p>
+<p><img src="../assets/chapter-05/reader/fig-02-log-projection.png" alt="原始日志、可见序号与派生消息的机制拆解"></p>
+<p>先不做压缩。假设日志里已有轮次边界、用户任务、读报告调用、报告回执、流式片段和完整助手消息。模型需要的是按合法消息身份组织的内容，不是“开始事件”“分块事件”这些内部通知。图中的序号与文字是简化投影；调用和结果仍必须在正确的消息结构中配对。</p>
+<p>现在读<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L713-L743">消息派生缓存实现</a>。它维护三个关键状态：已派生的消息数组、已经消费的表面节点数量、建立缓存时的替换代数。代数像这本阅读页签的版本号；它不是模型版本，也不是日志事件序号。</p>
+<p>一次普通追加只增加末尾节点，旧前缀的含义没变，因此只派生新增节点。若之前有 4 个可见节点，新增 2 个，就从第 4 个后面继续处理，而不是把整个会话重新算一遍。每个节点通过 <code>deriveEventMessage</code>（按事件派生一条消息）映射；空内容助手消息等不产生有效消息的节点，会被跳过。</p>
+<p>若视图发生替换，比如第九讲用带出处的摘要替换某一段可见历史，旧数组已经不是新视图的前缀。实现检查替换代数变化，清空派生缓存、重置已读节点数，然后按新视图重建。只盯着“节点数有没有增加”是不够的：四个旧节点换成两个新节点，即使数值接近，身份和内容也完全不同。</p>
+<p>把这段算法翻成方便推演的伪代码：</p>
+<pre><code class="language-text">若当前替换代数 != 缓存所用代数：
+    清空派生消息，已消费节点数归零，更新代数
+对当前可见节点中尚未消费的每一个序号：
+    从原始日志取出对应事件
+    派生消息；只有非空消息才加入缓存
+记录已经消费的节点数
+返回一个新的数组，元素共享已经冻结的消息对象
+</code></pre>
+<p>最后一句也很有价值：每次返回新的数组，所以后来追加消息不会让调用者手里那份旧请求突然变长；数组里的消息对象共享但深度冻结，避免再次复制整段内容又不允许调用者改写历史。类比 Java 返回不可变元素组成的列表快照，而不是把内部可变列表直接交出去。不能从“共享对象”推断“调用者可以修改对象”。</p>
+<h3>4.2 为什么不能一开始就每次全量重算</h3>
+<p>全量派生更直观，而且是很好的测试参照。问题在于长期会话每一步都从头处理，重复成本会随历史增长。增量缓存减少普通追加时的重复工作，但多出失效条件和快照语义，需要用测试防止缓存悄悄落后于事实。</p>
+<p>上游<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/tests/derived-cache.spec.ts">派生缓存测试</a>采用的验证方式值得学习：拿现有日志重新创建一个会话，从头派生作为参照，再与实时增量结果比较。它还覆盖替换后重建、旧数组长度不变、元素共享且冻结、边界事件不生成消息。这比只断言函数“返回了数组”强得多。</p>
+<p>运行这组测试前先预测：取一次消息数组，追加新用户消息，再取第二次；旧数组会增加一项吗？两份数组的第一条消息是不是同一个对象？答案分别是不会、可以是；后者之所以安全，是因为元素不可变，而不是因为没人碰巧改它。</p>
+<pre><code class="language-powershell">node node_modules/vitest/vitest.mjs run packages/core/session/tests/derived-cache.spec.ts --maxWorkers=1 --no-file-parallelism
+</code></pre>
+<p>作者已在第三至五讲四文件 64 项局部验证批次中实际执行该文件，全部通过。这是上游真实派生实现的测试，不是第二讲简化消息数组的替身测试；两层验证不要混用。</p>
 <h2>五、记在内存里，不等于已经保存到磁盘</h2>
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L1010-L1036">持久化等待入口</a> 等待持久化监听者完成，但真正的文件或数据库后端在其他包。类比记录员在纸上记下事实，再交档案室保存；写进工作簿和档案室确认收到，不是同一时刻。</p>
 <p>如果没有相应后端，不能宣称关闭进程再打开必然恢复。即使后端存在，也要区分排队写入和完成写入。第八讲将接着处理断电时的半条记录和未闭合调用。</p>
@@ -157,6 +188,18 @@
 <p>先查 <code>snapshotJsonValue</code> 固定输入，再查 <code>log.push</code> 追加事实，最后对照 <code>deriveMessages()</code>。日志保留原事实，模型使用派生消息；图没有承诺磁盘已经持久化。</p>
 </details>
 
+<h2>工程练习：把缓存当成算法来验</h2>
+<ol>
+<li>当前可见节点是 1、2、3、5。用摘要事件 6 替换 1 到 3 的可见范围后，当前视图是什么？原始日志的 1、2、3 是否消失？</li>
+<li>如果派生函数只记“已经处理四个节点”，不记替换代数，会出什么错误？</li>
+<li>请设计一项测试：先保留旧数组，再追加消息，然后验证两次数组长度和第一条消息身份。为什么共享第一条消息仍然安全？</li>
+</ol>
+<details>
+<summary>参考答案</summary>
+
+<p>新视图为 6、5，旧事件仍留在原始日志；这是消息生产节点的简化示例。只记数量会把新视图误当旧前缀，跳过新摘要或留下已被遮蔽的消息。应断言旧数组长度不变、新数组增长，第一条可以共享同一对象而且深度冻结。再与从头重放派生结果逐值比较，能抓到缓存失效错误；不要只比较长度。</p>
+</details>
+
 <p><a href="../previews/chapter-04.html#doc-2">← 第04讲：受控工具</a> · <a href="../previews/chapter-06.html#doc-2">第06讲：技能与外部接入 →</a></p>
 </article>
 <article id="doc-4"><div class="doc-label">分享稿</div><h1>第05讲 · 这次读到的证据，下次从哪里取</h1>
@@ -168,6 +211,8 @@
 <p>如果不补这一层，会遇到的问题是：为什么调用请求和工具结果必须分别留痕？ 请求记录想做什么，结果记录实际发生什么，并靠调用身份关联；二者混同会把意图当事实。 所以本讲新增的不是要背的名词，而是任务中一项明确的责任。</p>
 <p>现在能做到：日志记录事实，再派生下一次请求的消息。但还要守住反例：日志在内存里有新事件，能保证重启后还在吗？ 不能。要看持久化后端是否存在以及保存是否完成；会话包的等待入口不是磁盘实现。</p>
 <p>请结合<a href="../previews/chapter-05.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L602-L646">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“有工具却总漏步骤，怎样带上排查手册”继续。</p>
+<h2>面向程序员继续深入</h2>
+<p>能用具体事件序号推演可见消息；能解释增量缓存什么时候必须失效，以及新数组与共享冻结元素为什么可以并存。 分享时用本章机制图指出一个具体分支，并说明如果拿掉这个分支，运费排查会怎样出错。不要只把术语翻成中文就结束。</p>
 </article>
 <article id="doc-5"><div class="doc-label">术语词典</div><h1>第05讲 · 这次读到的证据，下次从哪里取</h1>
 <blockquote>
@@ -182,6 +227,27 @@
 <p>从原始日志计算出的用途特定视图，像从工单账本整理给工程师看的摘要页。模型消息和界面可用不同视图，原始记录不是它们的同义词。</p>
 <h2>核对来源</h2>
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L602-L646">本讲源码定位</a>与<a href="../previews/chapter-05.html#doc-2">完整正文</a>。本例报告和金额属于教学夹具，不来自这份上游源码。</p>
+<h2>新增工程术语</h2>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>定义、比喻与边界</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Surface</td>
+<td>当前消息表面：记录哪些消息生产事件进入当前派生历史，像阅读页签；不是整本原始日志</td>
+</tr>
+<tr>
+<td>Replace Generation</td>
+<td>替换代数：视图替换后的版本计数，用来判定缓存前缀是否仍有效；不是模型版本或事件序号</td>
+</tr>
+<tr>
+<td>Cache Invalidation</td>
+<td>缓存失效：原有缓存不再对应当前事实，必须重建；像换了页签目录不能继续沿旧页码读</td>
+</tr>
+</tbody></table>
 </article></main>
 </body>
 </html>

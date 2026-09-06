@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
+  <meta charset="utf-8"><meta name="textbook-version" content="4.0.0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第04讲-受控工具</title>
@@ -21,7 +21,7 @@
     h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
     h3 { margin:1.7em 0 .6em; font-size:20px; }
     p,li { font-size:20px; }
-    article { scroll-margin-top:82px; }
+    article { scroll-margin-top:82px; overflow-wrap:anywhere; }
     a { color:#2e5aa8; overflow-wrap:anywhere; }
     blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
     code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
@@ -60,6 +60,8 @@
 <p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
 <h2>本讲交接</h2>
 <p>拒绝、失败和成功分别形成真实结果；未授权不写入。但下一步还要解决：这次读到的证据，下次从哪里取。</p>
+<h2>深化后的验收补充</h2>
+<p>能解释参数校验、裁决、守卫、派发与结果的调用链；能预测两读一写的开工顺序、完成顺序与回执排列。 先预测，后运行正文给出的固定基线上游局部测试。测试命令通过只证明被断言的行为；完成练习中的反例解释才算本讲验收。</p>
 <p><a href="../previews/chapter-03.html#doc-2">← 第03讲：模型请求</a> · <a href="../previews/chapter-05.html#doc-2">第05讲：会话日志 →</a></p>
 </article>
 <article id="doc-1"><div class="doc-label">视觉课件</div><h1>第04讲 · 想改代码，不等于已经获准修改</h1>
@@ -74,6 +76,10 @@
 <p>本讲最容易误会的是：测试工具返回了结果，但进程退出码为 1，属于哪种失败？ 可能是命令成功执行后测试断言失败，须看输出；不能把工具通道完成等同于业务通过。</p>
 <h2>从图返回源码</h2>
 <p>图只表达教学关联与状态变化，不代替完整调用顺序。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/tools/src/index.ts#L1465-L1505">源码定位</a>提供实现或契约证据，<a href="../previews/chapter-04.html#doc-2">正文</a>解释映射和边界。</p>
+<h2>用机制图继续往里看</h2>
+<p><img src="../assets/chapter-04/reader/fig-02-tool-schedule.png" alt="执行并行与结果排序"></p>
+<p><img src="../assets/chapter-04/reader/fig-03-guard-flow.png" alt="执行前的拒绝分支"></p>
+<p>图不是替代源码的摘要：请指出输入、执行者、条件与返回，以及图中明确省略的边界；再用<a href="../previews/chapter-04.html#doc-3">工程练习</a>验证。</p>
 <p><a href="../previews/chapter-03.html#doc-2">← 第03讲：模型请求</a> · <a href="../previews/chapter-05.html#doc-2">第05讲：会话日志 →</a></p>
 </article>
 <article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第04讲 · 想改代码，不等于已经获准修改</h1>
@@ -115,6 +121,11 @@
 </code></pre>
 <p>前面的执行前裁决与审批给出 <code>decision</code>；这里在允许时继续做拒绝检查，并把 <code>denialReason</code> 作为是否进入工具主体的分界。只有没有拒绝且调用未取消，才进入 <code>dispatch</code> 分支。读到拒绝分支里的错误结果后，不能再把它描述成“工具主体已运行但结果不满意”。</p>
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/tools/src/index.ts#L1684-L1728">审批解析</a> 还说明一次允许与其他非授权结果怎样区分。没有可用审批通道不是默认允许。</p>
+<p><img src="../assets/chapter-04/reader/fig-03-guard-flow.png" alt="参数、执行前裁决、拒绝守卫及主体派发的流程"></p>
+<h3>3.1 用三个具体裁决代入，别把允许当成终点</h3>
+<p>假设输入是“把运费比较符号改为大于等于”。先代入 <code>decision.kind = &#39;deny&#39;</code>：直接保留裁决理由，形成错误回执，工具主体根本没有开始。再代入 <code>allow</code>，但守卫发现工作区只读：拒绝原因仍非空，同样不能派发。第三次既允许、也没有守卫拒绝，但原始调用者已取消：返回执行前取消的结果，仍不启动主体。</p>
+<p>这些判断的意义是让许可逐层收紧，而不是相互抵消。像 Java 服务里的认证、资源授权和乐观锁检查：登录成功不能撤销资源禁止访问，资源可写也不能撤销版本冲突。这里的实际阶段并不完全等同于那三种机制，但“上一个检查通过，不代表整个请求已经获准落地”的逻辑一致。</p>
+<p>实现先经 <code>createExecution</code>（建立受控执行上下文）校验和解析，再经 <code>prepareExecution</code>（执行前准备）得到下一阶段，最后才进入主体派发。请沿<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/tools/src/index.ts#L1445-L1555">这些调用者与阶段</a>读，而不是只找到一个错误字符串就停下。错误回执会回到模型下一次请求，模型可以解释缺授权、缩小请求或等待；它不应换一个没有检查的通道绕过限制。</p>
 <h2>四、拒绝、执行错误、测试失败不是一回事</h2>
 <table>
 <thead>
@@ -147,10 +158,23 @@
 </tbody></table>
 <p>把所有负面结果都称为“模型失败”，会把排障方向带错。拒绝要处理权限或缩小动作；工具错误要查参数与环境；断言失败要回到业务证据。不能通过换一条不受检查的通道重试来“解决”拒绝。</p>
 <h2>五、回执还要经过整理与记录</h2>
+<h3>5.1 模型一次要两份材料，执行顺序由谁定</h3>
+<p>第二讲的第二步同时要约定和源码。如果两个读取都被明确判为并发安全，调度器可以在容量允许时并行。但紧跟着的独占修改不能与先前读取随意重叠，否则你可能把“修改后代码”误当成失败发生时的版本。</p>
+<p><img src="../assets/chapter-04/reader/fig-02-tool-schedule.png" alt="两个并行读取与后续独占修改的教学时间线"></p>
+<p>图中时长是教学数字：约定读取 100 毫秒，源码读取 20 毫秒。源码先完成，不表示它的回执应顶替第一个调用的位置。上游<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/tool-calls.ts">工具批次执行实现</a>明确分开执行完成时机和最终结果顺序：可以并发运行，最终仍按模型给出的调用顺序收束结果，并保留调用标识。</p>
+<p>这里不是简单套一个 <code>Promise.all</code>（并行等待多个异步结果）。实现还要处理有界容量、独占动作等待在途任务静止、开工前重新判断执行模式，以及取消后不再启动新动作。已经开始的动作需要等到其状态稳定，不能一收到取消就丢掉它的结果，再让上层误以为从未发生。</p>
+<p>执行模式来自工具注册与参数分类，不来自模型声称“这个很安全”。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/tools/tests/execution-mode.spec.ts">分类测试</a>覆盖明确返回真才可并发、缺声明或未知工具默认独占、分类抛错或返回非布尔真值也不放宽等情况。这样宁可损失部分吞吐，也不把不确定性变成并发许可。</p>
+<p>如果全串行，实现简单但独立读取会互相等待；如果全并行，写入、共享环境和取消时的竞态更难控制。有界并发加独占屏障是这两者之间的工程取舍，但它不保证业务事务原子性，也不代替修改权限。</p>
+<h3>5.2 内部执行成功，为什么还要看最终回执</h3>
 <p>工具主体前后还有可扩展处理和最终结果整理。外围处理可能替换或阻止内容，最终对外结果需要冻结、归一化，并与原调用对应。完整链路见 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/tool-execution-pipeline.md">工具执行管线</a>。</p>
 <p>因此不要从某个内部函数打印了“成功”推断模型最终看到成功，也不要从模型最后一句话倒推系统实际执行过。应追到登记的最终结果和对应调用编号。</p>
 <h2>六、回到授权后的那一行</h2>
 <p>本书夹具只允许修正运费比较符号。读完最新源码、获得限定许可、应用匹配的补丁后，才进入重新测试。若文件在读取与编辑之间被别人改了，先重新读取，不能用旧材料覆盖新内容。</p>
+<p>把它做成实验：先读代码并保存摘要值，随后模拟另一位开发者改变代码，最后带旧摘要申请补丁。执行器应拒绝旧版本补丁。重新读取能够更新你的证据，但不能自动获得一份新的无限权限。这个例子采用本书显式摘要检查，不声称上游每个编辑工具都用同一套字段；工程原则是避免检查时的对象与使用时的对象已经变了。</p>
+<p>本地教学执行器已有未授权、过期源码、测试命令成功而断言失败的行为测试。上游分类与批次调度分别用如下局部测试核对：</p>
+<pre><code class="language-powershell">node node_modules/vitest/vitest.mjs run packages/core/tools/tests/execution-mode.spec.ts packages/core/agent-loop/tests/tool-calls.spec.ts --maxWorkers=1 --no-file-parallelism
+</code></pre>
+<p>作者已经分别执行过两个文件，全部通过；前者列入四文件 64 项验证批次，后者列入第二讲三文件 62 项批次。这些数字不是本讲两文件单独相加后的结果，也不是完整工具系统覆盖率。</p>
 <p>这一讲保证每一次动作都有真实回执。第五讲继续解决另一个缺口：这些回执怎样保留下来，让下一次模型请求知道已经做了什么，而不是从头猜一次。</p>
 <p><a href="../previews/chapter-03.html#doc-2">← 第03讲：模型请求</a> · <a href="../previews/chapter-05.html#doc-2">第05讲：会话日志 →</a></p>
 </article>
@@ -184,6 +208,18 @@
 <p>沿 <code>denialReason</code> 非空时返回错误结果、无拒绝才进入 <code>dispatch</code> 的分支核对。图右格只有改后的代码，不是测试通过报告；拒绝检查和真实写入是两个不同阶段。</p>
 </details>
 
+<h2>工程练习：三种顺序与两种失败</h2>
+<ol>
+<li>模型依次提出读取约定、读取源码、修改比较符。两个读取明确可并发，分别耗时 100 和 20 毫秒；修改是独占。画出开始、完成、最终回执排列三个顺序。</li>
+<li>前置处理返回允许，守卫返回工作区只读。补丁主体的调用计数应是多少？模型收到的结果又是什么？</li>
+<li>读取代码后另一个开发者改了文件。你带着旧摘要打补丁被拒绝，能否直接去掉摘要参数重试？怎样修复自己的工作流程？</li>
+</ol>
+<details>
+<summary>参考答案</summary>
+
+<p>读取可一同开工，源码先完成、约定后完成，独占修改等待在途读取静止；最终按模型顺序关联约定、源码、修改的回执。守卫拒绝时主体计数为零，返回带错误的最终结果。旧版本失败要重新读取、核对变更和许可边界，不能删除前置条件以绕过检查。两次读取是否真的并行仍受容量和实时分类影响；图中时长不是基准测试。</p>
+</details>
+
 <p><a href="../previews/chapter-03.html#doc-2">← 第03讲：模型请求</a> · <a href="../previews/chapter-05.html#doc-2">第05讲：会话日志 →</a></p>
 </article>
 <article id="doc-4"><div class="doc-label">分享稿</div><h1>第04讲 · 想改代码，不等于已经获准修改</h1>
@@ -195,6 +231,8 @@
 <p>如果不补这一层，会遇到的问题是：审批通过后，执行拒绝检查还需要保留吗？ 需要。一次审批不强制覆盖其他执行约束；任一适用拒绝仍应阻止主体执行。 所以本讲新增的不是要背的名词，而是任务中一项明确的责任。</p>
 <p>现在能做到：拒绝、失败和成功分别形成真实结果；未授权不写入。但还要守住反例：测试工具返回了结果，但进程退出码为 1，属于哪种失败？ 可能是命令成功执行后测试断言失败，须看输出；不能把工具通道完成等同于业务通过。</p>
 <p>请结合<a href="../previews/chapter-04.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/tools/src/index.ts#L1465-L1505">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“这次读到的证据，下次从哪里取”继续。</p>
+<h2>面向程序员继续深入</h2>
+<p>能解释参数校验、裁决、守卫、派发与结果的调用链；能预测两读一写的开工顺序、完成顺序与回执排列。 分享时用本章机制图指出一个具体分支，并说明如果拿掉这个分支，运费排查会怎样出错。不要只把术语翻成中文就结束。</p>
 </article>
 <article id="doc-5"><div class="doc-label">术语词典</div><h1>第04讲 · 想改代码，不等于已经获准修改</h1>
 <blockquote>
@@ -211,6 +249,27 @@
 <p>执行前只负责提出拒绝的检查，像门口最后一道禁止通行检查。它能拒绝或不表态，不能强行推翻已有拒绝来批准动作。</p>
 <h2>核对来源</h2>
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/tools/src/index.ts#L1465-L1505">本讲源码定位</a>与<a href="../previews/chapter-04.html#doc-2">完整正文</a>。本例报告和金额属于教学夹具，不来自这份上游源码。</p>
+<h2>新增工程术语</h2>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>定义、比喻与边界</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Exclusive</td>
+<td>独占执行：该动作需要等待其他在途任务静止后进入相应执行区间，像清场后再施工；不是业务事务和授权的同义词</td>
+</tr>
+<tr>
+<td>Bounded Concurrency</td>
+<td>有界并发：最多允许一定数量任务同时运行，像限制同时占用的工位，避免无限启动</td>
+</tr>
+<tr>
+<td>Guard</td>
+<td>拒绝守卫：只能提出拒绝或不表态，不能撤销别处的拒绝；类似最终门禁，不是修改建议</td>
+</tr>
+</tbody></table>
 </article></main>
 </body>
 </html>

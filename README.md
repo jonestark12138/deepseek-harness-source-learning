@@ -1,8 +1,8 @@
 # DeepSeek Harness 中文图文源码教材
 
-通过一次 Java 运费服务测试排查，学习智能体如何取证、受控行动、恢复任务并核验完成。
+面向程序员的工程深化版 4.0.0：沿同一 Java 测试排查任务，结合 43 张统一手绘场景、时序和机制图，深入请求、调度、状态、权限、恢复和验收。包含可复制实验、真实 Java 反例与 LangGraph 跨框架迁移实验。
 
-[在线阅读](https://jonestark12138.github.io/deepseek-harness-source-learning/) · [完整离线包](https://github.com/jonestark12138/deepseek-harness-source-learning/releases/tag/complete-course-v3.0.1)
+[在线阅读](https://jonestark12138.github.io/deepseek-harness-source-learning/) · [完整离线包](https://github.com/jonestark12138/deepseek-harness-source-learning/releases/tag/complete-course-v4.0.0)
 
 ## 按顺序阅读主线
 

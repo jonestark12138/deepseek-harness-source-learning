@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
+  <meta charset="utf-8"><meta name="textbook-version" content="4.0.0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第11讲-固定流程与动态决策</title>
@@ -21,7 +21,7 @@
     h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
     h3 { margin:1.7em 0 .6em; font-size:20px; }
     p,li { font-size:20px; }
-    article { scroll-margin-top:82px; }
+    article { scroll-margin-top:82px; overflow-wrap:anywhere; }
     a { color:#2e5aa8; overflow-wrap:anywhere; }
     blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
     code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
@@ -58,11 +58,16 @@
 <p>先看<a href="../previews/chapter-11.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-11.html#doc-3">练习</a>。<a href="../previews/chapter-11.html#doc-1">视觉课件</a>用于复习，<a href="../previews/chapter-11.html#doc-5">词典</a>随用随查，不要求先背英文。预计正文阅读 20–35 分钟，练习 10–20 分钟；这是安排建议，不是学会的证明。</p>
 <p>读完应能解释：是不是把每一步都写死就更可靠？ 还要能预测：工作流返回部分结果但被取消，能报告整体成功吗？ 最后从<a href="../evidence/chapter-11.html">源码证据</a>定位相应责任。</p>
 <p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
+<h2>工程深度验收</h2>
+<p>能分开元数据、脚本执行顺序、子任务配额与结果收束；能将开放判断和确定性授权、验收组合。 先预测练习中的分支，再按正文命令观察；只读解释、测试替身和真实执行环境分别记录，不混为一项。</p>
 <h2>本讲交接</h2>
 <p>固定安全检查和验收，保留假设选择的动态判断。但下一步还要解决：缺少执行器，为什么配置写了还不能开工。</p>
 <p><a href="../previews/chapter-10.html#doc-2">← 第10讲：分工与后台</a> · <a href="../previews/chapter-12.html#doc-2">第12讲：配置装配 →</a></p>
 </article>
 <article id="doc-1"><div class="doc-label">视觉课件</div><h1>第11讲 · 哪些步骤可以固定，哪些要继续判断</h1>
+<h2>工程图解：哪里让模型判断，哪里必须由程序守住？</h2>
+<p><img src="../assets/chapter-11/reader/fig-02-hybrid-flow.png" alt="哪里让模型判断，哪里必须由程序守住？"></p>
+<p>能分开元数据、脚本执行顺序、子任务配额与结果收束；能将开放判断和确定性授权、验收组合。 本图与原有场景图互补，具体分支与边界见逐步讲解。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
@@ -119,6 +124,13 @@
 </code></pre>
 <p>这段先等待 <code>run.result</code>，检查停止原因，非正常完成会形成工具错误；最后无论成功还是失败都释放运行对象。不要只看“拿到一个结果对象”，就认为结果已经成功；其停止原因和清理是否完成仍有意义。</p>
 <p><code>finally</code> 与 Java 的最终清理结构相似，但异步子任务和取消传播让清理本身也需要等待。它不是打印一句“流程结束”就算资源收回。</p>
+<h3>3.1 继续进入引擎，别停在工具包装层</h3>
+<p>选择本项目工作线程后端时，<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/workflow/workflow-worker-thread/src/index.ts#L140-L185">引擎启动</a>先校验元数据和脚本语法，解析子任务提供者、核对总启动上限，再生成运行标识与工作线程初始化数据。元数据里的阶段名字不是执行依赖，真正先后由脚本的等待与分支表达。</p>
+<p>例如本例脚本让两个子任务独立读证据，等待两份结果后核对，再决定是否申请修改。只把元数据写成“读取、修改、测试”，却没有在脚本里等待读取结果，既不会自动产生依赖图，也不会帮你阻止过早写入。可以把元数据看成项目看板的栏目，脚本才是实际调度指令。</p>
+<p>启动前语法错误可以同步拒绝；已经返回运行对象之后，失败通过结果中的停止原因表达。这是两个不同边界。外层工具要先等待结果，再检查停止原因；直接读取 <code>result.value</code>（结果值）而忽略原因，就可能把被取消后的部分输出写成完整交卷。</p>
+<h3>3.2 三种预算分别防什么失控</h3>
+<p>同时启动多少子任务、整次最多启动多少子任务、一次批处理接受多少项，是不同上限。前者控制同时占用资源，第二个阻止“每次只开一个却永远开下去”，第三个避免一次提交巨大输入。只有并发上限不能阻止无限总工作量，就像 Java 线程池只有固定线程数，也不能保证生产者不会无限堆任务。</p>
+<p>工作线程承载同步脚本，避免脚本的同步计算直接卡住宿主事件循环，并允许在必要时终止线程。但脚本运行环境不是安全隔离墙。模型生成脚本仍需要通过能力、权限和执行环境限制接触外部世界；不能把“另一个线程”误解为“另一个有严格权限边界的机器”。</p>
 <h2>四、一个安全的教学编排长什么样</h2>
 <p>下面是伪代码，只表达顺序，不是可直接调用上游引擎的完整脚本：</p>
 <pre><code class="language-text">并行读取业务约定与实现证据
@@ -129,9 +141,18 @@
 运行三项边界测试，交给独立验收规则
 </code></pre>
 <p>并行发生在独立读取之间；授权位于真正写入之前；验收位于实际修改和新测试之后。图若把这三条关系画反，再漂亮也会教错。</p>
+<p><img src="../assets/chapter-11/reader/fig-02-hybrid-flow.png" alt="动态原因判断与固定权限、版本及测试约束的流程"></p>
+<p>本图只画证据足以定位运费边界缺陷时的路径。若原因仍不确定，模型需要返回补证据，而不是继续执行预设补丁。流程化的是检查责任，动态的是根据材料选择假设和下一份证据。</p>
+<p>在第二讲的教学循环里已经有相同分工：受控模型决定读哪份材料，执行器始终拒绝未授权修改。你可以替换模型的选择策略，但不应该顺便移除权限和最终验收。把它迁移到工作流引擎时，首先迁移这些不变量，再映射框架的节点和工具名。</p>
 <h2>五、脚本运行隔离不自动等于权限沙箱</h2>
 <p>可选后端使用工作线程与脚本执行环境，但不能由此推断任意不可信脚本都获得了绝对安全隔离。第七讲已经说明，执行边界需要具体能力与实际约束支持；流程引擎、工具管线和子任务权限仍各有责任。</p>
 <p>如果一个流程超时或取消，不能返回部分结果并标为完整成功。部分证据可以保留，但需要注明哪些成员没有结束、哪些结论不能验证。这会接上第十六讲的验收。</p>
+<p>沿<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/workflow/workflow-worker-thread/src/host.ts#L171-L251">宿主侧取消和处置</a>继续：取消向工作线程发消息，也向子任务启动与运行传播信号；宽限期内仍不收束时，宿主可以终止工作线程。处置是幂等的，同一个返回承诺让重入清理加入既有过程，而不是重复清理子对象。</p>
+<p>这里需要保留一个不舒服但重要的边界：等待是有上界的，超过宽限期仍慢于清理的子任务可能按契约被放弃等待，不代表它的外部副作用已经撤回。引擎保证自己这段生命周期如何收束，业务仍要处理未知结果。这与第八讲的崩溃窗口是同一个工程问题，不会因为改用流程引擎就消失。</p>
+<p>实验可以用上游可控子任务提供者，观察取消、总数限制、发布后结果和清理路径，不必真的启动付费模型：</p>
+<pre><code class="language-powershell">node node_modules/vitest/vitest.mjs run packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts --maxWorkers=1 --no-file-parallelism
+</code></pre>
+<p>这组会创建真实工作线程，测试环境的线程启动开销也会影响耗时。2026-09-06 作者在正常本地权限下执行该文件，54 项通过。先前受限环境中，加载器的系统用户查询失败，端到端断言得到错误而非完成；这是实际保留的失败记录，不是静默改成通过。定位后使用同一源码重跑，没有修改上游逻辑。真实线程、虚构子任务提供者仍不等于真实模型端到端评测。</p>
 <h2>六、为什么还要回看装配</h2>
 <p>到这里，概念上需要的能力都明确了。但实际配置中，工作流工具可能已经声明，执行引擎却没有加载；也可能文件服务不在当前范围。模型多请求几次解决不了缺能力的问题。</p>
 <p>因此第十二讲不是突然换到一门框架课，而是面对本任务的下一类故障：“要用的机制已经讲清，运行中的工作台却没装全。”我们从这里进入装配、清理、接线和协作的工程实现。</p>
@@ -141,6 +162,19 @@
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
+<h2>工程实验：先预测，再定位真实边界</h2>
+<ol>
+<li>元数据写了“读、改、测”，脚本却没有等待读取结果。是否已建立数据依赖？</li>
+<li>同时运行上限设为 2，是否足以防止一个任务顺序启动一万个子任务？</li>
+<li>返回运行句柄后失败，与启动前校验失败，调用者分别从哪里读取？</li>
+<li>工作线程被终止，能否证明远端子任务的外部动作已经回滚？</li>
+</ol>
+<details>
+<summary>参考答案与验收依据</summary>
+
+<p>不能，实际依赖由脚本的等待和数据流表达。并发上限只限制同时占用，总量需要独立预算。启动前无效请求可同步抛错；句柄发布后的失败由结果中的停止原因表达。终止本地线程不等于外部动作回滚，须查看子任务取消、清理及现场结果。</p>
+</details>
+
 <h2>先作答，再展开</h2>
 <h3>1. 解释机制</h3>
 <p>是不是把每一步都写死就更可靠？</p>
@@ -170,6 +204,7 @@
 <p><a href="../previews/chapter-10.html#doc-2">← 第10讲：分工与后台</a> · <a href="../previews/chapter-12.html#doc-2">第12讲：配置装配 →</a></p>
 </article>
 <article id="doc-4"><div class="doc-label">分享稿</div><h1>第11讲 · 哪些步骤可以固定，哪些要继续判断</h1>
+<p>工程复述时，不要只背术语：能分开元数据、脚本执行顺序、子任务配额与结果收束；能将开放判断和确定性授权、验收组合。 用练习中的反例说明边界，再展示对应实现和实际测试结果。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
@@ -180,6 +215,11 @@
 <p>请结合<a href="../previews/chapter-11.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/workflow/tool-workflow/src/index.ts#L292-L323">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“缺少执行器，为什么配置写了还不能开工”继续。</p>
 </article>
 <article id="doc-5"><div class="doc-label">术语词典</div><h1>第11讲 · 哪些步骤可以固定，哪些要继续判断</h1>
+<h2>本次工程推演补充</h2>
+<ul>
+<li>Worker Thread（工作线程）：同一进程内独立执行脚本的线程，不是独立权限容器。</li>
+<li>Grace Period（收尾宽限期）：取消后等待协作清理的一段有界时间，超过后仍可能存在结果未知的外部动作。</li>
+</ul>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>

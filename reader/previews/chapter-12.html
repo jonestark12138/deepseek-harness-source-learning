@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
+  <meta charset="utf-8"><meta name="textbook-version" content="4.0.0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第12讲-配置装配</title>
@@ -21,7 +21,7 @@
     h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
     h3 { margin:1.7em 0 .6em; font-size:20px; }
     p,li { font-size:20px; }
-    article { scroll-margin-top:82px; }
+    article { scroll-margin-top:82px; overflow-wrap:anywhere; }
     a { color:#2e5aa8; overflow-wrap:anywhere; }
     blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
     code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
@@ -58,11 +58,16 @@
 <p>先看<a href="../previews/chapter-12.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-12.html#doc-3">练习</a>。<a href="../previews/chapter-12.html#doc-1">视觉课件</a>用于复习，<a href="../previews/chapter-12.html#doc-5">词典</a>随用随查，不要求先背英文。预计正文阅读 35–50 分钟，练习 10–20 分钟；这是安排建议，不是学会的证明。</p>
 <p>读完应能解释：后层只把超时从 30 改为 60，原目录字段一定保留吗？ 还要能预测：最终配置里有插件行，为什么还可能不能读报告？ 最后从<a href="../evidence/chapter-12.html">源码证据</a>定位相应责任。</p>
 <p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
+<h2>工程深度验收</h2>
+<p>能计算多层补丁的最终配置，区分替换、模块加载、依赖等待与激活失败。 不以背出术语为完成标准，须先预测，再运行真实上游内存实验并解释反例。实验统一收录在第十五讲练习页。</p>
 <h2>本讲交接</h2>
 <p>区分配置替换、插件加载和依赖激活。但下一步还要解决：切换执行环境后，旧定时器为何还在跑。</p>
 <p><a href="../previews/chapter-11.html#doc-2">← 第11讲：固定流程与动态决策</a> · <a href="../previews/chapter-13.html#doc-2">第13讲：插件生命周期 →</a></p>
 </article>
 <article id="doc-1"><div class="doc-label">视觉课件</div><h1>第12讲 · 缺少执行器，为什么配置写了还不能开工</h1>
+<h2>源码运行图解</h2>
+<p><img src="../assets/chapter-12/reader/fig-02-config-activation.png" alt="能计算多层补丁的最终配置，区分替换、模块加载、依赖等待与激活失败。"></p>
+<p>能计算多层补丁的最终配置，区分替换、模块加载、依赖等待与激活失败。 图是固定实现上的教学推演，不是运行日志截图；原有场景图用于直觉，新增图用于检查顺序和状态。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
@@ -171,6 +176,12 @@
 </tr>
 </tbody></table>
 <p>插入行会立即加入索引，因此后面的补丁可以修改前面刚插入的行。这一点由<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/boot/app-boot/tests/config-dump.spec.ts#L109-L165">配置组合测试</a>交叉验证。不要把所有无效补丁都想成“启动立即失败”：未命中定位编号的情况在这个函数里是告警并跳过。</p>
+<h3>4.1 真正运行补丁函数，而不是自己重写一个“类似算法”</h3>
+<p>现在把纸面例子交给实际的配置行补丁函数。我们不复制函数实现到教材里冒充验证，而是在独立实验脚本中导入固定提交的上游代码，构造虚构报告插件配置。实验同时断言两个对象：输出只剩超时 60，输入仍保留目录和超时 30。第二个断言非常重要，否则一个“看起来结果正确”的实现可能偷偷污染后续热更新的基准。</p>
+<p>再改变输入：第一条补丁插入报告行，第二条立刻将该行禁用，第三条指向不存在的编号。预期为“插入行被禁用、产生一条告警”，不是三个动作全失败。对应关键状态是索引在插入后已更新；这个结论能解释为什么同一层后面的补丁找得到刚插入的行。</p>
+<p><img src="../assets/chapter-12/reader/fig-02-config-activation.png" alt="配置计算和实际激活的分层排查"></p>
+<p>实验代码与统一运行命令收录于<a href="../previews/chapter-15.html#doc-3">第十五讲工程实验</a>，其中前两项就是本讲。运行记录是实际导入上游函数的内存测试，不涉及安装真实插件或改用户配置。</p>
+<p>一个常见设计取舍是浅层替换还是递归合并：前者让“这层提供完整配置对象”的语义明确，却容易漏写旧字段；后者写补丁方便，但删除字段、数组合并和默认值优先级又必须另定规则。本仓库此路径选择前者。理解它不是说它一定更好，而是能预测真实行为并为配置审查设计断言。</p>
 <h2>五、纸面装好了，运行为什么还可能失败？</h2>
 <p>前面处理的全是配置数据。现在才轮到安装员。</p>
 <p><code>boot()</code> 先建立根插件上下文，也就是服务查找与局部信息的入口，再装配加载机制。这里还不需要先读第十三讲：把上下文理解成工作台的通讯录即可。配置文件入口负责读配置文件并应用补丁，装配器把配置条目连接到 Cordis 的插件安装过程。一个配置行可能对应一个插件，也可能是承载子树的分组或文件入口。</p>
@@ -239,6 +250,15 @@
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
+<h2>工程实验与反例</h2>
+<p>为什么只改超时后目录不见了？插入行能否被后面的补丁命中？</p>
+<p>先画预期记录，再运行<a href="../previews/chapter-15.html#doc-3">第十五讲提供的完整内存实验</a>。本讲对应的断言应能指出发生了哪次数据或生命周期变化，而非只打印“成功”。</p>
+<details>
+<summary>推演答案</summary>
+
+<p>配置对象整体替换；插入时索引会更新。对输出、原输入和告警次数分别断言。</p>
+</details>
+
 <h2>先作答，再展开</h2>
 <h3>1. 解释机制</h3>
 <p>后层只把超时从 30 改为 60，原目录字段一定保留吗？</p>
@@ -268,6 +288,7 @@
 <p><a href="../previews/chapter-11.html#doc-2">← 第11讲：固定流程与动态决策</a> · <a href="../previews/chapter-13.html#doc-2">第13讲：插件生命周期 →</a></p>
 </article>
 <article id="doc-4"><div class="doc-label">分享稿</div><h1>第12讲 · 缺少执行器，为什么配置写了还不能开工</h1>
+<p>工程复述重点：能计算多层补丁的最终配置，区分替换、模块加载、依赖等待与激活失败。 用“为什么只改超时后目录不见了？插入行能否被后面的补丁命中？”检验是否真正理解，接上源码和实际观察，而不是单独讲一组名词。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
@@ -278,6 +299,8 @@
 <p>请结合<a href="../previews/chapter-12.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/boot/app-boot/src/index.ts#L772-L805">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“切换执行环境后，旧定时器为何还在跑”继续。</p>
 </article>
 <article id="doc-5"><div class="doc-label">术语词典</div><h1>第12讲 · 缺少执行器，为什么配置写了还不能开工</h1>
+<h2>工程追踪补充</h2>
+<p>Patch（配置补丁）不是递归合并承诺；Activation（激活）是条件满足后实际运行成功，不是条目写在文件中。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
+  <meta charset="utf-8"><meta name="textbook-version" content="4.0.0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第13讲-插件生命周期</title>
@@ -21,7 +21,7 @@
     h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
     h3 { margin:1.7em 0 .6em; font-size:20px; }
     p,li { font-size:20px; }
-    article { scroll-margin-top:82px; }
+    article { scroll-margin-top:82px; overflow-wrap:anywhere; }
     a { color:#2e5aa8; overflow-wrap:anywhere; }
     blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
     code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
@@ -58,11 +58,16 @@
 <p>先看<a href="../previews/chapter-13.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-13.html#doc-3">练习</a>。<a href="../previews/chapter-13.html#doc-1">视觉课件</a>用于复习，<a href="../previews/chapter-13.html#doc-5">词典</a>随用随查，不要求先背英文。预计正文阅读 20–35 分钟，练习 10–20 分钟；这是安排建议，不是学会的证明。</p>
 <p>读完应能解释：为什么清理函数应绑定本次安装，而不是全局插件名？ 还要能预测：同一副作用内部倒序清理，能推出全系统串行倒序吗？ 最后从<a href="../evidence/chapter-13.html">源码证据</a>定位相应责任。</p>
 <p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
+<h2>工程深度验收</h2>
+<p>能追踪依赖组合变化、旧代清理、新代加载，并用实际轨迹验证清理范围和幂等性。 不以背出术语为完成标准，须先预测，再运行真实上游内存实验并解释反例。实验统一收录在第十五讲练习页。</p>
 <h2>本讲交接</h2>
 <p>资源随安装清理，不留下旧后端的重复工作。但下一步还要解决：同名文件服务，怎样接到这次任务的工作区。</p>
 <p><a href="../previews/chapter-12.html#doc-2">← 第12讲：配置装配</a> · <a href="../previews/chapter-14.html#doc-2">第14讲：服务依赖 →</a></p>
 </article>
 <article id="doc-1"><div class="doc-label">视觉课件</div><h1>第13讲 · 切换执行环境后，旧定时器为何还在跑</h1>
+<h2>源码运行图解</h2>
+<p><img src="../assets/chapter-13/reader/fig-02-lifecycle.png" alt="能追踪依赖组合变化、旧代清理、新代加载，并用实际轨迹验证清理范围和幂等性。"></p>
+<p>能追踪依赖组合变化、旧代清理、新代加载，并用实际轨迹验证清理范围和幂等性。 图是固定实现上的教学推演，不是运行日志截图；原有场景图用于直觉，新增图用于检查顺序和状态。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
@@ -115,6 +120,21 @@
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L611-L638">依赖刷新</a> 根据依赖实现的标识构成依赖组合标识。它像“这次接的是哪一组设备”的编号，不是时间戳。组合变化后，需要卸载旧影响；新依赖条件满足后，再加载。</p>
 <p>读状态名时把它们翻译成动作即可：<code>PENDING</code>（等待条件）、<code>LOADING</code>（正在加载）、<code>ACTIVE</code>（已激活）、<code>UNLOADING</code>（正在清理）、<code>FAILED</code>（失败状态）、<code>DISPOSED</code>（永久结束）。</p>
 <p>尤其区分“卸载”和“永久结束”：一个仍有效的安装实例可以清理后重新加载，不必每次都换一张全新的工单；已经永久结束的实例则不能靠服务回来就复活。</p>
+<h3>6.1 代入两次真实提供者身份</h3>
+<p>把依赖组合标识算一次：报告使用者只依赖文件服务，原提供者的安装编号是 21，则组合中包含 <code>:21</code>；卸下它后缺依赖，变成不可用标记；新提供者编号是 34，组合中包含 <code>:34</code>。数字是教学值，源码实际取提供者安装身份，不是比较业务对象内容是否相等。</p>
+<p><img src="../assets/chapter-13/reader/fig-02-lifecycle.png" alt="依赖更换时先卸载旧资源再重载的状态路径"></p>
+<p>沿<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L611-L705">刷新、加载、卸载实现</a>推进：</p>
+<ol>
+<li>刷新重算组合，组合未变就不触发这条重载路径。</li>
+<li>组合变化时，当前若已有生命周期工作在推进，不再另起一套同时加载；新组合仍会被记录，后续收束继续检查。</li>
+<li>加载先保存本次依赖快照，再经过一个异步检查点；如果这一小段等待期间组合已失效，不应继续运行过时的插件主体。</li>
+<li>卸载等待各顶层清理动作收束，清空本次依赖快照；最新依赖可用才再加载，不可用就保持等待。</li>
+</ol>
+<p>这与“把服务字段换成新对象”差了整套所有权机制。比如旧监视回调已经闭包捕获甲目录，即使查找表指向乙，它也不会自动重写闭包。重新创建回调才获得新一代对象。</p>
+<h3>6.2 不用定时等待也能验证资源交接</h3>
+<p>本书的真实内存实验用 <code>start:workspace-A</code>、<code>stop:workspace-A</code>、<code>start:workspace-B</code>、<code>stop:workspace-B</code> 作为观察记录。先登记依赖消费者但不提供服务，预期记录为空；提供甲后加载，撤下甲后先出现停止；提供乙后才出现新启动。通过等待安装与撤销返回的结果同步，不靠“睡一秒应该好了”猜时机。</p>
+<p>另一项实验在同一个副作用中依次登记连接、订阅、监视的撤销函数，观察停止、退订、关闭的逆序，并连续调用两次清理，断言不会执行两遍。脚本在第十五讲练习页统一提供。这两项实验使用真实框架和虚构资源，不冒充真实监视器压力测试。</p>
+<p>如果把所有资源放进互不相关的顶层登记，只期望全局逆序，测试就应失败。需要顺序的清理要放进同一个责任组合，或明确等待依赖；为了简便依赖隐含注册顺序，会把偶然时序变成生产故障。</p>
 <h2>七、带着故障问题回看源码</h2>
 <p>如果定时器卸载后还在跑，先检查它是否通过副作用登记，以及返回的是否真是清理函数；再查清理属于哪次安装；最后查依赖变化是否触发了预期生命周期。不要先去模型提示里找原因。</p>
 <p>本讲给第一讲的完整任务补上了“装上也能拆下”的机制，但还留下一问：工单写着“需要文件服务”，究竟从哪里找到它？同名服务有两个怎么办？这正是<a href="../previews/chapter-14.html#doc-2">第十四讲</a>要解决的接线问题。</p>
@@ -126,6 +146,15 @@
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
+<h2>工程实验与反例</h2>
+<p>为什么给服务表换新对象，旧闭包不自动换目录？同一副作用的逆序是否等于全局逆序？</p>
+<p>先画预期记录，再运行<a href="../previews/chapter-15.html#doc-3">第十五讲提供的完整内存实验</a>。本讲对应的断言应能指出发生了哪次数据或生命周期变化，而非只打印“成功”。</p>
+<details>
+<summary>推演答案</summary>
+
+<p>旧闭包仍引用旧对象，需要撤销并重建；同一组合内倒序，而不同顶层清理并行等待。</p>
+</details>
+
 <h2>先作答，再展开</h2>
 <h3>1. 解释机制</h3>
 <p>为什么清理函数应绑定本次安装，而不是全局插件名？</p>
@@ -155,6 +184,7 @@
 <p><a href="../previews/chapter-12.html#doc-2">← 第12讲：配置装配</a> · <a href="../previews/chapter-14.html#doc-2">第14讲：服务依赖 →</a></p>
 </article>
 <article id="doc-4"><div class="doc-label">分享稿</div><h1>第13讲 · 切换执行环境后，旧定时器为何还在跑</h1>
+<p>工程复述重点：能追踪依赖组合变化、旧代清理、新代加载，并用实际轨迹验证清理范围和幂等性。 用“为什么给服务表换新对象，旧闭包不自动换目录？同一副作用的逆序是否等于全局逆序？”检验是否真正理解，接上源码和实际观察，而不是单独讲一组名词。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
@@ -165,6 +195,8 @@
 <p>请结合<a href="../previews/chapter-13.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/fiber.ts#L402-L441">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“同名文件服务，怎样接到这次任务的工作区”继续。</p>
 </article>
 <article id="doc-5"><div class="doc-label">术语词典</div><h1>第13讲 · 切换执行环境后，旧定时器为何还在跑</h1>
+<h2>工程追踪补充</h2>
+<p>Epoch（本次依赖组合标识）标记连接了哪一代提供者，像工单上的设备编号组合，不是时间戳。Idempotent（幂等）清理指重复调用不会重复撤销资源。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>

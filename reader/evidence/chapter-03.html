@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="textbook-version" content="3.0.1"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第03讲 · 源码事实矩阵</title><link rel="icon" href="data:,"><style>
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="textbook-version" content="4.0.0"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第03讲 · 源码事实矩阵</title><link rel="icon" href="data:,"><style>
     @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
     :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
     * { box-sizing:border-box; }
@@ -14,7 +14,7 @@
     h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
     h3 { margin:1.7em 0 .6em; font-size:20px; }
     p,li { font-size:20px; }
-    article { scroll-margin-top:82px; }
+    article { scroll-margin-top:82px; overflow-wrap:anywhere; }
     a { color:#2e5aa8; overflow-wrap:anywhere; }
     blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
     code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
@@ -37,6 +37,11 @@
       article p>img { width:1080px; max-width:none; }
     }
   </style><nav><a href="../index.html">← 阅读首页</a><a href="../previews/chapter-03.html">第03讲</a></nav><main><article><h1>第03讲源码证据</h1>
+<h2>工程深化补充</h2>
+<ul>
+<li>C03-F02：请求配置先形成提案，再准备适配器调用与规范请求头，最后组成冻结请求；不能把工作区内容视作自动入模。证据：<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L442-L541">固定基线实现</a>。新增机制图为源码抽取或已标明数字的教学推演，不是生产日志。</li>
+<li>2026-09-06 实际执行请求重建、流式组装器、工具执行分类、派生缓存四个测试文件，共 64 项通过。各章正文区分实验覆盖范围；未调用真实模型。</li>
+</ul>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。源码在本轮重新读取；引用不等于运行上游全部测试。Java 运费任务为独立教学夹具。</p>
 <table>
 <thead>

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
+  <meta charset="utf-8"><meta name="textbook-version" content="4.0.0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第16讲-完成验收</title>
@@ -21,7 +21,7 @@
     h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
     h3 { margin:1.7em 0 .6em; font-size:20px; }
     p,li { font-size:20px; }
-    article { scroll-margin-top:82px; }
+    article { scroll-margin-top:82px; overflow-wrap:anywhere; }
     a { color:#2e5aa8; overflow-wrap:anywhere; }
     blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
     code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
@@ -58,11 +58,16 @@
 <p>先看<a href="../previews/chapter-16.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-16.html#doc-3">练习</a>。<a href="../previews/chapter-16.html#doc-1">视觉课件</a>用于复习，<a href="../previews/chapter-16.html#doc-5">词典</a>随用随查，不要求先背英文。预计正文阅读 20–35 分钟，练习 10–20 分钟；这是安排建议，不是学会的证明。</p>
 <p>读完应能解释：助手回复完整且运行正常停止，为什么验收仍可能失败？ 还要能预测：修改后拿修改前的绿色报告交付，缺的是什么？ 最后从<a href="../evidence/chapter-16.html">源码证据</a>定位相应责任。</p>
 <p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
+<h2>工程深度验收</h2>
+<p>能用当前目录、代码指纹、真实退出码和独立业务约束识别假绿灯。 完成不是看过正文：需要预测实验分歧、实际运行、提交轨迹，并解释尚未覆盖的环境和输入范围。</p>
 <h2>本讲交接</h2>
 <p>用边界三测、实际退出码、差异和授权记录验收。但下一步还要解决：拆掉框架名字，你还能解释这次排查吗。</p>
 <p><a href="../previews/chapter-15.html#doc-2">← 第15讲：事件协作</a> · <a href="../previews/chapter-17.html#doc-2">第17讲：综合迁移 →</a></p>
 </article>
 <article id="doc-1"><div class="doc-label">视觉课件</div><h1>第16讲 · 助手说修好了，怎样证明不是只说说</h1>
+<h2>实验关系图</h2>
+<p><img src="../assets/chapter-16/reader/fig-02-independent-verification.png" alt="能用当前目录、代码指纹、真实退出码和独立业务约束识别假绿灯。"></p>
+<p>Java 四变体与有界独立验证实际执行；运行完成不是业务完成。 实验与限制分别说明，不能用作者绘图代替真实运行证据。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
@@ -113,6 +118,50 @@
 <p>故意让系统遇到七种情况：没有报告、只有报告没有代码、未授权写入、恢复时有悬空调用、摘要伪造授权、子任务只有结论没有证据、测试成功后代码又变了。</p>
 <p>期望行为不是每次都成功，而是在证据不足时准确停止：能说明已经完成什么、哪里失败、还需要什么。失败后凭空生成漂亮结果，比明确报告未完成更危险。</p>
 <p>同时区分四层实验：自编运行器验证教学约束；真实 Java 夹具检验业务代码；上游局部测试验证运行支撑实现；真实模型与真实工具评测验证端到端任务效果。本轮运行器通过不能冒充其余三层已通过。</p>
+<h3>5.1 这一次真的编译并运行 Java</h3>
+<p>这轮升级补上了独立的真实 Java 实验，不再只报告模拟金额比较。作者使用便携式 Temurin（Java 开发工具包发行版）21.0.12.1，在独立临时目录编译原夹具和独立验证程序，实际取得四组退出码。原始教材夹具保持不变，正确补丁和错误变体都在各自实验目录生成。</p>
+<p><img src="../assets/chapter-16/reader/fig-02-independent-verification.png" alt="三项测试与独立验证对四种实现的故障对照"></p>
+<table>
+<thead>
+<tr>
+<th>实现或改法</th>
+<th>原三测退出码</th>
+<th>独立验证退出码</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>原版严格大于</td>
+<td>1</td>
+<td>1</td>
+<td>等于边界仍失败</td>
+</tr>
+<tr>
+<td>只改为大于等于</td>
+<td>0</td>
+<td>0</td>
+<td>本实验范围通过</td>
+</tr>
+<tr>
+<td>所有金额免运费</td>
+<td>1</td>
+<td>1</td>
+<td>低于阈值行为被破坏</td>
+</tr>
+<tr>
+<td>保留错误实现，只改测试预期</td>
+<td>0</td>
+<td>1</td>
+<td>原三测变绿，但独立业务约定仍抓住错误</td>
+</tr>
+</tbody></table>
+<p>独立验证不是再复制三条断言：它遍历 0 到 20000 分的所有整数，按“低于阈值收费，否则免运费”的约定核对，并检查负数输入 -1 被拒绝。对这个<strong>有界输入域</strong>可穷举，不代表验证了所有整数、溢出、币种、并发、真实订单或部署配置。扩大结论必须扩大证据。</p>
+<p>这体现 Mutation Testing（变异测试）的直觉：故意制造错误实现，看现有测试是否能抓住，而不是仅看正确实现是否通过。这里手工构造三种错误/欺骗情境，没有运行通用变异框架，也不把几项实验包装成完整覆盖率。</p>
+<h3>5.2 让报告成为可关联的证据，而不是一块绿牌子</h3>
+<p>实验记录每个变体的执行目录、源码内容指纹、独立验证程序指纹、标准输出、错误输出和进程退出码。编译失败会在运行前直接拦下；没有 Java 开发工具包也会明确失败，不能生成虚假的绿色报告。</p>
+<p>因此验收可分成三道门：<strong>执行可信</strong>，命令确实完成且有真实结果；<strong>对象一致</strong>，报告对应当前目录和版本；<strong>目标一致</strong>，断言仍表达原业务约定。三道门任何一道缺失，都不能仅凭“退出码为零”结案。</p>
+<p>把这个思想迁移到更大 Java 项目时，第三道门可以包括契约测试、集成测试和人工差异审查。不要把“独立”理解成一定再开一个模型；同一个模型重新自评仍可能共享盲点，而独立的业务约束和执行记录通常更便于复核。</p>
+<p>完整代码与复现命令在本讲练习页。先预测四行结果，再运行，最后只改变测试预期观察为什么两个验收器分歧。这个分歧是实验要解释的现象，不是需要把独立验证改到也变绿的故障。</p>
 <h2>六、可靠性不只看成功率</h2>
 <p>更多请求和更多帮手可能提高某些复杂任务成功率，也会增加费用、时延、重复材料和合并错误。评价时要记录任务是否正确、是否越权、失败是否可解释、耗时与请求量，而非只数工具调用次数。</p>
 <p>本例的业务逻辑很小，通常无需分工和自动流程。全书逐步增加困难是为了理解机制，不是在推荐把所有机制都装到每个简单任务里。</p>
@@ -125,6 +174,112 @@
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
+<h2>真实 Java 实验：不要只看一个绿灯</h2>
+<p>建立独立练习目录，三份文件按下方文件名保存；其中 <code>java-lab.cjs</code> 与两份 Java 文件放在 <code>case</code> 子目录。命令参数为你自己的 JDK（Java 开发工具包）根目录，实验同时需要编译器和运行器，不是只有 JRE（Java 运行环境）即可。生成文件只进入练习目录的 <code>output</code>，不会覆盖原夹具。</p>
+<pre><code class="language-powershell">node case/java-lab.cjs &#39;D:/your-jdk&#39;
+</code></pre>
+<p>先预测原版、正确修复、全部免运费、只改测试预期这四组的两类退出码，再运行。作者在 2026-09-06 实际得到 <code>1/1、0/0、1/1、0/1</code>；最后一组是重点：相同绿色报告，是否真的满足原约定？</p>
+<details>
+<summary>展开原始失败 Java 夹具</summary>
+
+
+<pre><code class="language-java">// Fictional textbook fixture. No framework, network, credentials or company code.
+public class ShippingCase {
+    static int shippingFee(int orderCents) {
+        if (orderCents &lt; 0) throw new IllegalArgumentException(&quot;negative amount&quot;);
+        return orderCents &gt; 10000 ? 0 : 800;
+    }
+
+    public static void main(String[] args) {
+        int[] amounts = {9999, 10000, 10001};
+        int[] expected = {800, 0, 0};
+        int failed = 0;
+        for (int i = 0; i &lt; amounts.length; i++) {
+            int actual = shippingFee(amounts[i]);
+            boolean pass = actual == expected[i];
+            System.out.printf(&quot;amount=%d expected=%d actual=%d %s%n&quot;,
+                    amounts[i], expected[i], actual, pass ? &quot;PASS&quot; : &quot;FAIL&quot;);
+            if (!pass) failed++;
+        }
+        if (failed != 0) throw new AssertionError(&quot;failed=&quot; + failed);
+    }
+}
+</code></pre>
+</details>
+
+<details>
+<summary>展开独立有界 Java 验证器</summary>
+
+
+<pre><code class="language-java">// Independent bounded-domain oracle for the fictional shipping contract.
+public class ShippingProperties {
+    public static void main(String[] args) {
+        int checked = 0;
+        for (int amount = 0; amount &lt;= 20000; amount++) {
+            int actual = ShippingCase.shippingFee(amount);
+            int expected = amount &lt; 10000 ? 800 : 0;
+            if (actual != expected) {
+                throw new AssertionError(&quot;amount=&quot; + amount + &quot; expected=&quot; + expected + &quot; actual=&quot; + actual);
+            }
+            checked++;
+        }
+        try {
+            ShippingCase.shippingFee(-1);
+            throw new AssertionError(&quot;negative input must be rejected&quot;);
+        } catch (IllegalArgumentException expected) {
+            System.out.println(&quot;checked=&quot; + checked + &quot;; negative input rejected&quot;);
+        }
+    }
+}
+</code></pre>
+</details>
+
+<details>
+<summary>展开编译、执行四变体并关联证据的脚本</summary>
+
+
+<pre><code class="language-js">// Executes only these two fictional Java fixtures in a new local output folder.
+const fs=require(&#39;node:fs&#39;),path=require(&#39;node:path&#39;),assert=require(&#39;node:assert/strict&#39;)
+const {spawnSync}=require(&#39;node:child_process&#39;),{createHash}=require(&#39;node:crypto&#39;)
+const root=path.resolve(__dirname,&#39;..&#39;),jdk=path.resolve(process.argv[2]??&#39;missing-jdk&#39;)
+const exe=name=&gt;path.join(jdk,&#39;bin&#39;,name+(process.platform===&#39;win32&#39;?&#39;.exe&#39;:&#39;&#39;))
+for(const name of [&#39;java&#39;,&#39;javac&#39;])assert.ok(fs.existsSync(exe(name)),`Pass a JDK directory containing ${name}`)
+const hash=s=&gt;createHash(&#39;sha256&#39;).update(s).digest(&#39;hex&#39;)
+const original=fs.readFileSync(path.join(__dirname,&#39;ShippingCase.java&#39;),&#39;utf8&#39;)
+const properties=fs.readFileSync(path.join(__dirname,&#39;ShippingProperties.java&#39;),&#39;utf8&#39;)
+assert.equal(original.split(&#39;orderCents &gt; 10000&#39;).length,2)
+const fixed=original.replace(&#39;orderCents &gt; 10000&#39;,&#39;orderCents &gt;= 10000&#39;)
+const mutants=[
+ [&#39;original&#39;,original,1,1],
+ [&#39;fixed&#39;,fixed,0,0],
+ [&#39;always-free&#39;,original.replace(&#39;return orderCents &gt; 10000 ? 0 : 800;&#39;,&#39;return 0;&#39;),1,1],
+ [&#39;changed-test-expectation&#39;,original.replace(&#39;{800, 0, 0}&#39;,&#39;{800, 800, 0}&#39;),0,1],
+]
+fs.mkdirSync(path.join(root,&#39;output&#39;),{recursive:true})
+const workspace=fs.mkdtempSync(path.join(root,&#39;output&#39;,&#39;java-lab-&#39;))
+function run(name,args,cwd){const r=spawnSync(exe(name),args,{cwd,encoding:&#39;utf8&#39;,timeout:30000});if(r.error)throw r.error;return {exitCode:r.status,stdout:r.stdout.trim(),stderr:r.stderr.trim()}}
+const results=[]
+for(const [name,source,threeExit,propertyExit]of mutants){
+ const dir=path.join(workspace,name);fs.mkdirSync(dir)
+ fs.writeFileSync(path.join(dir,&#39;ShippingCase.java&#39;),source)
+ fs.writeFileSync(path.join(dir,&#39;ShippingProperties.java&#39;),properties)
+ const compilation=run(&#39;javac&#39;,[&#39;ShippingCase.java&#39;,&#39;ShippingProperties.java&#39;],dir)
+ assert.equal(compilation.exitCode,0,compilation.stderr)
+ const three=run(&#39;java&#39;,[&#39;-cp&#39;,&#39;.&#39;,&#39;ShippingCase&#39;],dir)
+ const property=run(&#39;java&#39;,[&#39;-cp&#39;,&#39;.&#39;,&#39;ShippingProperties&#39;],dir)
+ assert.equal(three.exitCode,threeExit,`${name}: three cases`)
+ assert.equal(property.exitCode,propertyExit,`${name}: independent bounded oracle`)
+ results.push({name,workspace:dir,sourceHash:hash(source),propertyHash:hash(properties),three,property})
+ console.log(`${name}: three=${three.exitCode}, independent=${property.exitCode}`)
+}
+assert.equal(fs.readFileSync(path.join(__dirname,&#39;ShippingCase.java&#39;),&#39;utf8&#39;),original)
+const report={jdk:run(&#39;java&#39;,[&#39;-version&#39;],workspace),workspace,results,boundary:&#39;Real javac/java; fictional fixture; no model or harness end-to-end claim; exhaustive only on 0..20000 plus -1.&#39;}
+fs.writeFileSync(path.join(workspace,&#39;report.json&#39;),JSON.stringify(report,null,2)+&#39;\n&#39;)
+console.log(JSON.stringify({variants:results.length,verified:true,report:path.join(workspace,&#39;report.json&#39;)}))
+</code></pre>
+</details>
+
+<p>有限改造：新增变体“只在 10000 分时免运费，其他都收费”。先预测哪组会抓住 10001 的回归，再加入脚本断言；不得修改独立预期让变体通过。另解释：即使 0–20000 全部整数通过，为什么仍不能声称真实支付系统已可靠？</p>
 <h2>先作答，再展开</h2>
 <h3>1. 解释机制</h3>
 <p>助手回复完整且运行正常停止，为什么验收仍可能失败？</p>
@@ -154,6 +309,7 @@
 <p><a href="../previews/chapter-15.html#doc-2">← 第15讲：事件协作</a> · <a href="../previews/chapter-17.html#doc-2">第17讲：综合迁移 →</a></p>
 </article>
 <article id="doc-4"><div class="doc-label">分享稿</div><h1>第16讲 · 助手说修好了，怎样证明不是只说说</h1>
+<p>工程复述目标：能用当前目录、代码指纹、真实退出码和独立业务约束识别假绿灯。 分享时先给一条错误轨迹，再说明实际机制、修正办法与验证范围。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
@@ -164,6 +320,8 @@
 <p>请结合<a href="../previews/chapter-16.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L424-L433">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“拆掉框架名字，你还能解释这次排查吗”继续。</p>
 </article>
 <article id="doc-5"><div class="doc-label">术语词典</div><h1>第16讲 · 助手说修好了，怎样证明不是只说说</h1>
+<h2>工程实验补充</h2>
+<p>Mutation Testing（变异测试）是故意制造错误来检查测试能否抓住，不是以绿灯数量代替覆盖证明。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>

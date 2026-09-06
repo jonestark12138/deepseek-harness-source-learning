@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
+  <meta charset="utf-8"><meta name="textbook-version" content="4.0.0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第02讲-智能体循环</title>
@@ -21,7 +21,7 @@
     h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
     h3 { margin:1.7em 0 .6em; font-size:20px; }
     p,li { font-size:20px; }
-    article { scroll-margin-top:82px; }
+    article { scroll-margin-top:82px; overflow-wrap:anywhere; }
     a { color:#2e5aa8; overflow-wrap:anywhere; }
     blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
     code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
@@ -47,59 +47,107 @@
 </head>
 <body>
   <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/chapter-02.html#doc-0">学习导航</a><a href="../previews/chapter-02.html#doc-1">视觉课件</a><a href="../previews/chapter-02.html#doc-2">逐步讲解</a><a href="../previews/chapter-02.html#doc-3">练习与答案</a><a href="../previews/chapter-02.html#doc-4">分享稿</a><a href="../previews/chapter-02.html#doc-5">术语词典</a></nav>
-  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第02讲 · 谁让助手读完报告后再读代码</h1>
-<blockquote>
-<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
-</blockquote>
-<h2>从这里接上</h2>
-<p>已有任务目标，但一次回答还不能完成排查。本讲要回答：谁让助手读完报告后再读代码？</p>
-<p>上一讲解决了“形成读报告、读代码、申请修改、重跑测试的任务闭环”；这仍不能代替本讲要补的责任。</p>
-<h2>阅读与完成标准</h2>
-<p>先看<a href="../previews/chapter-02.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-02.html#doc-3">练习</a>。<a href="../previews/chapter-02.html#doc-1">视觉课件</a>用于复习，<a href="../previews/chapter-02.html#doc-5">词典</a>随用随查，不要求先背英文。预计正文阅读 20–35 分钟，练习 10–20 分钟；这是安排建议，不是学会的证明。</p>
-<p>读完应能解释：读报告的工具结束后，为什么还可能欠下一步？ 还要能预测：日志有一轮开始与结束，却没有模型步骤，一定损坏了吗？ 最后从<a href="../evidence/chapter-02.html">源码证据</a>定位相应责任。</p>
-<p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
-<h2>本讲交接</h2>
-<p>读报告的结果触发下一次模型判断。但下一步还要解决：报告明明在磁盘，模型为什么仍不知道。</p>
-<p><a href="../previews/chapter-01.html#doc-2">← 第01讲：任务全景</a> · <a href="../previews/chapter-03.html#doc-2">第03讲：模型请求 →</a></p>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第02讲 · 把一次回答接成一段可追踪的工作</h1>
+<p>上一讲定了同一张工单：先查清运费边界错误，得到授权后修复并重新测试。本讲先完成诊断部分，暂不修改。我们要从“知道存在循环”，前进到能读懂请求、工具回执和步骤事件。</p>
+<p>先读<a href="../previews/chapter-02.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-02.html#doc-3">实验与练习</a>。<a href="../previews/chapter-02.html#doc-1">视觉课件</a>用四种图复盘同一条运行路径。预计正文与源码推演 45–60 分钟，实验与练习 30–45 分钟；不用一次完成，时间不是掌握标准。</p>
+<h2>本讲的工程验收</h2>
+<ul>
+<li>用具体消息解释报告结果如何进入第二次请求，并说出调用关联号为什么必要。</li>
+<li>对正常、请求重试、读报告失败三种轨迹，预测步骤数、请求尝试数、工具调用数。</li>
+<li>在源码上指出外层步骤循环、内层请求重试、零步退出和结束候选的差异。</li>
+<li>运行本地可控循环，注入取消或新消息，用断言核对预测。</li>
+<li>解释固定脚本的适用范围，以及动态循环额外增加的预算、权限与验证责任。</li>
+</ul>
+<p>实验只需 Node.js（JavaScript 运行环境），无需真实模型或密钥。公开阅读版在练习页内嵌完整实验脚本，不依赖私有制作库和源素材。</p>
+<h2>不在本讲硬塞的内容</h2>
+<p>第四讲展开工具批次调度和动作准入；第五讲展开会话事件到消息的派生；第八讲展开取消后恢复与外部结果未知；第九讲展开上下文压缩；第十五讲展开请求错误处理链。它们不是可忽略的细节，而是已经登记去向的后续核心机制。</p>
+<p>第三讲紧接着回答：循环已经会继续，下一次请求究竟怎样装入正确证据？</p>
+<p><a href="../previews/chapter-01.html#doc-2">← 第01讲</a> · <a href="../previews/chapter-03.html#doc-2">第03讲 →</a></p>
 </article>
-<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第02讲 · 谁让助手读完报告后再读代码</h1>
-<blockquote>
-<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
-</blockquote>
-<h2>当前现场</h2>
-<p>已有任务目标，但一次回答还不能完成排查。固定业务约定不变：满 10000 分免运费；原实现在等于时返回 800。禁止用修改预期的方式让测试变绿。</p>
-<p><img src="../assets/chapter-02/reader/fig-01-case-state.png" alt="已有任务目标，但一次回答还不能完成排查，经过本讲机制，变为读报告的结果触发下一次模型判断"></p>
-<h2>三分钟复述</h2>
-<p>先描述左格缺什么，再说明中格采取的机制，最后指出右格新增了哪些证据或责任。读报告的结果触发下一次模型判断。不要只读图上的物件名；删掉中间这项机制，任务会在哪一步失去依据？</p>
-<p>本讲最容易误会的是：日志有一轮开始与结束，却没有模型步骤，一定损坏了吗？ 不一定。首次输入在请求前被拒绝或改为空，可以形成零步骤轮次；应核对对应分支。</p>
-<h2>从图返回源码</h2>
-<p>图只表达教学关联与状态变化，不代替完整调用顺序。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">源码定位</a>提供实现或契约证据，<a href="../previews/chapter-02.html#doc-2">正文</a>解释映射和边界。</p>
-<p><a href="../previews/chapter-01.html#doc-2">← 第01讲：任务全景</a> · <a href="../previews/chapter-03.html#doc-2">第03讲：模型请求 →</a></p>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第02讲 · 四张图拆开同一次排查</h1>
+<p>这些图不替代正文的源码和实验。看图时先回答图题，再沿箭头说明输入与返回，不把“看懂颜色”当成理解机制。</p>
+<h2>1. 时序：报告结果不能停在工具出口</h2>
+<p><img src="../assets/chapter-02/reader/fig-02-feedback-sequence.png" alt="报告、下一次请求与后续判断的时序"></p>
+<p>模型提出调用；执行器产生回执；循环保存回执并准备下一步输入。同一步可以提出两次读取。图中调用号是简写，具体协议见正文。</p>
+<h2>2. 故障对照：重拨电话不等于进入下一阶段</h2>
+<p><img src="../assets/chapter-02/reader/fig-04-retry-comparison.png" alt="正常与请求重试的数量对照"></p>
+<p>只改变首个请求的前两次尝试。三步仍是三步，请求尝试变成五次。别把请求重试画成工具重放。</p>
+<h2>3. 流程：结束候选不等于业务成功</h2>
+<p><img src="../assets/chapter-02/reader/fig-03-step-flow.png" alt="单步成功输出之后的停止分支"></p>
+<p>这张图从完整响应之后开始，省略初始准入和错误恢复。输出上限、无工具调用、工具给出结束结论是不同分支；外层仍要检查新输入。</p>
+<h2>4. 场景：新材料先放收件盘</h2>
+<p><img src="../assets/chapter-02/reader/fig-01-case-state.png" alt="已准备请求与待领取消息的场景"></p>
+<p>已经发出的请求不会自动更新。下一步准入领取新消息。执行授权仍是独立的门禁，不是盘里的一张提醒。</p>
+<p>读图结束后，回到<a href="../previews/chapter-02.html#doc-3">实验与练习</a>用真实输出验证计数和消息时机。</p>
 </article>
-<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第02讲 · 谁让助手读完报告后再读代码</h1>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第02讲 · 把一次回答接成一段可追踪的工作</h1>
 <blockquote>
-<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。本讲区分源码事实、纸面推演、已执行教学循环和已执行上游局部测试。没有调用真实模型，也没有把模拟运费计算说成 Java 实测。</p>
 </blockquote>
-<h2>一、报告回来了，谁提醒模型接着看代码</h2>
-<p>第一讲得到一条失败报告：10000 分输入被收了 800 分。报告读取工具已经结束，可排查还没结束。如果程序只把工具输出显示给用户，然后退出，模型就没有机会结合结果提出“再读实现”的下一步。</p>
-<p>Agent Loop（智能体循环）正是这位负责接力的调度者：准备一次模型输入，接收模型输出，执行其中受控的动作，再把结果带回下一次请求。它不是给模型增加一颗新大脑，而是让多次判断和真实反馈组成任务过程。</p>
-<p><img src="../assets/chapter-02/reader/fig-01-case-state.png" alt="已有任务目标，但一次回答还不能完成排查，经过本讲机制，变为读报告的结果触发下一次模型判断"></p>
+<h2>一、报告读完了，可排查为什么还没往下走</h2>
+<p>接着第一讲。用户给出的任务是：“先查清运费边界测试失败原因，不要修改。”现在有三份可能用得上的材料：失败报告写着输入 10000 分、预期运费 0、实际 800；业务约定写着“满 10000 分免运费”；实现却是 <code>return orderCents &gt; 10000 ? 0 : 800;</code>。但是，材料存在于工作区，不表示模型已经看见。</p>
+<p>假设第一次请求只带了任务和读取工具的说明。模型提出“读报告”，执行器读到了失败报告，然后函数返回。到这里，程序做成了一次读取，却没有做成一次排查。缺少的不是更聪明的一句提示，而是有人把刚读到的证据送回模型，让它继续判断是否需要约定与源码。</p>
+<p>Agent Loop（智能体循环）就是这套接力机制：准备输入 → 请求模型 → 处理输出中的工具调用 → 保存结果 → 按条件继续。像排查事故时的值班协调员：开发者判断要看什么，协调员安排受控读取，把回执放到下一次讨论桌上。比喻里的人并不对应一个独立模型；这里的协调职责主要由确定性程序承担。</p>
+<p>对 Java 后端工程师，关键区别是：普通服务常按固定调用链执行；智能体的下一项动作可以由模型根据反馈选择，但工具准入、结果关联、取消和停止仍由程序控制。动态的是判断，不是安全规则可以随意变化。本讲最终要能沿着一份报告，追到下一份请求，而不仅是记住“有个循环”。</p>
+<h2>二、先定清四个计数单位，否则日志会把人带偏</h2>
+<p>Turn（一轮）是一次被驱动的运行边界；Step（一步）是轮内一次步骤执行，包含模型交互及该步骤产生的工具处理；Request Attempt（请求尝试）是一次向模型服务发出的具体尝试；Tool Call（工具调用）是模型提出的一项结构化动作。一步可能有多次模型请求尝试，也可能在一次成功响应中提出多个工具调用。</p>
+<p>可以把“一轮”想成这一张排查工单，“一步”想成一次新的判断阶段，“请求尝试”想成这一阶段拨通咨询电话的尝试次数。电话占线重拨，不等于已经进入下一个排查阶段；一次接通后要求查两份文件，也不等于接了两张工单。这个比喻只解释计数，不意味着模型请求没有费用或副作用。</p>
+<p>本讲受控模型依据已有结果选择动作。它不是人工写死“先执行读报告，再执行读代码”：改变请求中已有的证据，它会改变选择。正常路径是：</p>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>本次请求已包含的证据</th>
+<th>模型选择</th>
+<th>执行后的变化</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第 1 步</td>
+<td>只有用户任务</td>
+<td>读取报告</td>
+<td>增加失败断言，尚不知是契约还是实现问题</td>
+</tr>
+<tr>
+<td>第 2 步</td>
+<td>任务＋报告调用及结果</td>
+<td>读取约定、读取源码</td>
+<td>增加“含等于”的约定与“大于”的实现</td>
+</tr>
+<tr>
+<td>第 3 步</td>
+<td>前面全部调用与结果</td>
+<td>解释边界差异，不再调用工具</td>
+<td>正常结束诊断轮次，仍等待修改授权</td>
+</tr>
+</tbody></table>
+<p>因此正常实验是 1 轮、3 步、3 次请求尝试、3 次工具调用。第二步同时提出两个读取，所以不能根据工具调用数量反推步骤数。真实模型可能合并读取，也可能需要更多步骤；这里固定的是可复现的教学条件，不是产品保证三步完成。</p>
+<h2>三、沿报告的身份，走完一次反馈闭环</h2>
+<p><img src="../assets/chapter-02/reader/fig-02-feedback-sequence.png" alt="循环驱动、模型与工具执行器之间的报告读取和反馈时序"></p>
 <blockquote>
-<p>三格为同一运费任务的教学状态变化或故障对照。图不是实际运行日志；关键区别见各格说明。</p>
+<p>从上往下是时间。实线表示请求或交付，虚线表示返回。图中调用号为了可读性简写为 r1（报告调用）、r2（约定调用）、r3（源码调用）；教学程序实际使用 <code>read-report</code>、<code>read-contract</code>、<code>read-code</code>。它们对应同三份材料。</p>
 </blockquote>
-<h2>二、别把一次请求、一步和一轮混成一个词</h2>
-<p>Step（一步）在本项目中是一回模型请求以及它调用的工具；Turn（一轮）可以包含零步或多步。可以把一轮想成接下一张排查工单，一步则是工单里“根据现有材料决定并尝试一个阶段动作”。</p>
-<p>在教学推演里，第一步请求读取报告；结果说明是边界失败，于是第二步请求读取业务约定和实现；第三步解释原因并等待授权。用户随后授权修复，可能形成新的输入和后续轮次。这里没有规定真实模型一定用三步，它也可能合并独立读取或选择别的合法路径。</p>
-<p>为什么一轮会有零步？因为系统先受理一项输入，再在请求前检查时拒绝它，或者把最初输入改为空。工单被登记过，却没有发生模型请求；日志仍应能解释这次尝试。</p>
-<h2>三、真正控制继续的是状态，不是一句“继续工作”</h2>
-<p>阅读源码前先做预测：若工具刚读回报告，调度者为什么不能在返回报告后立即把整轮判为完成？因为下一次判断仍需要消费结果。反过来，若没有欠下的工具反馈，也没有新的待处理输入，就不应无条件再请求模型。</p>
-<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">固定提交中的定位片段</a>（连续原文；中文说明放在代码之外）：</p>
-<!-- source-excerpt: packages/core/agent-loop/src/agent.ts#L268-L308 -->
-<pre><code class="language-ts">    let target: InboxTarget = &#39;next-turn&#39;
-    try {
-      while (true) {
-        signal.throwIfAborted()
-        const step = phase.step + 1
+<p>先盯住报告这一次调用。教学协议做了明确简化，模型返回的是动作名、参数和调用标识：</p>
+<pre><code class="language-js">// 教学协议，不是上游供应商的原始请求格式。
+{ id: &#39;read-report&#39;, name: &#39;read&#39;, args: { file: &#39;report&#39; } }
+</code></pre>
+<p>循环不是把这段文字直接当命令执行。它交给受控执行器，执行器返回读取是否成功、哪份文件、内容和内容摘要值。循环再追加一条工具消息：</p>
+<pre><code class="language-js">{
+  role: &#39;tool&#39;,
+  callId: &#39;read-report&#39;,
+  result: { ok: true, file: &#39;report&#39;,
+    text: &#39;amount=10000 expected=0 actual=800 FAIL&#39;, hash: &#39;…&#39; }
+}
+</code></pre>
+<p><code>callId</code> 是调用关联号，像快递回执上的单号。没有它，在同一步有两次读取时，就可能把约定的结果贴到源码调用上。<code>ok</code> 是工具动作是否成功，不是测试是否通过：成功读到一份失败报告，完全可以是 <code>ok: true</code>。报告中的失败，属于被读取的业务证据。</p>
+<p>下一次请求里的 <code>messages</code>（消息列表）带上先前用户任务、助手提出的调用和工具回执。受控模型发现报告已具备、约定与源码还缺，才选择后两个读取。注意数据方向：模型提出意图 → 循环派发 → 工具生成结果 → 会话保存 → 下一次模型请求消费。工具不直接“给模型加记忆”，磁盘也不会自动进入模型输入。</p>
+<p>上游的对应关系在<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L339-L434">步骤实现</a>里能连起来：<code>this.step</code> 接收准备好的提示装配；<code>buildRequest</code> 取 <code>session.deriveMessages()</code> 派生的消息构建请求；响应收齐后写入 <code>assistant/message</code>；<code>executeToolCalls</code> 执行调用、形成工具结果；未结束则让外层进入下一步。第五讲会拆会话如何派生消息，第四讲会拆执行器如何调度；此刻必须掌握的是这条返回路径，不必提前背所有内部字段。</p>
+<h2>四、源码里为什么有两层循环</h2>
+<p>现在带着具体值读源码。外层推进步骤，内层处理一次步骤的模型交互。若把两者混为一谈，很容易把服务繁忙后的重试画成“重新做整个任务”。</p>
+<h3>4.1 外层：先准入，再花一次步骤</h3>
+<p>外层先计算候选步骤号，再调用 <code>preStep</code>（步骤前准入）。这个调用决定当前待处理输入能否进入、最终领取哪些消息。以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L272-L287">连续原文</a>：</p>
+<!-- source-excerpt: packages/core/agent-loop/src/agent.ts#L272-L287 -->
+<pre><code class="language-ts">        const step = phase.step + 1
         const decision = await this.preStep(target, { turn, step })
         if (decision.kind === &#39;reject&#39;) {
           turnEnds = { kind: &#39;blocked&#39; }
@@ -115,98 +163,617 @@
         signal.throwIfAborted()
         this.session.append(&#39;step/start&#39;, { turn, step })
         phase.step = step
-        try {
-          for (const message of decision.messages) {
-            this.session.append(&#39;user/message&#39;, message, { surfaceOp: &#39;append&#39; })
-          }
-          // max-tokens is sticky: once any step hits the ceiling, later steps
-          // that complete normally must not downgrade the turn outcome.
-          const stepEnd = await this.step(decision.assembly, decision.startsRequestSeries === true)
-          // max-tokens stays sticky: a later completed step must not
-          // downgrade the turn outcome.
-          if (turnEnds === null || turnEnds.kind !== &#39;max-tokens&#39;) turnEnds = stepEnd
-        } finally {
-          this.session.append(&#39;step/end&#39;, { turn, step })
+</code></pre>
+<p>代入初始值：已经受理一轮，<code>phase.step = 0</code>。如果准入返回拒绝，执行在写入步骤开始事件之前就返回，结果为 <code>blocked</code>（被阻止），步骤数为 0。若准入允许但最初消息被移除，消息数是 0，同样不花模型请求，但结果是 <code>completed</code>（正常结束）。两个分支都是零步，原因却不同。</p>
+<p>再代入读报告后的状态：<code>phase.step = 1</code>，上一步返回的结束原因是空值，盘里也没有新增用户消息。此时不会命中“初始零步且消息为空”，也不会命中“已经结束且消息为空”。因为报告的工具结果已经在会话里，下一步有东西可消费，不能拿“没有新增用户消息”当成“模型没有新证据”。这是理解这段判断最重要的一次手工推演。</p>
+<h3>4.2 内层：重试并没有把步骤号加一</h3>
+<p>在单步函数内部，<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L384-L403">请求错误分支</a>把失败交给扩展点决定。只有得到重试决定，才在内层继续；不是见到任何异常都无条件重来。</p>
+<!-- source-excerpt: packages/core/agent-loop/src/agent.ts#L401-L406 -->
+<pre><code class="language-ts">        signal.throwIfAborted()
+        if (action?.kind !== &#39;retry&#39;) {
+          throw new LlmError(finish.failure.message, finish.failure.code, finish.failure)
         }
-        signal.throwIfAborted()
-        if (turnEnds &amp;&amp; this.inbox.nextStep.length === 0) {
-          await this.dispatch.serial(&#39;agent/turn-stopping&#39;, { turn, signal })
-          signal.throwIfAborted()
-        }
-        if (turnEnds &amp;&amp; this.inbox.nextStep.length === 0) break
-        target = &#39;next-step&#39;
+        continue
       }
 </code></pre>
-<p>这段按顺序读 <code>preStep</code>、拒绝分支、<code>step/start</code>、<code>step</code> 和 <code>nextStep</code>。它们分别对应请求前准入、零步退出、开始记录、模型交互，以及下一步待处理材料。源码节选为连续片段，不展示全部异常处理；完整证据链接可继续往下看关闭轮次的部分。</p>
-<p>常见误读是“循环里有一个无限循环，所以智能体会一直跑”。循环是否继续由状态与返回条件控制，和 Java 的服务消费循环一样，不能只看语法外形。</p>
-<h2>四、到达、入队和进入模型是三件事</h2>
-<p>Inbox（待处理输入队列）像工单旁的收件盘：有些消息会唤醒驱动，有些注入材料先放在盘里，等下一次请求真正领取。材料已到达系统，不表示它已进入这一步模型输入。</p>
-<p>假设模型正在读源码，你又补充“只排查，不要修改”。这条边界必须通过系统输入与执行策略起作用，不能假设正在进行的模型请求会神奇地重算。对于本书练习，我们把修改权限放在执行器独立检查；消息用于帮助模型理解，权限检查用于阻止越界。</p>
-<p>可以类比 Java 队列的入队和消费者取走，但模型请求的上下文准备、日志事件与取消传播是额外职责，不能简化为一个普通阻塞队列。</p>
-<h2>五、停止的原因决定我们能说什么</h2>
-<p>停止可能是正常完成、被阻止、取消、错误，或输出达到上限。它们都表现为“不再向前运行”，却不代表同一种业务结果。上限停止尤其不能在后续某一步正常结束后被改写成整体毫无限制地完成。</p>
-<p>第一讲的任务还要保留更严格的业务判断：即使循环正常结束，助手仍可能没有测试或解释错误。因此运行结束是运行事实，业务验收要到第十六讲独立判断。</p>
-<h2>六、现在轮到检查模型究竟看见了什么</h2>
-<p>拿掉循环，报告结果无法推动下一次判断；有了循环，也仍可能一直猜错，因为每次输入里根本没放对材料。第三讲因此不再问“会不会继续”，而问“继续时，报告、源码和授权到底怎样成为模型请求”。</p>
+<p>这里的 <code>continue</code> 回到单步内部的模型请求准备，不回到外层的步骤号递增。假设第一次模型请求连续遇到两次可恢复失败，第三次才成功提出读报告：仍是第 1 步，只是第 1 步有三次尝试。它们没有成功产出并执行三个报告读取。</p>
+<p><img src="../assets/chapter-02/reader/fig-04-retry-comparison.png" alt="正常与两次模型请求失败的步骤、尝试及工具调用数量对照"></p>
+<p>教学循环把“限流、服务不可用可重试，最多三次”写成显式实验策略。上游则把是否重试交给请求错误处理链；其默认末端不是自动批准重试。模型请求重试也不能推广成工具重放策略：重发一次读取通常只增加成本，重发一次付款却可能多扣一次钱。后续讲执行、恢复时，要重新审查动作是否已发生，不能借用模型重试规则。</p>
+<h2>五、有结果之后，究竟由谁决定停</h2>
+<p>先看<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L426-L435">单步尾部原文</a>：</p>
+<!-- source-excerpt: packages/core/agent-loop/src/agent.ts#L426-L435 -->
+<pre><code class="language-ts">      if (finish.kind === &#39;max-tokens&#39;) return { kind: &#39;max-tokens&#39; }
+
+      const toolCalls = message.content.filter(block =&gt; block.type === &#39;tool-call&#39;)
+      if (toolCalls.length === 0) return { kind: &#39;completed&#39; }
+      const { concluded } = await executeToolCalls(
+        this.loopCtx, turn, step, toolCalls, signal,
+        context =&gt; this.inbox.splice(&#39;next-step&#39;, this.inbox.nextStep.length, 0, [context]),
+      )
+      return concluded ? { kind: &#39;completed&#39; } : null
+    }
+</code></pre>
+<p><code>null</code> 在这里不是“工具执行失败”，而是“这一步没有给出结束结论”。报告已经回来了，还应带着报告再次判断。没有工具调用可以返回正常结束；工具执行也可能给出结束结论；输出达到上限则优先返回相应原因，不把未完整输出的动作继续执行。</p>
+<p><img src="../assets/chapter-02/reader/fig-03-step-flow.png" alt="单步结束分支及向外层交接的流程图"></p>
+<p>图里的“标记完成”仍只是这一步交给外层的结束候选。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L300-L307">外层末尾</a>还要检查待处理输入，并在合适时机调用停止前钩子，再次检查是否有新输入。像协调员说“本次会议可以散了”，却发现门口刚送来一份紧急材料，就要先处理它，而不是机械地关门。</p>
+<p>此外，输出上限具有黏性：一轮里某一步触及上限，后续普通完成不能把整体记录降格为毫无限制的完成。这和 Java 批任务保留部分失败标记相似：最后一个子任务成功，不足以抹掉之前的异常结果。</p>
+<p>还有一个更重要的边界：<code>completed</code>（正常结束）描述的是运行控制，不是业务目标已经达成。本讲的正常路径只是诊断结束，没有授权、没有修改、没有重新测试，所以完整修复任务的验收仍为假。反过来，读取失败后如实报告缺证据，也可以正常结束这次交流。第十六讲会把运行状态与独立验收拆开。</p>
+<h2>六、运行中补充要求：到达、领取、执行并不是同一时刻</h2>
+<p>到这里已经能解释反馈，新的麻烦来了：模型正在处理第一步，你又补充“只读相关文件”。它会立刻出现在那个正在运行的请求里吗？不会凭空出现。</p>
+<p>Inbox（待处理输入队列）像桌边收件盘。系统接收材料是一件事；步骤前准入领取材料是第二件事；构造请求并交给模型是第三件事。已经发出的请求不是一个会随聊天窗口自动更新的共享白板。</p>
+<p><img src="../assets/chapter-02/reader/fig-01-case-state.png" alt="当前请求与下一步收件盘的场景图"></p>
+<p>在教学实验中，我们在报告结果写入后注入新消息，检查第一份请求快照没有它，第二份请求有它。这验证的是“何时被下一次请求消费”，不是上游所有并发时机的完整仿真。上游还区分下一轮和下一步的领取目标，本讲先沿已经运行的一轮讲清下一步领取。</p>
+<p>如果补充内容是撤回修改授权，更不能只往盘里放一句话，然后相信模型记得住。执行边界要在动作执行点独立检查。权限就像门禁，收件盘里的提醒只是通知，不是闸机。第四讲与第七讲继续解决这一点。</p>
+<p>取消也不是一句“请停止”的普通业务文本。Abort Signal（取消信号）让运行路径在明确检查点抛出取消；正在等待的组件还需要配合传播。正文原文可看到请求前、流式块消费后、步骤末尾的检查。取消能阻止后续动作，但不能保证已经写入外部系统的动作自动回滚。教学测试在报告回执后取消，断言不再开始第二次请求，同时当前步骤仍留下结束事件。</p>
+<h2>七、把故事变成可检查的运行记录</h2>
+<p>先预测，再在教材制作库根目录执行下面的本地命令；公开阅读版读者可从<a href="../previews/chapter-02.html#doc-3">练习页</a>复制三个完整脚本到同一文件夹。需要 Node.js（运行 JavaScript 的程序环境）24 或兼容版本，不需要密钥、联网模型或付费服务。</p>
+<pre><code class="language-powershell">node case/agent-loop.cjs normal
+node case/agent-loop.cjs retry
+node case/agent-loop.cjs missing-report
+node --test case/agent-loop.test.cjs
+</code></pre>
+<p>观察输出的三处，而不是只看“通过”：<code>requests</code>（模型请求快照）解释它每次看见什么；<code>events</code>（事件轨迹）解释步骤和尝试何时开始；<code>messages</code>（消息记录）解释工具结果怎样关联。正常场景的请求步骤号是 <code>[1,2,3]</code>；注入两次可恢复错误后是 <code>[1,1,1,2,3]</code>；缺报告时第二步如实说明读取失败，不会继续假装拥有源码证据。</p>
+<p>作者实际执行记录：教学循环 17 项测试通过；固定上游基线中请求错误、工具调用、取消三个文件共 62 项测试通过。上游测试使用可控替身，证明相应实现分支在测试条件下的行为；不是对真实模型、全部工具和生产环境可靠性的背书。</p>
+<p>如果程序输出与表格不同，先核对代码版本、场景名和初始材料，不要改预期去“配平”。若步骤对但模型仍在猜，检查请求是否带了结果；若调用两次但只见一条回执，检查调用关联和调度；若服务失败就不断重跑，检查重试所在层与预算。这已经是一条可用的排障顺序。</p>
+<h2>八、为什么不干脆固定成三步脚本</h2>
+<p>本例的边界缺陷很简单，固定“读报告、读约定、读源码”确实可以实现，成本更低，也更易测试。智能体循环的价值在于下一次判断可以根据证据变化：报告已经给了明确位置，可能缩小读取范围；报告文件缺失，需要寻找生成报告的前置条件；原因不在实现，则不该执意打补丁。</p>
+<p>代价也清楚：动态路径增加请求次数、超时和停止策略的复杂性，因此要有事件、预算、权限和独立验收。不是把所有程序都改成智能体，而是把需要判断的部分放进反馈循环，把必须可靠执行的约束留给确定性程序。第十一讲会把两者组合成工作流程。</p>
+<p>完成本讲，应能不用背段落就解释三件事：报告结果怎样进入下一次请求；两次请求失败为什么不一定增加步骤；轮次结束为什么不能直接宣告修复成功。第三讲紧接着打开那份“请求信封”：究竟装哪些指令、历史、工具说明和证据，才能让循环继续时不再盲猜？</p>
 <p><a href="../previews/chapter-01.html#doc-2">← 第01讲：任务全景</a> · <a href="../previews/chapter-03.html#doc-2">第03讲：模型请求 →</a></p>
 </article>
-<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第02讲 · 谁让助手读完报告后再读代码</h1>
-<blockquote>
-<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
-</blockquote>
-<h2>先作答，再展开</h2>
-<h3>1. 解释机制</h3>
-<p>读报告的工具结束后，为什么还可能欠下一步？</p>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第02讲 · 实验、推演与有限改造</h1>
+<h2>一、先准备一个不花模型费用的实验台</h2>
+<p>安装 Node.js（JavaScript 运行环境）24 或兼容版本。制作库读者在教材根目录执行下列命令；公开版读者展开文末三个代码块，按标题保存到同一个新建的 <code>case</code> 文件夹，然后在该文件夹的上一级执行。脚本只操作内存中的虚构业务材料，不读你的项目、不执行外部命令、不访问网络。</p>
+<pre><code class="language-powershell">node case/agent-loop.cjs normal
+node case/agent-loop.cjs retry
+node case/agent-loop.cjs missing-report
+node case/agent-loop.cjs blocked
+node case/agent-loop.cjs empty
+node case/agent-loop.cjs early-answer
+node --test case/agent-loop.test.cjs
+</code></pre>
+<p>模型替身依据已有工具结果选动作；循环真实执行准入、请求、回传、停止与取消逻辑。执行器内的运费测试是模拟，不是启动 Java，也不是上游的完整复刻。上游支持并行和独占工具调度；这里为隔离循环机制，工具批次顺序执行。上游重试由扩展点决定；这里最多三次且只放行两个明确错误码。</p>
+<h2>二、先填预测，再看输出</h2>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>步骤数</th>
+<th>请求尝试数</th>
+<th>工具调用数</th>
+<th>运行结果</th>
+<th>完整修复验收</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>正常</td>
+<td>请预测</td>
+<td>请预测</td>
+<td>请预测</td>
+<td>请预测</td>
+<td>请预测</td>
+</tr>
+<tr>
+<td>请求前两次可恢复失败</td>
+<td>请预测</td>
+<td>请预测</td>
+<td>请预测</td>
+<td>请预测</td>
+<td>请预测</td>
+</tr>
+<tr>
+<td>报告不存在</td>
+<td>请预测</td>
+<td>请预测</td>
+<td>请预测</td>
+<td>请预测</td>
+<td>请预测</td>
+</tr>
+<tr>
+<td>请求前被拒绝</td>
+<td>请预测</td>
+<td>请预测</td>
+<td>请预测</td>
+<td>请预测</td>
+<td>请预测</td>
+</tr>
+<tr>
+<td>初始消息被移除</td>
+<td>请预测</td>
+<td>请预测</td>
+<td>请预测</td>
+<td>请预测</td>
+<td>请预测</td>
+</tr>
+<tr>
+<td>直接声称修好</td>
+<td>请预测</td>
+<td>请预测</td>
+<td>请预测</td>
+<td>请预测</td>
+<td>请预测</td>
+</tr>
+</tbody></table>
 <details>
-<summary>查看解释与边界</summary>
+<summary>展开实际执行结果与解释</summary>
 
-<p>结果改变了可用证据，模型还需要基于它决定读源码或解释原因；结束工具不等于结束任务。</p>
+<p>正常为 3 / 3 / 3，正常结束；两次可恢复失败为 3 / 5 / 3，正常结束；缺报告为 2 / 2 / 1，模型在第二步说明失败后正常结束；拒绝为 0 / 0 / 0，被阻止；移除初始消息为 0 / 0 / 0，正常结束；直接声称修好为 1 / 1 / 0，正常结束。六种场景的完整修复验收都是假，因为没有完成授权、修改和复测链条。</p>
+<p>“缺报告仍正常结束”不是隐藏错误：工具消息明确带有失败结果，最终回答明确报告缺证据。正常结束只是本轮控制流收束，不能覆盖证据状态。</p>
 </details>
 
-<h3>2. 预测反例</h3>
-<p>日志有一轮开始与结束，却没有模型步骤，一定损坏了吗？</p>
+<h2>三、读轨迹：找出模型并没有看见的材料</h2>
+<p>在正常输出中比较三份 <code>requests</code>（请求快照）。第一份有报告内容吗？第二份有源码内容吗？第三份与第二份到底多了什么？</p>
 <details>
-<summary>查看推演</summary>
+<summary>答案与排障意义</summary>
 
-<p>不一定。首次输入在请求前被拒绝或改为空，可以形成零步骤轮次；应核对对应分支。</p>
+<p>第一份没有任何工具结果。第二份有报告调用与回执，但还没有约定和源码的读取结果。第三份增加第二步的两次调用及各自回执。若第三份缺了源码结果，模型即使继续运行也不能依据那份代码判断；先查回执写入与请求派生，不要先怪模型不聪明。</p>
 </details>
 
-<h3>3. 源码与图相互校验</h3>
-<p>打开<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">本讲定位</a>，找到正文强调的分支或契约。遮住图中文字，解释左、中、右三格分别表示什么；指出图省略了哪一项实现细节。</p>
+<h2>四、源码预测：为什么第二步可以没有新用户消息</h2>
+<p>把外层变量代入 <code>phase.step = 1</code>、<code>turnEnds = null</code>、<code>decision.messages = []</code>。它会零步退出吗？改为 <code>phase.step = 0</code> 又如何？再把结束原因为正常完成，消息仍为空，又如何？</p>
 <details>
-<summary>参考核对方式</summary>
+<summary>答案</summary>
 
-<p>图的顺序是：报告读取已结束（但原因还没确认）→再请求相关源码（结果推动下一次判断）→本轮停在原因说明（没有许可，不进入修改）。</p>
-<p>沿 <code>preStep</code> 的拒绝与空输入分支，再看 <code>this.step</code> 和 <code>inbox.nextStep</code>。前者决定是否花一次模型调用，后者参与继续条件；图省略了取消和输出上限等停止原因。</p>
+<p>第一种继续，因为不是初始步骤且没有结束候选；旧会话刚增加了工具结果。第二种命中初始空消息分支，不花请求。第三种命中已经结束且没有新消息的分支。三个条件看起来都“没有用户消息”，含义并不相同。请在正文源码逐个代入，不凭故事猜。</p>
 </details>
 
-<p><a href="../previews/chapter-01.html#doc-2">← 第01讲：任务全景</a> · <a href="../previews/chapter-03.html#doc-2">第03讲：模型请求 →</a></p>
+<h2>五、故障注入：取消和补充消息</h2>
+<p>现有测试覆盖“报告回执后取消”与“报告回执后追加限制”。先找对应断言，再解释为什么前者请求数为 1，后者的第一份请求没有新消息、第二份却有。把取消改成模型返回时才触发，已有测试还检查了什么？</p>
+<details>
+<summary>答案</summary>
+
+<p>循环在后续请求或派发前检查取消。补充消息进入待领取队列，到下一步才加入新请求；旧快照不会被改写。模型即使忽略取消并返回工具调用，循环仍应在派发前挡住它。取消不是外部副作用回滚，测试只证明这里不会继续新动作。</p>
+</details>
+
+<h2>六、有限改造：限制最多花两次模型尝试</h2>
+<p>不修改上游，只在你复制的教学循环中增加“整轮总请求预算为 2”。先预测正常场景将停在哪里；再写测试检查：读报告后又读到了约定和源码，但第三次模型请求尚未发出。预算结束不能伪装成完成。</p>
+<details>
+<summary>参考设计与验收断言</summary>
+
+<p>整轮预算与单步重试预算是两层约束。总计数在每次调用模型之前递增，包含失败尝试；超过预算时返回独立原因，例如 <code>request-budget</code>。在本例中两次成功请求已经执行三次读取，第三步准备请求时发现预算用尽，因此没有最终模型解释。</p>
+<p>至少断言总尝试为 2、工具结果为 3、结束原因不是普通完成、业务验收是假。再用“首个请求失败一次”检验失败也消耗预算，不能只统计成功请求。参考答案给出设计而不直接替你完成代码；这道题验收的是改造和测试能力。</p>
+</details>
+
+<h2>七、上游对照实验及实际验证边界</h2>
+<p>在固定上游基线、依赖已安装的环境，运行：</p>
+<pre><code class="language-powershell">node node_modules/vitest/vitest.mjs run packages/core/agent-loop/tests/request-error.spec.ts packages/core/agent-loop/tests/tool-calls.spec.ts packages/core/agent-loop/tests/cancel.spec.ts --maxWorkers=1 --no-file-parallelism
+</code></pre>
+<p>作者已执行：三个文件、62 项通过；本讲独立循环 17 项通过。依赖安装和真实模型调用不属于这个命令。上游<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/tests/request-error.spec.ts">请求错误测试</a>使用可控适配器，能验证同一步重试，不证明任意供应商永远按相同方式报错。</p>
+<h2>八、完整可复制的实验代码</h2>
+<p>下面代码由构建器直接嵌入经过测试的源文件，不手工维护第二份。只包含教学代码，不含私有绘图素材。三个文件缺一不可；没有安装第三方包的步骤。</p>
+<details>
+<summary>文件一：runner.cjs（内存执行器）</summary>
+
+
+<pre><code class="language-js">// Deterministic teaching model. No LLM, real shell, network or Java execution.
+const { createHash } = require(&#39;node:crypto&#39;)
+const digest = text =&gt; createHash(&#39;sha256&#39;).update(text).digest(&#39;hex&#39;)
+const ORIGINAL = &#39;return orderCents &gt; 10000 ? 0 : 800;&#39;
+const FIXED = &#39;return orderCents &gt;= 10000 ? 0 : 800;&#39;
+const CONTRACT = &#39;满 10000 分免运费；否则 800 分；不得改测试预期。&#39;
+const baseline = () =&gt; ({ code: ORIGINAL, contract: CONTRACT, report: &#39;amount=10000 expected=0 actual=800 FAIL&#39; })
+
+class TeachingHarness {
+  constructor(files = baseline(), persisted = []) {
+    this.files = files
+    this.log = structuredClone(persisted)
+    this.allowed = false // A new live executor requires fresh authorization.
+    this.view = null
+    // Close incomplete calls as unknown outcomes, never rerun them on recovery.
+    const settled = new Set(this.log.filter(e =&gt; e.type === &#39;result&#39;).map(e =&gt; e.data.callId))
+    for (const event of [...this.log]) if (event.type === &#39;call&#39; &amp;&amp; !settled.has(event.seq)) {
+      this.append(&#39;result&#39;, { callId: event.seq, ok: false, error: &#39;interrupted; external outcome unknown&#39; })
+    }
+  }
+  append(type, data) {
+    const event = { seq: this.log.length, type, data: structuredClone(data) }
+    this.log.push(event)
+    return event.seq
+  }
+  grant() {
+    this.allowed = true
+    this.append(&#39;authorization&#39;, { scope: &#39;one boundary fix; preserve tests&#39; })
+  }
+  async execute(name, args = {}) {
+    const callId = this.append(&#39;call&#39;, { name, args })
+    let result
+    try {
+      if (name === &#39;read&#39;) {
+        if (!Object.hasOwn(this.files, args.file)) throw Error(&#39;file not found&#39;)
+        const text = this.files[args.file]
+        result = { ok: true, file: args.file, text, hash: digest(text) }
+      } else if (name === &#39;patch&#39;) {
+        if (!this.allowed) throw Error(&#39;modification not authorized&#39;)
+        if (args.expectedHash !== digest(this.files.code)) throw Error(&#39;code changed; read again&#39;)
+        if (this.files.code !== ORIGINAL) throw Error(&#39;patch target no longer matches&#39;)
+        this.files.code = FIXED
+        this.allowed = false
+        result = { ok: true, changed: true, hash: digest(this.files.code) }
+      } else if (name === &#39;test&#39;) {
+        if (![ORIGINAL, FIXED].includes(this.files.code)) throw Error(&#39;unknown teaching implementation&#39;)
+        const rows = [9999, 10000, 10001].map(amount =&gt; {
+          const actual = (this.files.code === FIXED ? amount &gt;= 10000 : amount &gt; 10000) ? 0 : 800
+          return { amount, expected: amount &gt;= 10000 ? 0 : 800, actual }
+        })
+        result = { ok: true, simulated: true, codeHash: digest(this.files.code), rows,
+          exitCode: rows.some(r =&gt; r.actual !== r.expected) ? 1 : 0 }
+      } else throw Error(&#39;unknown tool&#39;)
+    } catch (error) { result = { ok: false, error: error.message } }
+    this.append(&#39;result&#39;, { callId, ...result })
+    return structuredClone(result)
+  }
+  compact(summary, sourceSeqs) {
+    if (!Array.isArray(sourceSeqs) || !sourceSeqs.length || sourceSeqs.some(i =&gt; !Number.isInteger(i) || !this.log[i])) throw Error(&#39;missing source&#39;)
+    const selected = sourceSeqs.map(i =&gt; this.log[i])
+    for (const event of selected) {
+      if (event.type === &#39;call&#39; &amp;&amp; !selected.some(e =&gt; e.type === &#39;result&#39; &amp;&amp; e.data.callId === event.seq)) throw Error(&#39;unpaired tool call&#39;)
+      if (event.type === &#39;result&#39; &amp;&amp; !sourceSeqs.includes(event.data.callId)) throw Error(&#39;unpaired tool result&#39;)
+    }
+    this.append(&#39;summary&#39;, { text: summary, sourceSeqs })
+    this.view = { text: summary, sourceSeqs: [...sourceSeqs] }
+  }
+  snapshot() { return structuredClone(this.log) }
+  verify() {
+    const results = this.log.filter(e =&gt; e.type === &#39;result&#39;).map(e =&gt; e.data)
+    const has = file =&gt; results.some(r =&gt; r.ok &amp;&amp; r.file === file)
+    const latestTest = results.filter(r =&gt; r.simulated).at(-1)
+    return { complete: has(&#39;report&#39;) &amp;&amp; has(&#39;contract&#39;) &amp;&amp; has(&#39;code&#39;)
+      &amp;&amp; this.log.some(e =&gt; e.type === &#39;authorization&#39;)
+      &amp;&amp; results.some(r =&gt; r.ok &amp;&amp; r.changed)
+      &amp;&amp; this.files.code === FIXED &amp;&amp; latestTest?.codeHash === digest(this.files.code)
+      &amp;&amp; latestTest.exitCode === 0 &amp;&amp; latestTest.rows.length === 3,
+    boundary: &#39;Only this deterministic fixture; not Java or a real agent evaluation.&#39; }
+  }
+}
+module.exports = { TeachingHarness, baseline, ORIGINAL, FIXED, digest }
+</code></pre>
+</details>
+
+<details>
+<summary>文件二：agent-loop.cjs（反馈驱动循环）</summary>
+
+
+<pre><code class="language-js">// Teaching loop, not an upstream reimplementation. No network, shell or paid model.
+// A controlled model chooses actions from feedback; the driver never hardcodes their order.
+const { TeachingHarness, ORIGINAL, FIXED } = require(&#39;./runner.cjs&#39;)
+const clone = value =&gt; structuredClone(value)
+const TASK = &#39;先查运费边界测试失败原因，不要修改。&#39;
+
+class FeedbackModel {
+  async generate(request) {
+    const results = request.messages.filter(m =&gt; m.role === &#39;tool&#39;)
+    const has = file =&gt; results.some(m =&gt; m.result.ok &amp;&amp; m.result.file === file)
+    const failure = results.find(m =&gt; !m.result.ok)
+    if (failure) return { text: &#39;读取失败，缺少证据；不猜测原因，不修改。&#39;, calls: [] }
+    if (!has(&#39;report&#39;)) return { calls: [{ id: &#39;read-report&#39;, name: &#39;read&#39;, args: { file: &#39;report&#39; } }] }
+    if (!has(&#39;contract&#39;) || !has(&#39;code&#39;)) return { calls: [&#39;contract&#39;, &#39;code&#39;].filter(f =&gt; !has(f)).map(file =&gt; ({ id: `read-${file}`, name: &#39;read&#39;, args: { file } })) }
+    const latest = file =&gt; results.filter(m =&gt; m.result.ok &amp;&amp; m.result.file === file).at(-1).result.text
+    const matches = latest(&#39;code&#39;) === ORIGINAL
+      &amp;&amp; latest(&#39;contract&#39;)?.includes(&#39;满 10000 分免运费&#39;)
+      &amp;&amp; latest(&#39;report&#39;)?.includes(&#39;amount=10000 expected=0 actual=800&#39;)
+    if (matches) return { text: &#39;报告：10000 得 800；约定包含等于，实现用了严格大于。原因已定位，等待修改授权。&#39;, calls: [] }
+    if (latest(&#39;code&#39;) === FIXED) return { text: &#39;当前代码已包含等于，旧报告不能证明当前版本仍有同一缺陷；需要新测试。&#39;, calls: [] }
+    return { text: &#39;证据与本教学规则不匹配，不能套用边界修复结论；需要重新排查。&#39;, calls: [] }
+  }
+}
+
+class LoopLab {
+  constructor({ model = new FeedbackModel(), executor = new TeachingHarness(), beforeStep, afterResult, maxSteps = 8, maxAttempts = 3 } = {}) {
+    if (!Number.isInteger(maxSteps) || maxSteps &lt; 1 || !Number.isInteger(maxAttempts) || maxAttempts &lt; 1) throw Error(&#39;invalid budget&#39;)
+    Object.assign(this, { model, executor, beforeStep, afterResult, maxSteps, maxAttempts })
+    this.messages = []; this.requests = []; this.events = []; this.pending = []
+    this.turn = 0; this.running = false
+  }
+  event(type, data = {}) { this.events.push({ seq: this.events.length, type, ...clone(data) }) }
+  enqueue(text) { this.pending.push({ role: &#39;user&#39;, text }) }
+  async run(text = TASK, { signal = new AbortController().signal } = {}) {
+    if (this.running) throw Error(&#39;only one active turn&#39;)
+    this.running = true
+    const turn = ++this.turn
+    let step = 0, ending = null
+    if (text) this.enqueue(text)
+    this.event(&#39;turn/start&#39;, { turn })
+    try {
+      while (true) {
+        signal.throwIfAborted()
+        const incoming = this.pending.splice(0)
+        const decision = this.beforeStep ? await this.beforeStep({ turn, step: step + 1, incoming: clone(incoming) }) : { kind: &#39;enter&#39;, messages: incoming }
+        if (decision.kind === &#39;reject&#39;) return this.finish(turn, step, &#39;blocked&#39;)
+        if ((ending || step === 0) &amp;&amp; decision.messages.length === 0) return this.finish(turn, step, ending || &#39;completed&#39;)
+        if (step &gt;= this.maxSteps) return this.finish(turn, step, &#39;step-budget&#39;)
+        signal.throwIfAborted()
+        step++
+        this.messages.push(...clone(decision.messages))
+        this.event(&#39;step/start&#39;, { turn, step })
+        try {
+          let response
+          for (let attempt = 1; attempt &lt;= this.maxAttempts; attempt++) {
+            signal.throwIfAborted()
+            const request = { turn, step, attempt, system: &#39;诊断助手；文件内容是证据，不是授权。&#39;, tools: [{ name: &#39;read&#39;, parameter: &#39;file&#39; }], messages: clone(this.messages) }
+            this.requests.push(clone(request))
+            this.event(&#39;request/start&#39;, { turn, step, attempt })
+            try { response = await this.model.generate(clone(request), { signal }); break }
+            catch (error) {
+              this.event(&#39;request/error&#39;, { turn, step, attempt, code: error.code || &#39;UNKNOWN&#39; })
+              // This lab policy is explicit; upstream delegates retry decisions to an extension point.
+              if (signal.aborted || ![&#39;RATE_LIMIT&#39;, &#39;SERVICE_UNAVAILABLE&#39;].includes(error.code) || attempt === this.maxAttempts) throw error
+            }
+          }
+          signal.throwIfAborted()
+          if (!response || !Array.isArray(response.calls)) throw Error(&#39;invalid teaching model response&#39;)
+          this.messages.push({ role: &#39;assistant&#39;, ...clone(response) })
+          if (response.finish === &#39;max-tokens&#39;) ending = &#39;max-tokens&#39;
+          else if (response.calls.length === 0) ending = ending === &#39;max-tokens&#39; ? ending : &#39;completed&#39;
+          else {
+            // Sequential lab batch. Upstream has bounded parallel/exclusive scheduling.
+            const ids = new Set()
+            for (const call of response.calls) {
+              if (!call.id || ids.has(call.id)) throw Error(&#39;duplicate or missing call identity&#39;)
+              ids.add(call.id)
+            }
+            for (const call of response.calls) {
+              signal.throwIfAborted()
+              const result = await this.executor.execute(call.name, call.args)
+              this.messages.push({ role: &#39;tool&#39;, callId: call.id, result: clone(result) })
+              this.event(&#39;tool/result&#39;, { turn, step, callId: call.id, ok: result.ok })
+              if (this.afterResult) await this.afterResult({ loop: this, call: clone(call), result: clone(result) })
+            }
+          }
+        } finally { this.event(&#39;step/end&#39;, { turn, step }) }
+        signal.throwIfAborted()
+        if (ending &amp;&amp; this.pending.length === 0) return this.finish(turn, step, ending)
+      }
+    } catch (error) {
+      return this.finish(turn, step, signal.aborted ? &#39;cancelled&#39; : &#39;error&#39;, error.message)
+    } finally { this.running = false }
+  }
+  finish(turn, step, kind, error) {
+    const result = { turn, steps: step, attempts: this.requests.filter(r =&gt; r.turn === turn).length, kind, ...(error ? { error } : {}) }
+    this.event(&#39;turn/end&#39;, result)
+    return result
+  }
+}
+
+async function scenario(name) {
+  const options = {}
+  if (name === &#39;retry&#39;) {
+    const base = new FeedbackModel(); let remaining = 2
+    options.model = { async generate(r) { if (remaining-- &gt; 0) throw Object.assign(Error(&#39;model service busy&#39;), { code: &#39;RATE_LIMIT&#39; }); return base.generate(r) } }
+  } else if (name === &#39;missing-report&#39;) {
+    options.executor = new TeachingHarness(); delete options.executor.files.report
+  } else if (name === &#39;blocked&#39;) options.beforeStep = async () =&gt; ({ kind: &#39;reject&#39; })
+  else if (name === &#39;empty&#39;) options.beforeStep = async () =&gt; ({ kind: &#39;enter&#39;, messages: [] })
+  else if (name === &#39;early-answer&#39;) options.model = { async generate() { return { text: &#39;我觉得修好了&#39;, calls: [] } } }
+  else if (name !== &#39;normal&#39;) throw Error(`unknown scenario: ${name}`)
+  const loop = new LoopLab(options)
+  const result = await loop.run()
+  return { layer: &#39;executed deterministic teaching loop; no real model or Java&#39;, scenario: name, result, requests: loop.requests, events: loop.events, messages: loop.messages, businessComplete: loop.executor.verify().complete }
+}
+if (require.main === module) scenario(process.argv[2] || &#39;normal&#39;).then(r =&gt; console.log(JSON.stringify(r, null, 2))).catch(e =&gt; { console.error(e); process.exitCode = 1 })
+module.exports = { LoopLab, FeedbackModel, scenario, TASK }
+</code></pre>
+</details>
+
+<details>
+<summary>文件三：agent-loop.test.cjs（17 项行为测试）</summary>
+
+
+<pre><code class="language-js">const { test } = require(&#39;node:test&#39;)
+const assert = require(&#39;node:assert/strict&#39;)
+const { LoopLab, FeedbackModel, scenario } = require(&#39;./agent-loop.cjs&#39;)
+const { ORIGINAL } = require(&#39;./runner.cjs&#39;)
+
+test(&#39;present but different evidence does not trigger the memorized diagnosis&#39;, async () =&gt; {
+  const loop = new LoopLab()
+  loop.executor.files.contract = &#39;超过 10000 分才免运费。&#39;
+  await loop.run()
+  assert.match(loop.messages.at(-1).text, /不匹配/)
+  assert.equal(loop.executor.files.code, ORIGINAL)
+})
+
+test(&#39;feedback drives three steps and the next request contains correlated results&#39;, async () =&gt; {
+  const r = await scenario(&#39;normal&#39;)
+  assert.deepEqual(r.result, { turn: 1, steps: 3, attempts: 3, kind: &#39;completed&#39; })
+  assert.equal(r.requests[0].messages.some(m =&gt; m.role === &#39;tool&#39;), false)
+  assert.deepEqual(r.requests[1].messages.filter(m =&gt; m.role === &#39;tool&#39;).map(m =&gt; m.callId), [&#39;read-report&#39;])
+  assert.deepEqual(r.requests[2].messages.filter(m =&gt; m.role === &#39;tool&#39;).map(m =&gt; m.result.file), [&#39;report&#39;,&#39;contract&#39;,&#39;code&#39;])
+  assert.equal(r.businessComplete, false)
+})
+test(&#39;two retryable failures add attempts, not steps or duplicated tool calls&#39;, async () =&gt; {
+  const r = await scenario(&#39;retry&#39;)
+  assert.equal(r.result.attempts, 5); assert.equal(r.result.steps, 3)
+  assert.deepEqual(r.requests.map(r =&gt; r.step), [1,1,1,2,3])
+  assert.equal(r.events.filter(e =&gt; e.type === &#39;tool/result&#39;).length, 3)
+})
+test(&#39;missing report is a tool result; next model decision stops without guessing&#39;, async () =&gt; {
+  const r = await scenario(&#39;missing-report&#39;)
+  assert.equal(r.result.steps, 2); assert.equal(r.result.kind, &#39;completed&#39;)
+  assert.equal(r.messages.filter(m =&gt; m.role === &#39;tool&#39;)[0].result.ok, false)
+  assert.match(r.messages.at(-1).text, /读取失败/); assert.equal(r.businessComplete, false)
+})
+for (const [name, kind] of [[&#39;blocked&#39;,&#39;blocked&#39;],[&#39;empty&#39;,&#39;completed&#39;]]) test(`${name} opens a turn but spends no model request`, async () =&gt; {
+  const r = await scenario(name)
+  assert.deepEqual(r.result, { turn: 1, steps: 0, attempts: 0, kind })
+  assert.deepEqual(r.events.map(e =&gt; e.type), [&#39;turn/start&#39;,&#39;turn/end&#39;])
+})
+test(&#39;a confident final answer does not prove business success&#39;, async () =&gt; {
+  const r = await scenario(&#39;early-answer&#39;)
+  assert.equal(r.result.kind, &#39;completed&#39;); assert.equal(r.businessComplete, false)
+})
+test(&#39;injected messages wait for the next request; past snapshots do not mutate&#39;, async () =&gt; {
+  const loop = new LoopLab({ afterResult: async ({loop,call}) =&gt; { if (call.id === &#39;read-report&#39;) loop.enqueue(&#39;新增限制：只读取相关文件。&#39;) } })
+  await loop.run()
+  assert.equal(loop.requests[0].messages.some(m =&gt; m.text?.includes(&#39;新增限制&#39;)), false)
+  assert.equal(loop.requests[1].messages.some(m =&gt; m.text?.includes(&#39;新增限制&#39;)), true)
+  assert.equal(loop.executor.files.code, ORIGINAL)
+})
+test(&#39;cancellation after a result closes the current step and does not start another request&#39;, async () =&gt; {
+  const controller = new AbortController()
+  const loop = new LoopLab({afterResult:async()=&gt;controller.abort()})
+  const r = await loop.run(undefined, {signal:controller.signal})
+  assert.equal(r.kind,&#39;cancelled&#39;); assert.equal(r.attempts,1)
+  assert.equal(loop.events.filter(e=&gt;e.type===&#39;step/end&#39;).length,1)
+})
+test(&#39;cancelled model response is not dispatched even when the model ignores cancellation&#39;, async () =&gt; {
+  const controller = new AbortController()
+  const loop = new LoopLab({model:{async generate(){controller.abort();return {calls:[{id:&#39;a&#39;,name:&#39;read&#39;,args:{file:&#39;report&#39;}}]}}}})
+  const r = await loop.run(undefined,{signal:controller.signal})
+  assert.equal(r.kind,&#39;cancelled&#39;); assert.equal(loop.executor.log.length,0)
+})
+test(&#39;permanent model failures are not retried&#39;, async () =&gt; {
+  const loop = new LoopLab({model:{async generate(){throw Object.assign(Error(&#39;bad request&#39;),{code:&#39;INVALID_REQUEST&#39;})}}})
+  const r = await loop.run(); assert.equal(r.kind,&#39;error&#39;); assert.equal(r.attempts,1)
+})
+test(&#39;retry budget bounds model calls&#39;, async () =&gt; {
+  const loop = new LoopLab({maxAttempts:2,model:{async generate(){throw Object.assign(Error(&#39;busy&#39;),{code:&#39;RATE_LIMIT&#39;})}}})
+  const r = await loop.run(); assert.equal(r.kind,&#39;error&#39;); assert.equal(r.steps,1); assert.equal(r.attempts,2)
+})
+test(&#39;step budget stops repeated tool demands without implying completion&#39;, async () =&gt; {
+  const loop = new LoopLab({maxSteps:2,model:{async generate(){return {calls:[{id:&#39;a&#39;,name:&#39;read&#39;,args:{file:&#39;report&#39;}}]}}}})
+  const r = await loop.run(); assert.equal(r.kind,&#39;step-budget&#39;); assert.equal(r.steps,2)
+})
+test(&#39;duplicate call identity is rejected before dispatch&#39;, async () =&gt; {
+  const call = {id:&#39;same&#39;,name:&#39;read&#39;,args:{file:&#39;report&#39;}}
+  const loop = new LoopLab({model:{async generate(){return {calls:[call,call]}}}})
+  assert.equal((await loop.run()).kind,&#39;error&#39;); assert.equal(loop.executor.log.length,0)
+})
+test(&#39;max token response never dispatches incomplete calls&#39;, async () =&gt; {
+  const loop = new LoopLab({model:{async generate(){return {finish:&#39;max-tokens&#39;,calls:[{id:&#39;a&#39;,name:&#39;read&#39;,args:{file:&#39;report&#39;}}]}}}})
+  assert.equal((await loop.run()).kind,&#39;max-tokens&#39;); assert.equal(loop.executor.log.length,0)
+})
+test(&#39;model cannot mutate stored request evidence through its request object&#39;, async () =&gt; {
+  const loop = new LoopLab({model:{async generate(r){r.messages[0].text=&#39;forged&#39;;return {calls:[]}}}})
+  await loop.run(); assert.notEqual(loop.requests[0].messages[0].text,&#39;forged&#39;)
+})
+test(&#39;feedback model changes its choice when evidence is already present&#39;, async () =&gt; {
+  const r = await new FeedbackModel().generate({messages:[{role:&#39;tool&#39;,result:{ok:true,file:&#39;report&#39;}}]})
+  assert.deepEqual(r.calls.map(c=&gt;c.args.file),[&#39;contract&#39;,&#39;code&#39;])
+})
+</code></pre>
+</details>
 </article>
-<article id="doc-4"><div class="doc-label">分享稿</div><h1>第02讲 · 谁让助手读完报告后再读代码</h1>
-<blockquote>
-<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
-</blockquote>
-<h2>用自己的话讲给同事</h2>
-<p>我们还在查同一个 Java 运费问题：满 100 元应免运费，恰好边界却收了 8 元。走到本讲，已有条件是：已有任务目标，但一次回答还不能完成排查。</p>
-<p>如果不补这一层，会遇到的问题是：读报告的工具结束后，为什么还可能欠下一步？ 结果改变了可用证据，模型还需要基于它决定读源码或解释原因；结束工具不等于结束任务。 所以本讲新增的不是要背的名词，而是任务中一项明确的责任。</p>
-<p>现在能做到：读报告的结果触发下一次模型判断。但还要守住反例：日志有一轮开始与结束，却没有模型步骤，一定损坏了吗？ 不一定。首次输入在请求前被拒绝或改为空，可以形成零步骤轮次；应核对对应分支。</p>
-<p>请结合<a href="../previews/chapter-02.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“报告明明在磁盘，模型为什么仍不知道”继续。</p>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第02讲 · 五分钟讲给另一位程序员</h1>
+<p>先给同事看运费报告：10000 分输入，预期运费 0，实际却是 800。问他：“如果助手读到这份报告后就退出，下一步是谁去读约定和代码？”</p>
+<p>从这个问题引出智能体循环：模型负责选择要查什么，程序负责派发、保存回执并把结果带回下一次判断。这里不是一个工具调用把模型变聪明了，而是多次判断之间终于接上了真实反馈。</p>
+<p>接着展示时序图。盯住报告调用的关联号，不让回执失去身份。正常路径三步：先要报告，再要约定和代码，最后解释原因等待授权。第二步有两次工具调用，所以三个工具不一定对应三个有工具的步骤。</p>
+<p>再展示重试对照图：第一步的模型服务连续失败两次，仍在第 1 步内部重试。整个过程仍为三步，请求尝试却从三次变成五次。重试什么要说清楚；咨询请求可以重发，不代表外部写入可以重复执行。</p>
+<p>最后问：“运行记录写正常结束，能宣布修好了么？”不能。本讲没有修改授权，也没有实际补丁和复测。控制流完成、证据齐全、业务通过是不同维度。我们下一讲继续打开请求，检查模型到底看到了什么。</p>
+<p>分享时保留一句实验边界：这是已执行的可控教学循环，上游局部测试也已执行，但未调用真实模型，不把模拟结果宣传成生产可靠性。</p>
 </article>
-<article id="doc-5"><div class="doc-label">术语词典</div><h1>第02讲 · 谁让助手读完报告后再读代码</h1>
-<blockquote>
-<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
-</blockquote>
-<p>词典用于回查，正文在首次使用处解释。代码、参数与路径保留原拼写；产品名称不逐字翻译。模型上下文和插件上下文不是一回事。</p>
-<h2>Agent Loop（智能体循环）</h2>
-<p>反复准备输入、调用模型、处理工具请求并决定下一步的驱动。像接力调度员：报告回来后再安排读源码。循环可以被拒绝、取消或结束，不等于无限重试。</p>
-<h2>Step（一步）</h2>
-<p>本项目的一次模型请求及其工具调用。像排查中的一次问答交接；一个步骤可能请求多个工具，不一定只读一个文件。</p>
-<h2>Turn（一轮）</h2>
-<p>一次由驱动组织的轮次，可以包含零个或多个步骤。像接手一轮工单处理；材料被拒绝时可能一步都没执行，也不等于整个业务任务已经完工。</p>
-<h2>Inbox（待处理输入队列）</h2>
-<p>等待被驱动领取的输入队列，像工作台的收件盘。材料入盘和真正进入模型请求是两个时点，不是消息送来就自动被模型看见。</p>
-<h2>核对来源</h2>
-<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">本讲源码定位</a>与<a href="../previews/chapter-02.html#doc-2">完整正文</a>。本例报告和金额属于教学夹具，不来自这份上游源码。</p>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第02讲 · 读日志时随手翻的词典</h1>
+<table>
+<thead>
+<tr>
+<th>英文及常见代码名</th>
+<th>中文与准确含义</th>
+<th>本例与比喻</th>
+<th>不要误会成</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Agent Loop</td>
+<td>智能体循环：把模型交互、工具处理、反馈和停止连起来的运行机制</td>
+<td>值班协调员把报告带回下一次讨论</td>
+<td>只是一句让模型“继续”的提示</td>
+</tr>
+<tr>
+<td>Turn / turn</td>
+<td>一轮：被驱动的一段运行边界，可有零步或多步</td>
+<td>接下一张排查工单</td>
+<td>必然等于一条聊天气泡</td>
+</tr>
+<tr>
+<td>Step / step</td>
+<td>一步：轮内一次步骤执行，可含多次请求尝试和多个工具</td>
+<td>一次新的判断阶段</td>
+<td>一次网络请求</td>
+</tr>
+<tr>
+<td>Request Attempt / attempt</td>
+<td>请求尝试：一次实际模型交互尝试，包括失败尝试</td>
+<td>电话占线后重拨</td>
+<td>新的步骤</td>
+</tr>
+<tr>
+<td>Tool Call / calls</td>
+<td>工具调用：模型提出的结构化动作</td>
+<td>让执行器读取报告的取件单</td>
+<td>模型已经完成了动作</td>
+</tr>
+<tr>
+<td>Tool Result / result</td>
+<td>工具结果：执行器返回的成功、失败及证据</td>
+<td>带单号的回执</td>
+<td>成功读报告就表示测试通过</td>
+</tr>
+<tr>
+<td>callId</td>
+<td>调用关联号：把回执和请求动作配对的身份</td>
+<td>快递回执上的运单号</td>
+<td>全部系统可互换的通用编号</td>
+</tr>
+<tr>
+<td>Inbox / pending</td>
+<td>待处理输入队列：尚待准入领取的消息</td>
+<td>桌边收件盘</td>
+<td>已经发给模型的上下文</td>
+</tr>
+<tr>
+<td>preStep / beforeStep</td>
+<td>步骤前准入；前者是上游定位名，后者是教学钩子名</td>
+<td>开会前决定收哪些材料</td>
+<td>执行权限检查的全部实现</td>
+</tr>
+<tr>
+<td>messages / deriveMessages</td>
+<td>消息列表／从会话派生模型可见消息</td>
+<td>整理后的会议材料</td>
+<td>原始日志的逐条照搬</td>
+</tr>
+<tr>
+<td>Retry / retry</td>
+<td>重试：在明确错误策略下重新尝试</td>
+<td>忙线后再拨</td>
+<td>一切异常都重做整轮</td>
+</tr>
+<tr>
+<td>Abort Signal</td>
+<td>取消信号：供执行路径和等待组件检查的取消状态</td>
+<td>拉响停止铃，后续节点要响应</td>
+<td>自动撤销已发生的外部写入</td>
+</tr>
+<tr>
+<td>completed</td>
+<td>正常结束：本轮控制流正常收束</td>
+<td>会议结束</td>
+<td>修复已经验收通过</td>
+</tr>
+<tr>
+<td>blocked / cancelled / error</td>
+<td>被阻止／被取消／错误：不同运行停止原因</td>
+<td>门禁拒绝／主动叫停／故障终止</td>
+<td>一种可统一隐藏的失败</td>
+</tr>
+<tr>
+<td>max-tokens</td>
+<td>输出达到上限：本次输出受长度约束而停止</td>
+<td>纸张用尽，内容可能没写完</td>
+<td>所有内容都完整完成</td>
+</tr>
+<tr>
+<td>hash</td>
+<td>内容摘要值：本教材用于识别读到的内容版本</td>
+<td>给那一版代码留指纹</td>
+<td>证明内容本身正确</td>
+</tr>
+<tr>
+<td>Node.js / Vitest</td>
+<td>JavaScript 运行环境／上游使用的测试运行器</td>
+<td>运行实验的工作台和测试夹具</td>
+<td>模型服务或绘图工具</td>
+</tr>
+</tbody></table>
+<p>代码保留真实拼写，正文优先使用中文。看到不熟悉的字段，先问它描述输入、事件、结果还是状态，再回源码确认作用域；不要只靠中文译名猜行为。</p>
 </article></main>
 </body>
 </html>

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
+  <meta charset="utf-8"><meta name="textbook-version" content="4.0.0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第07讲-执行边界</title>
@@ -21,7 +21,7 @@
     h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
     h3 { margin:1.7em 0 .6em; font-size:20px; }
     p,li { font-size:20px; }
-    article { scroll-margin-top:82px; }
+    article { scroll-margin-top:82px; overflow-wrap:anywhere; }
     a { color:#2e5aa8; overflow-wrap:anywhere; }
     blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
     code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
@@ -58,11 +58,16 @@
 <p>先看<a href="../previews/chapter-07.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-07.html#doc-3">练习</a>。<a href="../previews/chapter-07.html#doc-1">视觉课件</a>用于复习，<a href="../previews/chapter-07.html#doc-5">词典</a>随用随查，不要求先背英文。预计正文阅读 20–35 分钟，练习 10–20 分钟；这是安排建议，不是学会的证明。</p>
 <p>读完应能解释：工作区相同的名字可以证明在同一份文件上测试吗？ 还要能预测：平台无法提供要求的沙箱约束时，可以关闭限制再试吗？ 最后从<a href="../evidence/chapter-07.html">源码证据</a>定位相应责任。</p>
 <p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
+<h2>工程深度验收</h2>
+<p>能沿工具、服务、执行器、操作系统、Java 分层定位失败；能识别编辑和测试工作区错配。 先预测练习中的分支，再按正文命令观察；只读解释、测试替身和真实执行环境分别记录，不混为一项。</p>
 <h2>本讲交接</h2>
 <p>在正确工作区、明确边界内尝试动作；拒绝不降级绕过。但下一步还要解决：关掉后再打开，能从哪一步继续。</p>
 <p><a href="../previews/chapter-06.html#doc-2">← 第06讲：技能与外部接入</a> · <a href="../previews/chapter-08.html#doc-2">第08讲：中断恢复 →</a></p>
 </article>
 <article id="doc-1"><div class="doc-label">视觉课件</div><h1>第07讲 · 读错工作区或执行被拒绝怎么办</h1>
+<h2>工程图解：甲目录改好了，乙目录的绿灯能证明什么？</h2>
+<p><img src="../assets/chapter-07/reader/fig-02-wrong-workspace.png" alt="甲目录改好了，乙目录的绿灯能证明什么？"></p>
+<p>能沿工具、服务、执行器、操作系统、Java 分层定位失败；能识别编辑和测试工作区错配。 本图与原有场景图互补，具体分支与边界见逐步讲解。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
@@ -105,12 +110,25 @@
 </code></pre>
 <p>这里列的是不同操作系统对应的执行器候选链。它说明“有沙箱服务”并不是各平台都拥有完全相同的隔离机制。尤其应继续读 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/sandbox/sandbox-local/src/index.ts#L168-L188">约束完整性标记</a>：固定源码中的 Windows（操作系统） 后端报告部分约束，不能把它宣传成绝对隔离。</p>
 <p>本讲是读取源码，不是在你机器上证明这些平台约束已经有效。实际使用还需要检查当前平台、后端可用性和明确的拒绝结果。教材不会为了让测试跑通而建议关闭安全边界。</p>
+<h3>3.1 执行器选择不是“失败就裸跑”</h3>
+<p>沿<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/sandbox/sandbox-local/src/index.ts#L489-L536">本地后端选择实现</a>读：先按平台得到候选链，多候选链才按顺序作功能探测，单候选有自己的选择与运行拒绝契约。没有可用受约束执行器时，应报告不可用，而不是把原命令直接放到宿主环境执行。</p>
+<p>例如候选甲不可用、候选乙具备受支持的约束，可以按策略选乙；这与“所有沙箱不可用后降级成无沙箱”完全不同。还要分清 <code>full</code>（按所报告能力完整约束）、<code>partial</code>（部分约束）和不可用，不把程序启动成功解释为所有安全属性已经成立。第一个词也必须放在该执行器声明的能力范围内理解，不能扩大成绝对安全。</p>
+<p>提供者生成执行约束和包装参数，文件与子进程消费者才在实际动作路径上使用这些约束。要诊断测试没有启动，应先检查工作目录是否有效，再区分执行器自身拒绝与被包裹命令的业务退出；不能只见退出码非零就认定是 Java 测试断言失败。</p>
+<p>这与容器排障类似：镜像启动失败、进程没有权限打开文件、JVM（Java 虚拟机）启动失败和业务断言失败都可能表现为“命令失败”，却属于不同层。沿“工具请求 → 文件或进程服务 → 受约束执行器 → 操作系统 → Java 测试”定位，会比反复改提示词更有效。</p>
 <h2>四、拒绝以后，先解释拒绝属于哪一层</h2>
 <p>如果运行测试被拒绝，先看是用户未授权、工具策略拒绝，还是平台执行器无法实现要求。如果是工作目录错误，就修正目录；如果确实需要新的访问范围，就说明理由与影响并重新请求许可；如果当前环境不支持所需安全约束，则停在未验证状态。</p>
 <p>不能把“换到另一条未受约束的执行通道”当成重试，也不能把子进程创建成功等同于测试成功。测试进程可能随后因缺少依赖退出；这时报告的是环境失败，而非运费逻辑通过。</p>
 <h2>五、替换提供者时需要一起检查什么</h2>
 <p>文件读取和命令运行若一边在远端、一边仍在本地，会制造最隐蔽的错配。系统能力可以替换，前提是调用契约、路径、取消与生命周期一致；不是把实现类名换掉就结束。</p>
+<p><img src="../assets/chapter-07/reader/fig-02-wrong-workspace.png" alt="编辑甲目录却在乙目录测试的故障对照"></p>
+<p>代入具体路径身份：甲是目标副本，刚把比较符改对；乙是另一个早已能通过的副本。文件服务在甲读取并修改，子进程服务却在乙执行测试。此时甲的补丁摘要和乙的绿色输出都是真的，组合成“甲验证通过”却是假的。不是所有假结论都来自假数据，也可能来自把不同对象的真数据接错。</p>
+<p>因此每份验收证据至少关联工作区身份、代码版本和实际测试命令。相对路径只有在同一工作目录语义中才可比较；同名文件或相同最后一级目录名不能证明它们指向同一个对象。第十四讲的服务作用域解析会进一步解释为什么两个服务可能接到不同提供者。</p>
+<p>一种简单设计是把文件与子进程服务绑成同一个后端配置，减少错配可能；可插拔服务则更灵活，但需要跨能力的一致性验收。两种都不因为“使用依赖注入”就自动正确。替换远端环境时，工作目录、环境变量、退出码、取消和清理都在兼容性检查里。</p>
 <p>与本书三测联系起来：报告必须标识当前代码版本和执行目录；如果只是看见另一份历史报告，不能跳过对现有文件的验证。第十四讲会进一步读同名服务怎样解析到对应实现。</p>
+<p>用上游本地后端的受控测试核对候选选择、参数方言、拒绝签名和约束等级：</p>
+<pre><code class="language-powershell">node node_modules/vitest/vitest.mjs run packages/sandbox/sandbox-local/tests/local.spec.ts --maxWorkers=1 --no-file-parallelism
+</code></pre>
+<p>这组包含替身执行器与探测结果，也包含依赖类 Unix（操作系统家族）命令环境的检查。上游当前测试配置明确排除了 Windows（操作系统）上的整个本地沙箱测试包；本次 Windows（操作系统）作者环境没有运行这组，不能将“被排除”计作通过。在兼容环境运行时，它可验证选择和失败关闭逻辑，但仍不能据此宣传“已经实测所有平台沙箱隔离”。真正的隔离验收需要在对应平台、明确授权的临时工作区做单独实验，不能拿你的日常文件做破坏性试验。</p>
 <h2>六、边界确认了，进程中断怎么办</h2>
 <p>本讲使我们知道动作应在哪儿发生、为什么可能被拒绝。但机器重启或任务被停止时，内存状态仍会消失。第八讲沿着这个缺口继续：重新打开后哪些事实可以恢复，哪些外部结果仍要重新核对？</p>
 <p><a href="../previews/chapter-06.html#doc-2">← 第06讲：技能与外部接入</a> · <a href="../previews/chapter-08.html#doc-2">第08讲：中断恢复 →</a></p>
@@ -119,6 +137,18 @@
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
+<h2>工程实验：先预测，再定位真实边界</h2>
+<ol>
+<li>文件服务在甲目录，命令服务在乙目录。补丁摘要与绿色输出都是真的，结论为什么仍可能是假？</li>
+<li>多候选链全部不可用时，是否应让同一命令直接在宿主执行？</li>
+<li>在 Windows（操作系统）上命令显示没有选中的测试文件，能记作验证通过吗？</li>
+</ol>
+<details>
+<summary>参考答案与验收依据</summary>
+
+<p>证据必须属于同一目标副本及当前版本，不能组合不同对象的真结果。缺少满足约束的执行器应失败关闭，不能绕过约束。未选中不是通过；上游配置明确排除 Windows（操作系统）的本地沙箱测试包，应记录未运行并在兼容环境补测。</p>
+</details>
+
 <h2>先作答，再展开</h2>
 <h3>1. 解释机制</h3>
 <p>工作区相同的名字可以证明在同一份文件上测试吗？</p>
@@ -148,6 +178,7 @@
 <p><a href="../previews/chapter-06.html#doc-2">← 第06讲：技能与外部接入</a> · <a href="../previews/chapter-08.html#doc-2">第08讲：中断恢复 →</a></p>
 </article>
 <article id="doc-4"><div class="doc-label">分享稿</div><h1>第07讲 · 读错工作区或执行被拒绝怎么办</h1>
+<p>工程复述时，不要只背术语：能沿工具、服务、执行器、操作系统、Java 分层定位失败；能识别编辑和测试工作区错配。 用练习中的反例说明边界，再展示对应实现和实际测试结果。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
@@ -158,6 +189,11 @@
 <p>请结合<a href="../previews/chapter-07.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/sandbox/sandbox-local/src/index.ts#L151-L177">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“关掉后再打开，能从哪一步继续”继续。</p>
 </article>
 <article id="doc-5"><div class="doc-label">术语词典</div><h1>第07讲 · 读错工作区或执行被拒绝怎么办</h1>
+<h2>本次工程推演补充</h2>
+<ul>
+<li>Enforcement（约束落实程度）：后端声明的约束实现到了什么程度，不是“绝对安全”的评级。</li>
+<li>JVM（Java 虚拟机）：执行 Java 字节码的运行环境；它未能启动与业务断言失败是两层故障。</li>
+</ul>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>

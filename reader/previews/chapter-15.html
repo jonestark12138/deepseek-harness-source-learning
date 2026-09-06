@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
+  <meta charset="utf-8"><meta name="textbook-version" content="4.0.0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第15讲-事件协作</title>
@@ -21,7 +21,7 @@
     h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
     h3 { margin:1.7em 0 .6em; font-size:20px; }
     p,li { font-size:20px; }
-    article { scroll-margin-top:82px; }
+    article { scroll-margin-top:82px; overflow-wrap:anywhere; }
     a { color:#2e5aa8; overflow-wrap:anywhere; }
     blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
     code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
@@ -58,11 +58,16 @@
 <p>先看<a href="../previews/chapter-15.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-15.html#doc-3">练习</a>。<a href="../previews/chapter-15.html#doc-1">视觉课件</a>用于复习，<a href="../previews/chapter-15.html#doc-5">词典</a>随用随查，不要求先背英文。预计正文阅读 20–35 分钟，练习 10–20 分钟；这是安排建议，不是学会的证明。</p>
 <p>读完应能解释：首个监听器返回 <code>Promise.resolve(false)</code>，同步裁决和逐个等待一样吗？ 还要能预测：可以用 <code>next(newInput)</code> 替换本项目接力链参数吗？ 最后从<a href="../evidence/chapter-15.html">源码证据</a>定位相应责任。</p>
 <p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
+<h2>工程深度验收</h2>
+<p>能根据返回值、等待时机和故障轨迹选择分发方式，画出接力链的进入与回程。 不以背出术语为完成标准，须先预测，再运行真实上游内存实验并解释反例。实验统一收录在第十五讲练习页。</p>
 <h2>本讲交接</h2>
 <p>分清通知、等待、裁决和接力，拒绝错误控制流。但下一步还要解决：助手说修好了，怎样证明不是只说说。</p>
 <p><a href="../previews/chapter-14.html#doc-2">← 第14讲：服务依赖</a> · <a href="../previews/chapter-16.html#doc-2">第16讲：完成验收 →</a></p>
 </article>
 <article id="doc-1"><div class="doc-label">视觉课件</div><h1>第15讲 · 记录员、审批者和执行者，谁必须等待谁</h1>
+<h2>源码运行图解</h2>
+<p><img src="../assets/chapter-15/reader/fig-02-waterfall-sequence.png" alt="能根据返回值、等待时机和故障轨迹选择分发方式，画出接力链的进入与回程。"></p>
+<p>能根据返回值、等待时机和故障轨迹选择分发方式，画出接力链的进入与回程。 图是固定实现上的教学推演，不是运行日志截图；原有场景图用于直觉，新增图用于检查顺序和状态。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
@@ -112,6 +117,14 @@
 <p>进入时先校验；调用继续函数后，把控制交给剩余队列；结果回来再审计。也可以不调用继续函数而直接返回，此时后面的监听器和默认处理都不会执行。它很像拦截器的前置与后置处理，但具体参数契约要读这个项目，不能照搬别的框架。</p>
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L224-L243">接力链源码</a> 用队列依次取出下一项。这里的继续函数<strong>不接收替换参数</strong>，因此不能写成 <code>next(newInput)</code> 并声称它会把新参数传给下一层。闭包中的参数才是这条实现实际使用的参数。</p>
 <p>这一点修正了旧稿中的错误说法：本实现不是预先从后往前包装监听器，也没有通过继续函数替换参数的接口。可以讲“逐层进入、逐层返回”的可观察过程，但不能借别的中间件实现来补不存在的机制。</p>
+<h3>5.1 给接力链记一条可复核的调用轨迹</h3>
+<p>本书使用两个监听者和默认处理，实际运行得到：甲进入 → 乙进入 → 默认返回 7 → 乙退出 → 甲退出。甲和乙都必须等待继续函数的结果，才能把后置工作放在返回之后；只写调用却不等待，就不能宣称“后置审计发生在内部工作完成后”。</p>
+<p><img src="../assets/chapter-15/reader/fig-02-waterfall-sequence.png" alt="接力链进入与返回的时序"></p>
+<p>再在最外层加一个直接返回拒绝的处理者，轨迹只剩“否决”。这不是请求已经执行之后再改标签，而是后续从未取得控制权。这个反例能检查实际授权链是否把裁决放在动作前。</p>
+<p>还有一个容易误用的细节：此处队列由闭包取下一个监听者；继续函数不是可以任意多次重试的业务入口。不要把两次调用当成“重试整个链”，也不要依靠没有声明的单次调用防护。需要重试时，应在明确边界上设计次数、错误类别和幂等责任。</p>
+<h3>5.2 三个小实验把等待方式真正分开</h3>
+<p>在真实上游函数上，首监听者返回最终为 <code>false</code> 的异步结果：同步裁决看见的是结果凭据对象，因此停止；逐个等待先取到最终值，继续问第二位并得到明确结论。再把并行通知的一位改为立即失败、另一位挂在受控等待门上；关闭等待门之前，整体仍不能结束。另一位最后完成，才汇总失败，没有自动取消它。</p>
+<p>这三种轨迹在不同输入下相似、在边界下不同。只看成功日志，可能把所有模式误以为“都是调几个回调”；故障注入让等待与停止规则可观察。完整实验与断言在本讲练习页，可独立重复。</p>
 <h2>六、真实案例：谁来向用户追问缺失信息</h2>
 <p>回到测试排查。如果缺少复现条件，系统可能需要询问用户。负责发问的服务不该写死当前一定是网页界面。</p>
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/interaction/user-questions/src/types.ts#L85-L90">问题事件的类型契约</a> 说明请求和继续处理的形式。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/interaction/user-questions/src/index.ts#L130-L142">发问实现</a> 把“没有回答者”的函数放在链尾。</p>
@@ -167,6 +180,133 @@
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
+<h2>工程实验与反例</h2>
+<p>首个监听者返回最终为假值的异步对象时，同步裁决与逐个等待是否等价？并行等待中的失败会自动取消其他人吗？</p>
+<p>先画预期记录，再运行<a href="../previews/chapter-15.html#doc-3">第十五讲提供的完整内存实验</a>。本讲对应的断言应能指出发生了哪次数据或生命周期变化，而非只打印“成功”。</p>
+<details>
+<summary>推演答案</summary>
+
+<p>不等价：同步模式停在对象上，等待模式取得假值后继续。并行等待全部收束后汇总错误，不自动取消其他监听者。</p>
+</details>
+
+<h2>完整源码实验：第十二至十五讲共用</h2>
+<p>将下方代码保存为教材工作目录的 <code>case/cordis-lab.mjs</code>。它导入独立的上游检出，不复制或修改上游实现；需要已有 Git（版本管理工具）、Node.js（JavaScript 运行环境）24、上游依赖，并把上游切到本书固定提交。脚本会核对提交号，不会替你切换或覆盖代码。路径按你自己的目录调整。</p>
+<pre><code class="language-powershell">$env:TSX_TSCONFIG_PATH = &#39;D:/code/deepseek-harness/source/deepseek-harness/tsconfig.base.json&#39;
+node --import ../source/deepseek-harness/node_modules/tsx/dist/loader.mjs case/cordis-lab.mjs ../source/deepseek-harness
+</code></pre>
+<p>这里设置的只是本次终端进程变量。目录示例不是必须照抄的安装位置；相对路径从教材工作目录解析。先打开脚本确认它只构造内存对象。受限运行器若不支持加载器的系统查询，应记录环境失败，不要删掉断言求通过。</p>
+<p>2026-09-06 作者实际执行结果为 8 项通过：配置对象替换、插入行后续命中、同一副作用逆序且只清理一次、必需服务撤下与重载、隔离标记解析、两种裁决、接力链、并行失败收束。资源名是教学命名；此实验没有模型、网络、真实磁盘修改或操作系统隔离测试。</p>
+<details>
+<summary>展开完整实验及断言</summary>
+
+
+<pre><code class="language-js">// Teaching experiments against the pinned, separately checked-out upstream.
+// No model, network, timers or business file mutation; in-memory resources only.
+import assert from &#39;node:assert/strict&#39;
+import { resolve } from &#39;node:path&#39;
+import { pathToFileURL } from &#39;node:url&#39;
+import { execFileSync } from &#39;node:child_process&#39;
+const source = resolve(process.argv[2] ?? &#39;../source/deepseek-harness&#39;)
+const pin = &#39;cd5ef8148158c3a752a658978873241fdf8e2bbc&#39;
+assert.equal(execFileSync(&#39;git&#39;, [&#39;-c&#39;, `safe.directory=${source}`, &#39;-C&#39;, source, &#39;rev-parse&#39;, &#39;HEAD&#39;], {encoding:&#39;utf8&#39;}).trim(), pin)
+const { Context } = await import(pathToFileURL(resolve(source, &#39;vendor/cordis/src/index.ts&#39;)))
+const { applyEntryPatches } = await import(pathToFileURL(resolve(source, &#39;vendor/include/src/index.ts&#39;)))
+let passed = 0
+async function test(name, body) { await body(); passed++; console.log(`PASS ${name}`) }
+await test(&#39;config replaces the whole nested object; source input stays unchanged&#39;, () =&gt; {
+  const input=[{id:&#39;report&#39;,name:&#39;demo&#39;,config:{directory:&#39;reports&#39;,timeout:30}}]
+  const output=applyEntryPatches(input,[{id:&#39;report&#39;,config:{timeout:60}}],()=&gt;{})
+  assert.deepEqual(output[0].config,{timeout:60})
+  assert.deepEqual(input[0].config,{directory:&#39;reports&#39;,timeout:30})
+})
+await test(&#39;later patch sees inserted row; unknown id warns and is skipped&#39;, () =&gt; {
+  const warnings=[]
+  const output=applyEntryPatches([], [{insert:[{id:&#39;report&#39;,name:&#39;demo&#39;}]}, {id:&#39;report&#39;,disabled:true},{id:&#39;missing&#39;,disabled:true}], (...args)=&gt;warnings.push(args))
+  assert.equal(output[0].disabled,true); assert.equal(warnings.length,1)
+})
+await test(&#39;one effect tears down in reverse order, exactly once&#39;, async () =&gt; {
+  const ctx=new Context(), trace=[]
+  try {
+    const dispose=ctx.effect(function* () {
+      trace.push(&#39;open-connection&#39;); yield ()=&gt;trace.push(&#39;close-connection&#39;)
+      trace.push(&#39;subscribe&#39;); yield ()=&gt;trace.push(&#39;unsubscribe&#39;)
+      trace.push(&#39;start-watch&#39;); yield ()=&gt;trace.push(&#39;stop-watch&#39;)
+    },&#39;report-watch&#39;)
+    await dispose(); await dispose()
+    assert.deepEqual(trace,[&#39;open-connection&#39;,&#39;subscribe&#39;,&#39;start-watch&#39;,&#39;stop-watch&#39;,&#39;unsubscribe&#39;,&#39;close-connection&#39;])
+  } finally { await ctx.fiber.dispose() }
+})
+await test(&#39;required service removal unloads consumer; replacement reloads it&#39;, async () =&gt; {
+  const ctx=new Context(), trace=[]
+  try {
+    const watch=ctx.inject([&#39;reportFiles&#39;], c=&gt; {
+      const identity=c.reportFiles.identity
+      trace.push(`start:${identity}`)
+      c.effect(()=&gt;()=&gt;trace.push(`stop:${identity}`),&#39;watch-resource&#39;)
+    })
+    await watch; assert.deepEqual(trace,[])
+    const offA=ctx.provide(&#39;reportFiles&#39;,{identity:&#39;workspace-A&#39;})
+    await watch.await(); assert.deepEqual(trace,[&#39;start:workspace-A&#39;])
+    await offA(); assert.deepEqual(trace,[&#39;start:workspace-A&#39;,&#39;stop:workspace-A&#39;])
+    const offB=ctx.provide(&#39;reportFiles&#39;,{identity:&#39;workspace-B&#39;})
+    await watch.await(); assert.equal(trace.at(-1),&#39;start:workspace-B&#39;)
+    await offB(); assert.equal(trace.at(-1),&#39;stop:workspace-B&#39;)
+  } finally { await ctx.fiber.dispose() }
+})
+await test(&#39;isolation labels route equal names to distinct service values&#39;, async () =&gt; {
+  const ctx=new Context()
+  try {
+    const a=ctx.isolate(&#39;reportFiles&#39;),b=ctx.isolate(&#39;reportFiles&#39;)
+    a.provide(&#39;reportFiles&#39;,{identity:&#39;workspace-A&#39;});b.provide(&#39;reportFiles&#39;,{identity:&#39;workspace-B&#39;})
+    assert.equal(a.get(&#39;reportFiles&#39;).identity,&#39;workspace-A&#39;)
+    assert.equal(b.get(&#39;reportFiles&#39;).identity,&#39;workspace-B&#39;)
+    assert.equal(ctx.get(&#39;reportFiles&#39;),undefined)
+    const shared=Symbol(&#39;shared&#39;),c=ctx.isolate(&#39;sharedFiles&#39;,shared),d=ctx.isolate(&#39;sharedFiles&#39;,shared)
+    c.provide(&#39;sharedFiles&#39;,{identity:&#39;joined&#39;})
+    assert.equal(d.get(&#39;sharedFiles&#39;).identity,&#39;joined&#39;)
+  } finally { await ctx.fiber.dispose() }
+})
+await test(&#39;bail sees a promise object; serial awaits its false value&#39;, async () =&gt; {
+  const ctx=new Context(),trace=[]
+  try {
+    ctx.on(&#39;judge&#39;,()=&gt;Promise.resolve(false))
+    ctx.on(&#39;judge&#39;,()=&gt;{trace.push(&#39;second&#39;);return &#39;decision&#39;})
+    const immediate=ctx.bail(&#39;judge&#39;)
+    assert.equal(typeof immediate.then,&#39;function&#39;);assert.deepEqual(trace,[])
+    assert.equal(await immediate,false)
+    assert.equal(await ctx.serial(&#39;judge&#39;),&#39;decision&#39;);assert.deepEqual(trace,[&#39;second&#39;])
+  } finally { await ctx.fiber.dispose() }
+})
+await test(&#39;waterfall enters then returns; veto stops later handlers and default&#39;, async () =&gt; {
+  const ctx=new Context(),trace=[]
+  try {
+    ctx.on(&#39;request&#39;,async (input,next)=&gt;{trace.push(&#39;A-in&#39;);const x=await next();trace.push(&#39;A-out&#39;);return x})
+    ctx.on(&#39;request&#39;,async (input,next)=&gt;{trace.push(&#39;B-in&#39;);const x=await next();trace.push(&#39;B-out&#39;);return x})
+    assert.equal(await ctx.waterfall(&#39;request&#39;,{},()=&gt;{trace.push(&#39;default&#39;);return 7}),7)
+    assert.deepEqual(trace,[&#39;A-in&#39;,&#39;B-in&#39;,&#39;default&#39;,&#39;B-out&#39;,&#39;A-out&#39;])
+    trace.length=0
+    ctx.on(&#39;request&#39;,()=&gt;{trace.push(&#39;veto&#39;);return &#39;denied&#39;},{prepend:true})
+    assert.equal(await ctx.waterfall(&#39;request&#39;,{},()=&gt;{trace.push(&#39;bad&#39;);return 0}),&#39;denied&#39;)
+    assert.deepEqual(trace,[&#39;veto&#39;])
+  } finally { await ctx.fiber.dispose() }
+})
+await test(&#39;parallel waits even after one failure; it does not cancel the other listener&#39;, async () =&gt; {
+  const ctx=new Context(), gate=Promise.withResolvers(), trace=[]
+  try {
+    ctx.on(&#39;save&#39;,async()=&gt;{throw Error(&#39;disk-failed&#39;)})
+    ctx.on(&#39;save&#39;,async()=&gt;{await gate.promise;trace.push(&#39;other-finished&#39;)})
+    let settled=false
+    const result=ctx.parallel(&#39;save&#39;).then(()=&gt;{settled=true},e=&gt;{settled=true;return e})
+    await Promise.resolve();assert.equal(settled,false)
+    gate.resolve();assert.ok(await result instanceof AggregateError)
+    assert.deepEqual(trace,[&#39;other-finished&#39;])
+  } finally { await ctx.fiber.dispose() }
+})
+console.log(JSON.stringify({passed,pin,boundary:&#39;Real pinned Cordis/config functions; teaching names and in-memory objects; no live model or OS isolation test.&#39;}))
+</code></pre>
+</details>
+
+<p>有限改造：新增一项“两个顶层清理互不等待先后，但卸载等待两者结束”的测试。用两个可控等待门，不用真实定时器；验收必须在任一门未释放时断言卸载尚未结束。不要为了获得想要的结果改上游实现。</p>
 <h2>先作答，再展开</h2>
 <h3>1. 解释机制</h3>
 <p>首个监听器返回 <code>Promise.resolve(false)</code>，同步裁决和逐个等待一样吗？</p>
@@ -196,6 +336,7 @@
 <p><a href="../previews/chapter-14.html#doc-2">← 第14讲：服务依赖</a> · <a href="../previews/chapter-16.html#doc-2">第16讲：完成验收 →</a></p>
 </article>
 <article id="doc-4"><div class="doc-label">分享稿</div><h1>第15讲 · 记录员、审批者和执行者，谁必须等待谁</h1>
+<p>工程复述重点：能根据返回值、等待时机和故障轨迹选择分发方式，画出接力链的进入与回程。 用“首个监听者返回最终为假值的异步对象时，同步裁决与逐个等待是否等价？并行等待中的失败会自动取消其他人吗？”检验是否真正理解，接上源码和实际观察，而不是单独讲一组名词。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
@@ -206,6 +347,8 @@
 <p>请结合<a href="../previews/chapter-15.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L224-L243">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“助手说修好了，怎样证明不是只说说”继续。</p>
 </article>
 <article id="doc-5"><div class="doc-label">术语词典</div><h1>第15讲 · 记录员、审批者和执行者，谁必须等待谁</h1>
+<h2>工程追踪补充</h2>
+<p>Bail Value（停止值）不是 JavaScript 真值规则；此处 null、false、undefined 以外可停止。AggregateError（汇总错误）将多份失败放在一起，并不代表取消了别的任务。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>

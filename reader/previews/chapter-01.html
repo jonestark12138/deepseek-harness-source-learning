@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
+  <meta charset="utf-8"><meta name="textbook-version" content="4.0.0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第01讲-任务全景</title>
@@ -21,7 +21,7 @@
     h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
     h3 { margin:1.7em 0 .6em; font-size:20px; }
     p,li { font-size:20px; }
-    article { scroll-margin-top:82px; }
+    article { scroll-margin-top:82px; overflow-wrap:anywhere; }
     a { color:#2e5aa8; overflow-wrap:anywhere; }
     blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
     code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
@@ -136,6 +136,10 @@
 </tr>
 </tbody></table>
 <p>没有新测试结果，就只能说“已修改，待验证”。报告通过后，还要确认测试针对当前文件、退出码成功、测试预期没被偷偷改掉。全书最终交付沿用这组标准。</p>
+<h3>5.1 这本书后面会深入到哪里</h3>
+<p>现在的三份证据、限定授权和新测试，是后面每个机制都必须保护的对象。第二至五讲沿一次真实请求追循环、消息、工具和日志；第六至十一讲加入手册、执行边界、恢复、长材料和分工；第十二至十五讲深入支撑这些能力的配置、生命周期、依赖解析和事件；最后两讲用真实 Java 反例和跨框架暂停恢复实验验收。</p>
+<p>你会看到统一的手绘场景，也会看到同风格的时序图、流程图、机制图。前者帮助记住“为什么需要”，后者让你能预测“这一刻谁调用谁、哪条分支会走”。图不是替代源码，也不是把源码全部塞入方框，而是连接直觉和运行过程。</p>
+<p>对有 Java 后端经验的读者，目标是能解释设计、追踪输入与状态、定位失败、有限改造并验证。总览暂不展开的分支，都会在后面的实现讲继续；不需要先背完全部英文再开始。</p>
 <h2>六、回到运行支撑源码：谁让过程继续</h2>
 <p>上面的业务服务是虚构夹具，下面的运行机制才来自固定的 DeepSeek Harness 源码。循环驱动检查模型回复中有没有工具调用；没有工具调用可以返回本轮完成状态，有工具调用则执行并根据结果决定是否继续。注意源码允许工具批次明确结束，不能把“调用工具后必然无限继续”当规则。</p>
 <p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L426-L434">固定提交中的定位片段</a>（连续原文；中文说明放在代码之外）：</p>

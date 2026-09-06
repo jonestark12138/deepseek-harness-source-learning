@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
+  <meta charset="utf-8"><meta name="textbook-version" content="4.0.0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第14讲-服务依赖</title>
@@ -21,7 +21,7 @@
     h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
     h3 { margin:1.7em 0 .6em; font-size:20px; }
     p,li { font-size:20px; }
-    article { scroll-margin-top:82px; }
+    article { scroll-margin-top:82px; overflow-wrap:anywhere; }
     a { color:#2e5aa8; overflow-wrap:anywhere; }
     blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
     code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
@@ -58,11 +58,16 @@
 <p>先看<a href="../previews/chapter-14.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-14.html#doc-3">练习</a>。<a href="../previews/chapter-14.html#doc-1">视觉课件</a>用于复习，<a href="../previews/chapter-14.html#doc-5">词典</a>随用随查，不要求先背英文。预计正文阅读 20–35 分钟，练习 10–20 分钟；这是安排建议，不是学会的证明。</p>
 <p>读完应能解释：文件服务定义、本地实现、文件工具分别做什么？ 还要能预测：服务可见范围隔离了，文件访问就绝对安全了吗？ 最后从<a href="../evidence/chapter-14.html">源码证据</a>定位相应责任。</p>
 <p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
+<h2>工程深度验收</h2>
+<p>能用服务名、隔离标记、提供者和使用者还原查找路径，区分可选查询与必需依赖。 不以背出术语为完成标准，须先预测，再运行真实上游内存实验并解释反例。实验统一收录在第十五讲练习页。</p>
 <h2>本讲交接</h2>
 <p>通过定义、提供者、消费者和可见范围定位接线。但下一步还要解决：记录员、审批者和执行者，谁必须等待谁。</p>
 <p><a href="../previews/chapter-13.html#doc-2">← 第13讲：插件生命周期</a> · <a href="../previews/chapter-15.html#doc-2">第15讲：事件协作 →</a></p>
 </article>
 <article id="doc-1"><div class="doc-label">视觉课件</div><h1>第14讲 · 同名文件服务，怎样接到这次任务的工作区</h1>
+<h2>源码运行图解</h2>
+<p><img src="../assets/chapter-14/reader/fig-02-scope-routing.png" alt="能用服务名、隔离标记、提供者和使用者还原查找路径，区分可选查询与必需依赖。"></p>
+<p>能用服务名、隔离标记、提供者和使用者还原查找路径，区分可选查询与必需依赖。 图是固定实现上的教学推演，不是运行日志截图；原有场景图用于直觉，新增图用于检查顺序和状态。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
@@ -111,6 +116,15 @@
 <p>即使名字和契约正确，当前环境仍可能有不止一个实现。scope（服务可见范围）决定这个名字在当前位置通向谁，像两个房间各有自己的插座。</p>
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/context.ts#L109-L125">服务解析隔离</a> 为子上下文中指定的服务建立独立隔离标记。查找时使用对应标记区分服务存储，于是甲房间与乙房间可以同名而不通向同一个提供者。</p>
 <p>这里的墙不是安全边界。它不会阻止一个文件实现访问操作系统磁盘，也不会把同一进程变成两个容器。它解决的是“名字解析到谁”，沙箱与权限解决的则是“这个实现被允许做什么”。</p>
+<h3>6.1 名字之外，还有一个实际的查找键</h3>
+<p>把“房间插座”落到对象上：<code>isolate(&#39;reportFiles&#39;)</code> 建立一个子上下文，并为这个服务名创建新的唯一标记。再调用一次而不传共享标记，就得到另一分区。两个工位都叫报告文件服务，却可以分别注册甲、乙实现。若显式把同一个标记传给两次调用，它们会共享分区，不是自动两份副本。</p>
+<p><img src="../assets/chapter-14/reader/fig-02-scope-routing.png" alt="服务名和隔离标记共同决定接线"></p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/reflect.ts#L276-L305">注册实现</a>按对应标记存放实现记录；记录除业务对象外还有提供者安装身份。同一分区重复注册会报错，不是“最后一个覆盖前一个”。撤销时先移除查找入口、通知依赖者并等它们收束，再移除提供者安装上的那份存储。这个次序服务于清理期间的访问责任。</p>
+<p>然后观察<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/reflect.ts#L133-L170">属性解析</a>：运行中插件优先沿安装的依赖存储查找，必要时沿父级继续；遇到当前安装已声明却不可用的必需服务，或跨越不匹配的隔离标记，就不能假装找到一份任意全局对象。于是错误不是普通空指针，而是依赖契约或安装状态问题。</p>
+<h3>6.2 用四个断言检查有没有串线</h3>
+<p>第十五讲的统一内存实验创建两个独立分区：甲读到甲身份，乙读到乙身份，根上下文的可选查找没有这项实现；再创建两个共用标记的上下文，后者可读到前者提供的身份。四项观察分别回答“分开了没有、有没有泄漏到根、显式共享是否有效”。</p>
+<p>实验中的身份只是普通对象字段，没有操作系统访问能力。你仍需要第七讲的执行环境检查，才能证明文件和测试真的指向同一目录。就像 Spring 的不同应用上下文能持有不同连接池，却不会因此获得数据库行级权限一样：接线隔离和资源访问权限不是同一层。</p>
+<p>这也给出排障取舍：若确实是必需服务，不要用可选查询掩盖声明缺失；若是增强日志等可选功能，显式不存在分支比强行等待更合理。两种都可以使用，但应由业务是否允许缺失决定，而不是由哪个写法更容易消除报错决定。</p>
 <h2>七、把接线关系放回测试排查</h2>
 <p>文件工具拿不到服务，先查契约名称与依赖声明，再查当前范围里有没有提供者；提供者更换后行为异常，继续查旧安装的资源是否已清理；如果担心越权，则要去执行策略与沙箱边界，不能拿作用域隔离当作安全证明。</p>
 <p>现在可以读懂第一讲里“连接工具与文件能力”的具体一部分了。不过，一个任务还会让界面、记录者和提问处理者一起参与。它们该全部等待，还是找到一个回答就停？<a href="../previews/chapter-15.html#doc-2">第十五讲</a>沿这个问题进入事件协作。</p>
@@ -122,6 +136,15 @@
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
+<h2>工程实验与反例</h2>
+<p>独立两次隔离与传同一标记隔离，结果有何不同？为何根上下文不应看到子分区实现？</p>
+<p>先画预期记录，再运行<a href="../previews/chapter-15.html#doc-3">第十五讲提供的完整内存实验</a>。本讲对应的断言应能指出发生了哪次数据或生命周期变化，而非只打印“成功”。</p>
+<details>
+<summary>推演答案</summary>
+
+<p>前者两个分区，后者主动共享。查找按当前标记解析，不能越过标记去随便取同名全局对象；这不是操作系统权限。</p>
+</details>
+
 <h2>先作答，再展开</h2>
 <h3>1. 解释机制</h3>
 <p>文件服务定义、本地实现、文件工具分别做什么？</p>
@@ -151,6 +174,7 @@
 <p><a href="../previews/chapter-13.html#doc-2">← 第13讲：插件生命周期</a> · <a href="../previews/chapter-15.html#doc-2">第15讲：事件协作 →</a></p>
 </article>
 <article id="doc-4"><div class="doc-label">分享稿</div><h1>第14讲 · 同名文件服务，怎样接到这次任务的工作区</h1>
+<p>工程复述重点：能用服务名、隔离标记、提供者和使用者还原查找路径，区分可选查询与必需依赖。 用“独立两次隔离与传同一标记隔离，结果有何不同？为何根上下文不应看到子分区实现？”检验是否真正理解，接上源码和实际观察，而不是单独讲一组名词。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
@@ -161,6 +185,8 @@
 <p>请结合<a href="../previews/chapter-14.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/reflect.ts#L267-L305">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“记录员、审批者和执行者，谁必须等待谁”继续。</p>
 </article>
 <article id="doc-5"><div class="doc-label">术语词典</div><h1>第14讲 · 同名文件服务，怎样接到这次任务的工作区</h1>
+<h2>工程追踪补充</h2>
+<p>Isolation Label（服务隔离标记）是同名服务的解析分区键，像不同房间的插座回路号，不是磁盘访问许可。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>

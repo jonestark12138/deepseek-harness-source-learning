@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
+  <meta charset="utf-8"><meta name="textbook-version" content="4.0.0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第17讲-综合迁移</title>
@@ -21,7 +21,7 @@
     h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
     h3 { margin:1.7em 0 .6em; font-size:20px; }
     p,li { font-size:20px; }
-    article { scroll-margin-top:82px; }
+    article { scroll-margin-top:82px; overflow-wrap:anywhere; }
     a { color:#2e5aa8; overflow-wrap:anywhere; }
     blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
     code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
@@ -58,11 +58,16 @@
 <p>先看<a href="../previews/chapter-17.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-17.html#doc-3">练习</a>。<a href="../previews/chapter-17.html#doc-1">视觉课件</a>用于复习，<a href="../previews/chapter-17.html#doc-5">词典</a>随用随查，不要求先背英文。预计正文阅读 20–35 分钟，练习 10–20 分钟；这是安排建议，不是学会的证明。</p>
 <p>读完应能解释：教学运行器通过所有断言，是否证明真实模型可靠？ 还要能预测：去另一个框架找不到 Session（会话）类，是不是没有记忆机制？ 最后从<a href="../evidence/chapter-17.html">源码证据</a>定位相应责任。</p>
 <p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
+<h2>工程深度验收</h2>
+<p>能把反馈排查与确定性授权、验收接起来，并解释另一框架暂停恢复的具体差异。 完成不是看过正文：需要预测实验分歧、实际运行、提交轨迹，并解释尚未覆盖的环境和输入范围。</p>
 <h2>本讲交接</h2>
 <p>用最小教学运行器复现拒绝、恢复、分工与验收约束。从头到尾复述任务，并明确教学实验与真实端到端验证的差别。</p>
 <p><a href="../previews/chapter-16.html#doc-2">← 第16讲：完成验收</a> · 主线正文完结</p>
 </article>
 <article id="doc-1"><div class="doc-label">视觉课件</div><h1>第17讲 · 拆掉框架名字，你还能解释这次排查吗</h1>
+<h2>实验关系图</h2>
+<p><img src="../assets/chapter-17/reader/fig-02-resume-replay.png" alt="能把反馈排查与确定性授权、验收接起来，并解释另一框架暂停恢复的具体差异。"></p>
+<p>LangGraph（图式智能体编排框架）1.0.1同进程内存实验观察申请节点重入两次；DeepSeek Harness源码恢复事实不等于重放外部动作。 实验与限制分别说明，不能用作者绘图代替真实运行证据。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
@@ -78,142 +83,312 @@
 </article>
 <article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第17讲 · 拆掉框架名字，你还能解释这次排查吗</h1>
 <blockquote>
-<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务。跨框架实验另固定 LangGraph（图式智能体编排框架）1.0.1，不能把两个项目的实现约定混为一谈。</p>
 </blockquote>
-<h2>一、把所有英文遮住，只剩这次任务</h2>
-<p>第十六讲已经说明怎样验真。现在回到第一讲的请求：一个 Java 服务边界测试失败，先排查；获得修改授权后修复，再重新测试。你应能不依赖包名，说出信息如何进来、动作如何执行、事实如何留下、任务如何继续以及完成怎样证明。</p>
-<p>这就是学习 DeepSeek Harness 的迁移目标。不同智能体常面对相近的输入、动作、状态与验证问题，但可能使用不同调度方式、记忆结构、工具协议和权限体系。共性在问题与责任，不在一定拥有同名类或使用相同插件框架。</p>
-<p><img src="../assets/chapter-17/reader/fig-01-case-state.png" alt="具备从报告到验证的完整证据链，经过本讲机制，变为用最小教学运行器复现拒绝、恢复、分工与验收约束"></p>
-<blockquote>
-<p>三格为同一运费任务的教学状态变化或故障对照。图不是实际运行日志；关键区别见各格说明。</p>
-</blockquote>
-<h2>二、最小运行器故意省掉什么</h2>
-<p>本书提供确定性的教学运行器：用内存文件替代真实磁盘，用预设调用替代真实模型，用金额比较的对应实验替代 Java 运行。它不接网络、不执行任意命令、不花模型费用。它能验证几条工程约束，不能评估模型推理质量。</p>
-<p>Stub（测试替身）像排练时按固定台词说话的演员，帮助我们检查舞台机关和交接规则。真实模型可能给错参数、读错材料、反复尝试或过早结束；固定台词不会暴露所有这些问题。所以别把排练顺利叫作真实首演成功。</p>
-<h2>三、保留哪些最小责任</h2>
-<p>运行器保存调用与结果、一份可恢复快照、独立写许可、有限补丁规则和当前代码指纹。它拒绝未授权写入，拒绝旧版本补丁，不在恢复时重放外部动作，并要求新的测试结果才能验收。</p>
-<p>这些职责与上游机制有对应关系，但没有实现 Cordis 插件生命周期、完整消息协议、持久化崩溃事务或真实沙箱。对照 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">主循环</a>，你应能指出教学运行器省略了哪些部分，而非把它当另一份官方实现。</p>
-<h2>四、复制后先走一次失败，再走一次正确过程</h2>
-<p>把下方完整教学代码复制为 <code>runner.cjs</code>，再将示例复制为同目录的 <code>demo.cjs</code>。使用 Node.js（JavaScript 运行环境）24 或以上运行 <code>node demo.cjs</code>。这里的测试输出明确标为模拟结果。</p>
-<details>
-<summary>展开完整教学运行器（无真实工具与模型调用）</summary>
-
-<pre><code class="language-js">// Deterministic teaching model. No LLM, real shell, network or Java execution.
-const { createHash } = require(&#39;node:crypto&#39;)
-const digest = text =&gt; createHash(&#39;sha256&#39;).update(text).digest(&#39;hex&#39;)
-const ORIGINAL = &#39;return orderCents &gt; 10000 ? 0 : 800;&#39;
-const FIXED = &#39;return orderCents &gt;= 10000 ? 0 : 800;&#39;
-const CONTRACT = &#39;满 10000 分免运费；否则 800 分；不得改测试预期。&#39;
-const baseline = () =&gt; ({ code: ORIGINAL, contract: CONTRACT, report: &#39;amount=10000 expected=0 actual=800 FAIL&#39; })
-
-class TeachingHarness {
-  constructor(files = baseline(), persisted = []) {
-    this.files = files
-    this.log = structuredClone(persisted)
-    this.allowed = false // A new live executor requires fresh authorization.
-    this.view = null
-    // Close incomplete calls as unknown outcomes, never rerun them on recovery.
-    const settled = new Set(this.log.filter(e =&gt; e.type === &#39;result&#39;).map(e =&gt; e.data.callId))
-    for (const event of [...this.log]) if (event.type === &#39;call&#39; &amp;&amp; !settled.has(event.seq)) {
-      this.append(&#39;result&#39;, { callId: event.seq, ok: false, error: &#39;interrupted; external outcome unknown&#39; })
-    }
-  }
-  append(type, data) {
-    const event = { seq: this.log.length, type, data: structuredClone(data) }
-    this.log.push(event)
-    return event.seq
-  }
-  grant() {
-    this.allowed = true
-    this.append(&#39;authorization&#39;, { scope: &#39;one boundary fix; preserve tests&#39; })
-  }
-  async execute(name, args = {}) {
-    const callId = this.append(&#39;call&#39;, { name, args })
-    let result
-    try {
-      if (name === &#39;read&#39;) {
-        if (!Object.hasOwn(this.files, args.file)) throw Error(&#39;file not found&#39;)
-        const text = this.files[args.file]
-        result = { ok: true, file: args.file, text, hash: digest(text) }
-      } else if (name === &#39;patch&#39;) {
-        if (!this.allowed) throw Error(&#39;modification not authorized&#39;)
-        if (args.expectedHash !== digest(this.files.code)) throw Error(&#39;code changed; read again&#39;)
-        if (this.files.code !== ORIGINAL) throw Error(&#39;patch target no longer matches&#39;)
-        this.files.code = FIXED
-        this.allowed = false
-        result = { ok: true, changed: true, hash: digest(this.files.code) }
-      } else if (name === &#39;test&#39;) {
-        if (![ORIGINAL, FIXED].includes(this.files.code)) throw Error(&#39;unknown teaching implementation&#39;)
-        const rows = [9999, 10000, 10001].map(amount =&gt; {
-          const actual = (this.files.code === FIXED ? amount &gt;= 10000 : amount &gt; 10000) ? 0 : 800
-          return { amount, expected: amount &gt;= 10000 ? 0 : 800, actual }
-        })
-        result = { ok: true, simulated: true, codeHash: digest(this.files.code), rows,
-          exitCode: rows.some(r =&gt; r.actual !== r.expected) ? 1 : 0 }
-      } else throw Error(&#39;unknown tool&#39;)
-    } catch (error) { result = { ok: false, error: error.message } }
-    this.append(&#39;result&#39;, { callId, ...result })
-    return structuredClone(result)
-  }
-  compact(summary, sourceSeqs) {
-    if (!Array.isArray(sourceSeqs) || !sourceSeqs.length || sourceSeqs.some(i =&gt; !Number.isInteger(i) || !this.log[i])) throw Error(&#39;missing source&#39;)
-    const selected = sourceSeqs.map(i =&gt; this.log[i])
-    for (const event of selected) {
-      if (event.type === &#39;call&#39; &amp;&amp; !selected.some(e =&gt; e.type === &#39;result&#39; &amp;&amp; e.data.callId === event.seq)) throw Error(&#39;unpaired tool call&#39;)
-      if (event.type === &#39;result&#39; &amp;&amp; !sourceSeqs.includes(event.data.callId)) throw Error(&#39;unpaired tool result&#39;)
-    }
-    this.append(&#39;summary&#39;, { text: summary, sourceSeqs })
-    this.view = { text: summary, sourceSeqs: [...sourceSeqs] }
-  }
-  snapshot() { return structuredClone(this.log) }
-  verify() {
-    const results = this.log.filter(e =&gt; e.type === &#39;result&#39;).map(e =&gt; e.data)
-    const has = file =&gt; results.some(r =&gt; r.ok &amp;&amp; r.file === file)
-    const latestTest = results.filter(r =&gt; r.simulated).at(-1)
-    return { complete: has(&#39;report&#39;) &amp;&amp; has(&#39;contract&#39;) &amp;&amp; has(&#39;code&#39;)
-      &amp;&amp; this.log.some(e =&gt; e.type === &#39;authorization&#39;)
-      &amp;&amp; results.some(r =&gt; r.ok &amp;&amp; r.changed)
-      &amp;&amp; this.files.code === FIXED &amp;&amp; latestTest?.codeHash === digest(this.files.code)
-      &amp;&amp; latestTest.exitCode === 0 &amp;&amp; latestTest.rows.length === 3,
-    boundary: &#39;Only this deterministic fixture; not Java or a real agent evaluation.&#39; }
-  }
-}
-module.exports = { TeachingHarness, baseline, ORIGINAL, FIXED, digest }
+<h2>一、现在要交付的，不是十七个概念的复述</h2>
+<p>从第一讲开始，我们一直在做同一件事：查清“满 100 元免运费”的失败原因，获得限定修改许可后修复，再验证当前版本。你现在应能解释：材料怎样进请求；模型为何继续读；工具请求由谁执行；历史怎样保存；中断后如何确认现场；多份结果怎样汇合；最后凭什么结案。</p>
+<p>但能解释还不够。作为工程师，还应当能对一段执行轨迹指出哪一层违约，修改一个有限机制并验证没有破坏授权、版本和停止边界。最后一讲分两步检验：先把本书已经运行过的部件接起来，再把同一问题放进另一种框架，观察<strong>相同责任下不同的运行行为</strong>。</p>
+<p><img src="../assets/chapter-17/reader/fig-01-case-state.png" alt="完整证据链与迁移任务"></p>
+<p>本例业务很小，不需要为了修一个比较符把全套功能都装上。反复叠加困难是为了学习工程机制，不是在宣传复杂架构优于简单程序。</p>
+<h2>二、先接起来：动态排查，确定性修复与验收</h2>
+<p>旧式演示若直接按顺序调用“读报告、读代码、修改、测试”，只能说明几个工具函数会用，不能证明存在反馈循环。第二讲已经换成真正的循环驱动：受控模型根据当前已收到的工具结果选择下一动作；工具结果写回后再构造下一次请求。提前放入报告会改变它的选择；改变业务约定会让它拒绝套用既定结论。</p>
+<p>这里的 Stub（测试替身）不是聪明模型，而是按可检查规则行动的演员。我们用它测舞台的交接机关，不测演员即兴推理。它仅识别本例有限材料，不会理解任意 Java 项目；不能把“文件存在”当成已经理解内容。</p>
+<p>综合演示先运行这段排查循环，得到三步、三次请求和等待修改授权的结论。接着故意尝试一次未授权补丁，观察拒绝且文件未变。可信应用收到独立用户批准后，才开启一次限定修改权，重读当前代码指纹，应用补丁，再跑教学三测。</p>
+<p>注意后半段是<strong>明确写在程序中的授权修复流程</strong>，不是伪称模型动态决定每一步。这正是第十一讲的混合设计：开放排查用反馈循环，已经确定的权限、版本和验收用程序约束。替换模型不应该顺便改掉这些约束。</p>
+<p>完整代码在本讲练习页。把第二讲的三个文件与 <code>course-demo.cjs</code> 放在同一目录，运行：</p>
+<pre><code class="language-powershell">node course-demo.cjs
 </code></pre>
-</details>
-
-<pre><code class="language-js">const { TeachingHarness, digest } = require(&#39;./runner.cjs&#39;);
-(async () =&gt; {
-  const h = new TeachingHarness();
-  console.log(&#39;unauthorized:&#39;, await h.execute(&#39;patch&#39;, {
-    expectedHash: digest(h.files.code)
-  }));
-  for (const file of [&#39;report&#39;, &#39;contract&#39;, &#39;code&#39;]) {
-    await h.execute(&#39;read&#39;, { file });
-  }
-  console.log(&#39;before:&#39;, await h.execute(&#39;test&#39;));
-  h.grant();
-  await h.execute(&#39;patch&#39;, { expectedHash: digest(h.files.code) });
-  console.log(&#39;after:&#39;, await h.execute(&#39;test&#39;));
-  console.log(&#39;verification:&#39;, h.verify());
-})();
+<p>作者实际观察：排查正常结束，但此时业务尚未修复；未授权写入被拒；明确授权后模拟三测退出码为 0；恢复一个新执行器不会恢复旧的写权限；再改变源码，旧绿灯不能通过当前验收。这里的文件与测试仍是内存模拟，真实 Java 实验在第十六讲单独运行，不能混称同一次端到端智能体测试。</p>
+<p>对应上游时，沿<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">主循环</a>找准入和步骤，沿工具服务找执行，沿会话找事实。教学循环没有复刻流式适配、完整插件树、持久化事务或平台沙箱；这些机制要回到前面已经展开的源码与实验。</p>
+<h2>三、迁移的第一步：把责任画出来，再找新框架的入口</h2>
+<p>现在用 LangGraph（图式智能体编排框架）1.0.1 再做这个任务。选择它是因为它能让我们直接比较图节点、状态更新、条件分支和暂停恢复；并不是说它能自动解决授权或模型正确性。</p>
+<p>本书实验固定在<a href="https://github.com/langchain-ai/langgraph/tree/fca3e4513cf585a728a611485ba9db11b318a13c">该版本提交</a>。先认三项实际契约：</p>
+<ul>
+<li>StateGraph（状态图构造器）：定义节点以及节点返回的状态更新。像把任务白板的栏目和工序连起来，但白板更新不是任意外部动作的事务。</li>
+<li>Conditional Edge（条件边）：节点结束后，根据当前状态选择下一节点。本例读取结果不足就继续取证，足够才进入申请。</li>
+<li>Checkpointer（检查点保存器）和 Interrupt（可恢复暂停）：保存运行状态并把待回答问题交给调用方；恢复时如何重走代码，必须读它自己的规则。</li>
+</ul>
+<p>映射到本任务：</p>
+<table>
+<thead>
+<tr>
+<th>本次责任</th>
+<th>本书循环中的位置</th>
+<th>迁移实验中的位置</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>判断下一份材料</td>
+<td>受控模型读取工具反馈</td>
+<td>判断节点读取图状态</td>
+</tr>
+<tr>
+<td>取得报告与代码</td>
+<td>工具执行器及结果消息</td>
+<td>读取节点返回状态更新</td>
+</tr>
+<tr>
+<td>决定继续</td>
+<td>外层循环与停止候选</td>
+<td>条件边回到判断或进入申请</td>
+</tr>
+<tr>
+<td>等待用户</td>
+<td>暂停结案，独立收取授权</td>
+<td>申请节点暂停，客户端提交恢复值</td>
+</tr>
+<tr>
+<td>守住写入</td>
+<td>执行器的一次授权和版本校验</td>
+<td>图外执行状态加节点内写入前校验</td>
+</tr>
+<tr>
+<td>验证业务</td>
+<td>独立验收当前代码与新测试</td>
+<td>显式验收结果，不靠到达结束节点</td>
+</tr>
+</tbody></table>
+<p>表是责任映射，不表示一个节点必然等于 DeepSeek Harness 的一步，更不表示检查点等于仅追加会话日志。循环、图调度、消息派生和持久化可以采用不同实现；要迁移的是不变量与验证方法。</p>
+<h2>四、最值得亲自观察的差异：恢复不是从暂停行下一句接着执行</h2>
+<p>在本书第八讲，我们反复强调“加载记录不应直接重放外部编辑”。现在不能把这句话粗暴翻译为“所有框架恢复时都不会重走代码”。</p>
+<p>LangGraph（图式智能体编排框架）的<a href="https://github.com/langchain-ai/langgraph/blob/fca3e4513cf585a728a611485ba9db11b318a13c/libs/langgraph/langgraph/types.py#L396-L514">暂停实现与说明</a>明确：节点第一次暂停时抛出可恢复中断；客户端传入恢复命令后，<strong>该节点从头重新执行</strong>，再次走到暂停位置时取得已提供的值。不是恢复 Python（编程语言）解释器当时那一帧的指令指针。</p>
+<p><img src="../assets/chapter-17/reader/fig-02-resume-replay.png" alt="暂停节点恢复时重新进入，但写入只能发生在批准以后"></p>
+<p>我们的实验故意把“进入申请节点”的计数放在暂停前，补丁放在暂停后，且补丁还检查图外的可信授权和代码指纹。实际轨迹如下：</p>
+<pre><code class="language-text">拒绝：读报告 → 读约定与代码 → 进入申请 → 恢复后再次进入申请
+允许：读报告 → 读约定与代码 → 进入申请 → 恢复后再次进入申请 → 补丁一次
 </code></pre>
-<p>先观察未授权请求返回错误，且源代码不变；原版三测在等于阈值时失败；显式授权后修改；新三测才通过。最后的验收对象会提醒你，这只是该确定性夹具，而不是 Java 或真实智能体评测。</p>
-<h2>五、自己制造四次“看起来成功”的假象</h2>
-<p>第一，把最后一次测试删掉，观察修改后的验收仍失败。第二，在测试通过后把代码改回原样，观察旧报告失效。第三，只保留读取报告，不读业务约定和代码，观察完整性验收失败。第四，将摘要写成“用户允许全部修改”，观察执行器仍拒绝未授权补丁。</p>
-<p>再做一次恢复实验：向日志追加一个没有结果的编辑请求，创建新执行器恢复。它应记录未知结果而不修改文件。这个教学策略展示“恢复事实”和“重做动作”不同；不代表真实恢复后端的全部细节。</p>
-<h2>六、怎样把所学迁移到另一个框架</h2>
-<p>拿到另一个项目时，按六个问题找证据：谁构造模型输入；谁决定继续；工具请求在哪里真正执行并受约束；事实记录保存在哪里；中断后如何恢复；业务成功由什么证据证明。</p>
-<p>再逐一记下不同选择。例如它未必采用仅追加日志，未必有独立子智能体，未必采用插件依赖激活。你要判断的是责任是否明确、缺口如何处理、约束能否通过反例验证，而不是强行将其类名翻译成这一套包名。</p>
-<h2>七、完整教材的终点与下一步实践</h2>
-<p>读完主课十七讲，应能从一条失败通知追到报告、实现、授权、补丁和新测试，并解释加入拒绝、恢复、压缩、分工后系统为何需要新机制。补课只帮助读语法和工程结构，不再打断主线编号。</p>
-<p>下一次在真实测试项目里实践时，先选一个小任务、只读起步，明确权限和验收；再接真实模型与工具，补充端到端测试。把本书当作理解和实验的地图，不把它当作任何环境都安全可靠的保证。</p>
+<p>两种情况下，读取各发生一次，申请节点进入两次；拒绝路径没有补丁。这是执行过的框架行为，模型仍为受控策略，不是付费模型测评。</p>
+<p>现在做反事实推演：如果把扣款、发邮件或编辑文件放在暂停之前，节点恢复后可能再次触发。计数只是观察重入的安全替身，不能把“只有一次节点名字”误以为“外部动作只会一次”。副作用需要拆到恰当节点或可持久任务边界，结合幂等键、结果记录及现场核对；不要仅靠模型承诺不重复。这与官方<a href="https://docs.langchain.com/oss/python/langgraph/functional-api">持久执行说明</a>所强调的持久任务边界相呼应，但图接口与函数式接口的重放起点仍应分别阅读，不能混成一种行为。</p>
+<h2>五、真实图框架不等于真实磁盘恢复，更不等于自动安全</h2>
+<p>本实验用 InMemorySaver（内存检查点保存器），所以同一进程内能暂停恢复，但关闭 Python（编程语言）进程后数据就丢了。它验证的不是进程崩溃持久化。真实持久后端要另做重启、并发写入、版本升级和重复动作测试。</p>
+<p>另一个边界是信任：恢复值为允许，只是本实验可信应用明确收取用户回答的途径；从模型文本或一段摘要解析出“允许”不应自动给执行器授权。示例额外用图外的一次许可作检查，目的是把知识状态与访问权分开。生产系统还需要身份、作用域、有效期与审计，不是加一个布尔值就完成权限系统。</p>
+<p>版本也不能省。申请时读到的代码与真正写入时可能不同，所以补丁前重新计算指纹并比较；不匹配就重新读取，而不是强行套旧补丁。这个原则在两个框架中相同，实现位置却由各自执行结构决定。</p>
+<p>本次跨框架实验的完整代码和依赖版本在练习页；它没有模型或网络调用。保存器库有默认反序列化配置未来变化的提醒，实验只使用自身生成的内存数据，不加载外来检查点；生产选型仍须核对当时版本的安全与兼容边界。</p>
+<h2>六、再看一种不同选择，不必把每个 Agent（智能体）都装进同一套类名</h2>
+<p>作为阅读迁移，smolagents（轻量智能体框架）的<a href="https://huggingface.co/docs/smolagents/reference/agents">官方智能体说明</a>区分代码动作和结构化工具调用：前者生成可执行代码，后者生成结构化调用。它们都需要选择、执行、观察和停止，却把动作表达及执行风险放在不同位置。</p>
+<p>这部分是官方文档对照，<strong>本书没有运行该框架实验</strong>，不声称某一种更聪明或更安全。你可以据此提出新的源码阅读问题：代码执行环境限制哪些能力？一次代码动作能调用多少工具？失败日志如何进入下一次判断？终止条件由谁解释？已有六类责任让问题具体化，而不是只换个框架名重新背名词。</p>
+<p>设计取舍也因此更清楚。显式图便于固定业务关口和观察路径，但图节点内部仍可能有不确定行为；动态循环更适合随材料改变阅读顺序，却需要预算和停止约束。代码动作可一次表达多步计算，又把执行环境与错误恢复的要求提高。是否采用，取决于任务不确定性、验收方式和风险，不是组件多少。</p>
+<h2>七、工程毕业验收：解释、定位、改造，再证明没破坏边界</h2>
+<p>完成本书不是“把这些页看完”。请交付四件可以审查的东西：</p>
+<ol>
+<li>画出同一失败任务从报告到新测试的运行路径，标出状态所有者、授权点、取消点及业务验收；选用合适图型，不要求全部画成流程图。</li>
+<li>给一条异常轨迹定位责任层，例如“模型已读报告但第二次请求没有结果”“恢复后重复外部动作”“报告通过但属于另一副本”；指出源码入口和验证方法。</li>
+<li>只做一项有限改造，例如新增请求总预算或增加旧版本补丁拦截；列出兼容性、失败路径、测试和撤回改动的方法。</li>
+<li>在另一框架完成同类约束实验，解释哪里相同、哪里必须重新设计。不要只交一份名称对照表。</li>
+</ol>
+<p>求职表达也可以沿这条链：问题是什么、原实现如何运行、失败为什么发生、改造守住哪些不变量、证据怎样取得、哪些范围尚未验证。它比“我熟悉十几个智能体名词”更能体现工程理解；但教材和实验不等同于生产经历，也不保证面试结果。</p>
 <p><a href="../previews/chapter-16.html#doc-2">← 第16讲：完成验收</a> · 主线正文完结</p>
 </article>
 <article id="doc-3"><div class="doc-label">练习与答案</div><h1>第17讲 · 拆掉框架名字，你还能解释这次排查吗</h1>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
+<h2>综合与迁移实验</h2>
+<p>第一步，把第二讲的 <code>runner.cjs</code>、<code>agent-loop.cjs</code> 和测试保存到同一目录，再保存下方综合程序，执行 <code>node course-demo.cjs</code>。解释哪些动作由反馈决定，哪些是明确的授权后固定流程，不可把整个程序都说成动态模型决策。</p>
+<details>
+<summary>展开综合运行程序</summary>
+
+
+<pre><code class="language-js">// Diagnosis is feedback-driven; repair and verification are deterministic authorized steps.
+const assert=require(&#39;node:assert/strict&#39;)
+const {LoopLab}=require(&#39;./agent-loop.cjs&#39;)
+const {TeachingHarness,ORIGINAL,digest}=require(&#39;./runner.cjs&#39;)
+async function courseDemo(){
+ const loop=new LoopLab(),h=loop.executor
+ const diagnosis=await loop.run()
+ assert.equal(diagnosis.kind,&#39;completed&#39;);assert.equal(h.verify().complete,false)
+ const rejected=await h.execute(&#39;patch&#39;,{expectedHash:digest(h.files.code)})
+ assert.equal(rejected.ok,false);assert.equal(h.files.code,ORIGINAL)
+ // The trusted application receives a separate user approval; no model text grants it.
+ h.grant()
+ const current=await h.execute(&#39;read&#39;,{file:&#39;code&#39;})
+ const patched=await h.execute(&#39;patch&#39;,{expectedHash:current.hash})
+ assert.equal(patched.ok,true)
+ const tested=await h.execute(&#39;test&#39;)
+ assert.equal(tested.exitCode,0);assert.equal(h.verify().complete,true)
+ const saved=h.snapshot(),before=h.files.code
+ const recovered=new TeachingHarness(h.files,saved)
+ assert.equal(recovered.files.code,before);assert.equal(recovered.allowed,false)
+ // A report from an older revision cannot verify a newer code state.
+ recovered.files.code=ORIGINAL
+ assert.equal(recovered.verify().complete,false)
+ return {diagnosis,requestCount:loop.requests.length,denied:rejected.error,
+  authorizedRepair:patched.ok,simulatedTestExit:tested.exitCode,
+  restoredPermission:recovered.allowed,staleReportAccepted:recovered.verify().complete,
+  boundary:&#39;Controlled model for diagnosis; explicitly scripted authorized repair; in-memory files and simulated Java. Run java-lab.cjs separately for real Java.&#39;}
+}
+if(require.main===module)courseDemo().then(r=&gt;console.log(JSON.stringify(r,null,2))).catch(e=&gt;{console.error(e);process.exitCode=1})
+module.exports={courseDemo}
+</code></pre>
+</details>
+
+<p>第二步，在独立 Python（编程语言）虚拟环境中运行固定版本的图框架实验。作者环境为 Python（编程语言）3.12；依赖清单提供本轮解析版本，不是所有平台的安全或兼容保证。安装只需一次，实验不调用模型、不接网络、不读取你的真实会话。</p>
+<pre><code class="language-powershell">python -m venv .venv
+.venv/Scripts/python -m pip install -r langgraph-requirements.txt
+.venv/Scripts/python langgraph-lab.py
+</code></pre>
+<details>
+<summary>展开图框架迁移实验程序</summary>
+
+
+<pre><code class="language-python">&quot;&quot;&quot;Real LangGraph 1.0.1 graph; deterministic choices and in-memory business state.
+No model/network calls. Never use checkpoint text as trusted authorization.
+&quot;&quot;&quot;
+import os
+os.environ[&quot;LANGSMITH_TRACING&quot;] = &quot;false&quot;
+os.environ[&quot;LANGCHAIN_TRACING_V2&quot;] = &quot;false&quot;
+from importlib.metadata import version
+from typing import TypedDict
+from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.types import interrupt, Command
+
+assert version(&quot;langgraph&quot;) == &quot;1.0.1&quot;
+
+class State(TypedDict, total=False):
+    report: str
+    code: str
+    contract: str
+    action: str
+    hash: str
+    complete: bool
+
+def run_case(approved: bool):
+    from hashlib import sha256
+    original = &#39;return orderCents &gt; 10000 ? 0 : 800;&#39;
+    fixed = &#39;return orderCents &gt;= 10000 ? 0 : 800;&#39;
+    files = {&#39;report&#39;: &#39;amount=10000 expected=0 actual=800 FAIL&#39;,
+             &#39;code&#39;: original, &#39;contract&#39;: &#39;满 10000 分免运费&#39;}
+    trace = []
+    grant = {&#39;allow&#39;: False}  # trusted executor state, outside graph/model messages
+    fingerprint = lambda: sha256(files[&#39;code&#39;].encode()).hexdigest()
+
+    def think(state):
+        # Controlled policy chooses from observed evidence, not a language model.
+        if not state.get(&#39;report&#39;):
+            return {&#39;action&#39;: &#39;read_report&#39;}
+        if not state.get(&#39;code&#39;) or not state.get(&#39;contract&#39;):
+            return {&#39;action&#39;: &#39;read_evidence&#39;}
+        if state[&#39;code&#39;] != original or state[&#39;contract&#39;] != files[&#39;contract&#39;]:
+            return {&#39;action&#39;: &#39;stop&#39;, &#39;complete&#39;: False}
+        return {&#39;action&#39;: &#39;approval&#39;}
+
+    def read_report(state):
+        trace.append(&#39;report-read&#39;)
+        return {&#39;report&#39;: files[&#39;report&#39;]}
+
+    def read_evidence(state):
+        trace.append(&#39;code-and-contract-read&#39;)
+        return {&#39;code&#39;: files[&#39;code&#39;], &#39;contract&#39;: files[&#39;contract&#39;], &#39;hash&#39;: fingerprint()}
+
+    def approval(state):
+        trace.append(&#39;approval-node-entered&#39;)  # intentionally shows replay
+        answer = interrupt({&#39;request&#39;: &#39;只修边界，不改测试预期&#39;, &#39;codeHash&#39;: state[&#39;hash&#39;]})
+        if answer is not True or not grant[&#39;allow&#39;]:
+            return {&#39;complete&#39;: False}
+        if state[&#39;hash&#39;] != fingerprint():
+            raise RuntimeError(&#39;code changed; re-read before patch&#39;)
+        assert files[&#39;code&#39;] == original
+        files[&#39;code&#39;] = fixed
+        grant[&#39;allow&#39;] = False
+        trace.append(&#39;patch-applied&#39;)
+        # Explicit simulation, not Java execution.
+        rows = [(x, 0 if x &gt;= 10000 else 800) for x in (9999, 10000, 10001)]
+        assert rows == [(9999, 800), (10000, 0), (10001, 0)]
+        return {&#39;complete&#39;: files[&#39;code&#39;] == fixed}
+
+    builder = StateGraph(State)
+    for name, fn in [(&#39;think&#39;, think), (&#39;read_report&#39;, read_report), (&#39;read_evidence&#39;, read_evidence), (&#39;approval&#39;, approval)]:
+        builder.add_node(name, fn)
+    builder.add_edge(START, &#39;think&#39;)
+    builder.add_conditional_edges(&#39;think&#39;, lambda s: s[&#39;action&#39;],
+        {&#39;read_report&#39;: &#39;read_report&#39;, &#39;read_evidence&#39;: &#39;read_evidence&#39;, &#39;approval&#39;: &#39;approval&#39;, &#39;stop&#39;: END})
+    builder.add_edge(&#39;read_report&#39;, &#39;think&#39;)
+    builder.add_edge(&#39;read_evidence&#39;, &#39;think&#39;)
+    builder.add_edge(&#39;approval&#39;, END)
+    graph = builder.compile(checkpointer=InMemorySaver())
+    config = {&#39;configurable&#39;: {&#39;thread_id&#39;: f&#39;shipping-{approved}&#39;}}
+    paused = graph.invoke({}, config)
+    assert paused[&#39;__interrupt__&#39;]
+    assert files[&#39;code&#39;] == original
+    assert trace.count(&#39;approval-node-entered&#39;) == 1
+    grant[&#39;allow&#39;] = approved  # independent explicit application approval
+    resumed = graph.invoke(Command(resume=approved), config)
+    assert trace.count(&#39;approval-node-entered&#39;) == 2
+    assert trace.count(&#39;report-read&#39;) == 1
+    assert trace.count(&#39;code-and-contract-read&#39;) == 1
+    assert trace.count(&#39;patch-applied&#39;) == int(approved)
+    assert resumed[&#39;complete&#39;] is approved
+    return {&#39;approved&#39;: approved, &#39;trace&#39;: trace, &#39;complete&#39;: resumed[&#39;complete&#39;]}
+
+if __name__ == &#39;__main__&#39;:
+    import json
+    print(json.dumps({&#39;langgraph&#39;: version(&#39;langgraph&#39;), &#39;cases&#39;: [run_case(False), run_case(True)],
+        &#39;boundary&#39;: &#39;Real graph/checkpoint/interrupt; memory-only state; no process-crash persistence, model or real Java execution.&#39;}, ensure_ascii=False, indent=2))
+</code></pre>
+</details>
+
+<details>
+<summary>展开作者实验依赖版本清单</summary>
+
+
+<pre><code class="language-text">annotated-types==0.8.0
+anyio==4.15.1
+certifi==2026.7.22
+charset-normalizer==3.5.1
+distro==1.9.0
+h11==0.16.0
+httpcore==1.0.9
+httpcore2==2.12.0
+httpx==0.28.1
+httpx2==2.12.0
+idna==3.19
+jsonpatch==1.33
+jsonpointer==3.1.1
+langchain-core==1.6.2
+langchain-protocol==0.0.19
+langgraph==1.0.1
+langgraph-checkpoint==3.0.1
+langgraph-prebuilt==1.0.13
+langgraph-sdk==0.2.15
+langsmith==0.12.2
+orjson==3.12.0
+ormsgpack==1.12.2
+packaging==26.3
+pydantic==2.13.5
+pydantic_core==2.46.5
+PyYAML==6.0.3
+requests==2.34.2
+requests-toolbelt==1.0.0
+sniffio==1.3.1
+tenacity==9.1.4
+truststore==0.10.4
+typing-inspection==0.4.4
+typing_extensions==4.16.0
+urllib3==2.7.0
+uuid_utils==0.17.0
+websockets==17.1
+xxhash==4.0.1
+zstandard==0.25.0
+</code></pre>
+</details>
+
+<h3>先预测，再运行</h3>
+<ol>
+<li>暂停后恢复，申请节点前的计数会出现几次？读取报告会不会也重做？</li>
+<li>若拒绝恢复，补丁应执行几次？若允许，执行几次？</li>
+<li>把一次外部写入放到暂停之前，恢复时会有什么风险？不要真实扣款或发邮件，用计数替身检验。</li>
+<li>将内存保存器换成持久后端，是否只改一行就完成生产级崩溃恢复？</li>
+<li>图状态中写“用户允许”，与独立执行器许可有何不同？</li>
+</ol>
+<details>
+<summary>参考答案与边界</summary>
+
+<p>当前脚本申请节点进入两次，已完成的两个读取节点各一次；拒绝零次补丁，允许一次。暂停之前的动作会随节点重新进入，可能重复外部效果。持久后端还需恢复、并发、版本、重放和外部结果核对测试。图状态是数据，不等于可信用户授予的访问权；不能让摘要或模型输出自行创建执行许可。</p>
+</details>
+
+<h3>毕业改造作业</h3>
+<p>只选一项：给循环增加跨步骤的请求总预算；给迁移实验增加暂停期间代码变化的拒绝；给综合演示增加“测试报告来自其他工作区”的验收失败。提交输入、预期轨迹、实际轨迹、代码差异和回归断言。通过标准不是程序能启动，而是新故障被捕捉、正常路径仍通过、授权和版本约束未被削弱。</p>
 <h2>先作答，再展开</h2>
 <h3>1. 解释机制</h3>
 <p>教学运行器通过所有断言，是否证明真实模型可靠？</p>
@@ -243,6 +418,7 @@ module.exports = { TeachingHarness, baseline, ORIGINAL, FIXED, digest }
 <p><a href="../previews/chapter-16.html#doc-2">← 第16讲：完成验收</a> · 主线正文完结</p>
 </article>
 <article id="doc-4"><div class="doc-label">分享稿</div><h1>第17讲 · 拆掉框架名字，你还能解释这次排查吗</h1>
+<p>工程复述目标：能把反馈排查与确定性授权、验收接起来，并解释另一框架暂停恢复的具体差异。 分享时先给一条错误轨迹，再说明实际机制、修正办法与验证范围。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
@@ -253,6 +429,8 @@ module.exports = { TeachingHarness, baseline, ORIGINAL, FIXED, digest }
 <p>请结合<a href="../previews/chapter-17.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">源码</a>；不要宣称这段教学推演就是实际模型日志。到这里应能对照另一个实现，识别共同问题和不同选择。</p>
 </article>
 <article id="doc-5"><div class="doc-label">术语词典</div><h1>第17讲 · 拆掉框架名字，你还能解释这次排查吗</h1>
+<h2>工程实验补充</h2>
+<p>Checkpoint（检查点）保存一部分可恢复状态，像标记可重新开工的位置；不是完整操作系统进程快照。Replay（重放）需要按框架明确哪些代码重新执行，不等于所有外部动作都可重复。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>

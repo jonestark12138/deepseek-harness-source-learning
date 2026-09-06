@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
+  <meta charset="utf-8"><meta name="textbook-version" content="4.0.0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第06讲-技能与外部接入</title>
@@ -21,7 +21,7 @@
     h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
     h3 { margin:1.7em 0 .6em; font-size:20px; }
     p,li { font-size:20px; }
-    article { scroll-margin-top:82px; }
+    article { scroll-margin-top:82px; overflow-wrap:anywhere; }
     a { color:#2e5aa8; overflow-wrap:anywhere; }
     blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
     code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
@@ -58,11 +58,16 @@
 <p>先看<a href="../previews/chapter-06.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-06.html#doc-3">练习</a>。<a href="../previews/chapter-06.html#doc-1">视觉课件</a>用于复习，<a href="../previews/chapter-06.html#doc-5">词典</a>随用随查，不要求先背英文。预计正文阅读 20–35 分钟，练习 10–20 分钟；这是安排建议，不是学会的证明。</p>
 <p>读完应能解释：加载排查手册以后，是否自动有写文件能力？ 还要能预测：报告来自外部平台，应新增手册还是接入工具？ 最后从<a href="../evidence/chapter-06.html">源码证据</a>定位相应责任。</p>
 <p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
+<h2>工程深度验收</h2>
+<p>能追踪目录发现、按名加载和资格复核；能区分外部目录同步的准备失败与交换失败。 先预测练习中的分支，再按正文命令观察；只读解释、测试替身和真实执行环境分别记录，不混为一项。</p>
 <h2>本讲交接</h2>
 <p>加载方法说明，并分清手册、工具和外部协议接入。但下一步还要解决：读错工作区或执行被拒绝怎么办。</p>
 <p><a href="../previews/chapter-05.html#doc-2">← 第05讲：会话日志</a> · <a href="../previews/chapter-07.html#doc-2">第07讲：执行边界 →</a></p>
 </article>
 <article id="doc-1"><div class="doc-label">视觉课件</div><h1>第06讲 · 有工具却总漏步骤，怎样带上排查手册</h1>
+<h2>工程图解：看见手册目录以后，正文怎样进入本次判断？</h2>
+<p><img src="../assets/chapter-06/reader/fig-02-skill-loading.png" alt="看见手册目录以后，正文怎样进入本次判断？"></p>
+<p>能追踪目录发现、按名加载和资格复核；能区分外部目录同步的准备失败与交换失败。 本图与原有场景图互补，具体分支与边界见逐步讲解。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
@@ -100,6 +105,12 @@
     },
 </code></pre>
 <p>这里的 <code>skill</code> 是模型可调用的加载工具，参数是精确名称。再向后读 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/skill/tool-skill/src/index.ts#L128-L170">名称与可见性检查</a>：工具根据当前范围查目录和正文。目录、正文、当前是否允许调用，是不同问题。</p>
+<p><img src="../assets/chapter-06/reader/fig-02-skill-loading.png" alt="目录发现与完整正文加载之间的调用时序"></p>
+<h3>2.1 为什么读取正文时还要再检查一次</h3>
+<p>假设模型上一轮看见“运费边界排查手册”，这一轮决定加载，但期间当前工作区切换或技能注册发生变化。不能凭旧目录认定现在仍可读取。实现把当前工作目录、取消信号和当前智能体作用域一起传给技能注册表，先查当前目录和模型调用资格，再取完整定义，并在定义上再次核对资格。</p>
+<p>代入三种情况：名称格式不合法，加载前拒绝；旧目录有、当前目录没有，报告未知或已不可用；目录可见但禁止模型主动调用，不能因为猜中了精确名称就越过限制。错误应通过工具回执回到后续判断，而不是偷偷改用一份同名旧正文。</p>
+<p>加载结果除名称、提供者和正文外，还可能带 Resource Base（资源基址），它回答正文中的相对参考路径从哪里解析。目录型基址可指向本地技能目录，网址型或不透明资源标识则需要相应访问方式；不能把所有资源都拼成当前工作区的文件路径。像 Java 类路径里的资源和本地文件路径都能“找到内容”，解析规则却不一样。</p>
+<p>另外，<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/skill/tool-skill/src/index.ts#L162-L211">用户明确调用入口</a>在步骤准入时识别用户来源消息中的明确技能调用形式，直接注入允许用户调用的技能内容。具体识别以解析函数与测试为准，不能仅凭附近“首行”的注释排除句中合法手势。它与模型主动调用加载工具是两条路径；外部报告里写出同样的字样，不能伪造可信用户手势。目录只解决发现，载入解决内容可见，是否执行每项动作仍由模型选择与执行约束共同决定。</p>
 <h2>三、一份真正有用的案例手册应该写什么</h2>
 <p>下面是本书建议的手册正文，不是上游自带的一项技能：</p>
 <pre><code class="language-text">先读取失败报告、业务约定和相关实现。
@@ -113,8 +124,45 @@
 <p>假设报告不在本地，而在外部测试平台。现在缺的是接入能力，不是检查方法。MCP（模型上下文协议）可以作为外部能力的一种接入协议；在本项目中，客户端把外部工具转换并注册到运行支撑的工具体系。</p>
 <p>读 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/mcp/mcp-client/src/tools.ts#L1-L12">外部工具桥接</a> 和 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/mcp/mcp-client/src/tools.ts#L76-L93">调用请求</a>。桥接要保存外部服务器和原始工具名的身份关系，再发送协议请求；不能把显示名称随便拆开来猜原始身份。</p>
 <p>可以类比 Java 服务的接口适配层，但协议工具仍可能失败、超时、返回不可信内容。接入成功不表示我们对该平台的数据拥有访问许可，也不表示返回内容成为系统指令。</p>
+<h3>4.1 沿工具身份追到外部服务</h3>
+<p>假设服务器叫 <code>ci</code>，原工具叫 <code>read_report</code>，桥接后给模型的公开名称可以是 <code>mcp__ci__read_report</code>。这个名字便于区分不同服务器上的同名工具，但线上请求仍要发送原始工具名。实现保存“服务器名、原始名”的身份关系，不靠反向拆公开字符串恢复原名；规范化可能改变字符，拆字符串会把显示规则误当协议身份。</p>
+<table>
+<thead>
+<tr>
+<th>所在层</th>
+<th>本例身份或数据</th>
+<th>该层责任</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>模型可见工具目录</td>
+<td>规范化后的公开工具名及参数说明</td>
+<td>让模型选择工具</td>
+</tr>
+<tr>
+<td>本地工具运行时</td>
+<td>已注册定义与当前执行上下文</td>
+<td>参数、策略、取消及最终回执</td>
+</tr>
+<tr>
+<td>桥接调用</td>
+<td>原服务器与原始工具名、调用参数</td>
+<td>发出协议请求并整理返回</td>
+</tr>
+<tr>
+<td>外部测试服务</td>
+<td>报告实际内容或错误</td>
+<td>提供外部证据，不提供用户授权</td>
+</tr>
+</tbody></table>
+<p>再看<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/mcp/mcp-client/src/tools.ts#L142-L196">工具目录重新同步</a>。实现先完整拉取并构造下一代定义，此阶段不触碰旧注册。拉取失败时，旧目录仍可保留；到交换阶段才移除旧注册并安装新一代。若新注册出现冲突，它清理本次已经注册的部分，不留下半套目录。这里不能说成“任何同步失败都自动恢复旧版”：交换阶段的冲突可以让该服务器当前注册集变为空。</p>
+<p>这像热更新路由表：先准备新表，再切换；准备失败与切换失败的恢复责任不同。把两阶段区分清楚，排查时才能解释“服务器仍连接着，模型却看不到那项工具”究竟发生在哪一层。</p>
 <h2>五、手册、工具和模型各自还欠什么</h2>
 <p>模型选择下一步，手册改善选择方法，工具提供动作，执行策略限制动作。四者有重叠的使用场景，却不是相同职责。多安装手册不会自动多出磁盘权限，多接一个工具也不会自动保证模型善用它。</p>
+<p>本讲的实验不是比一比两段回答哪段好听，而是验证具体分支：移除当前可见手册后是否拒绝旧名加载；外部数据能否冒充用户明确调用；目录拉取失败是否保住原注册；交换冲突是否清理半套注册。对应上游局部测试命令如下，实际执行状态见整书验证记录，不把命令存在当成已经通过：</p>
+<pre><code class="language-powershell">node node_modules/vitest/vitest.mjs run packages/skill/tool-skill/tests/tool-skill.spec.ts packages/mcp/mcp-client/tests/mcp-client.spec.ts --maxWorkers=1 --no-file-parallelism
+</code></pre>
+<p>取舍也由此清楚：按需加载减少常驻提示开销，却增加发现与加载两阶段；外部协议减少逐个写定制接口的成本，却增加连接、命名、同步和不可信返回处理。只在它们确实解决方法复用或外部能力缺口时采用，不把安装数量当智能体水平。</p>
 <p>回到运费案例：用手册确保不漏边界，用工具读取报告，用源码验证原因，用执行策略守住授权。下一讲进一步追问：即使工具已接好，它到底在哪个工作区操作，受什么边界约束？</p>
 <p><a href="../previews/chapter-05.html#doc-2">← 第05讲：会话日志</a> · <a href="../previews/chapter-07.html#doc-2">第07讲：执行边界 →</a></p>
 </article>
@@ -122,6 +170,18 @@
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
+<h2>工程实验：先预测，再定位真实边界</h2>
+<ol>
+<li>目录曾经列出手册，但加载前作用域变化，应相信旧目录吗？</li>
+<li>外部工具目录拉取失败，与新注册冲突，有何不同？分别保留什么？</li>
+<li>两台服务器都有 <code>read_report</code>，为什么不能从公开名称反向拆原始身份？</li>
+</ol>
+<details>
+<summary>参考答案与验收依据</summary>
+
+<p>旧目录不是持续授权：加载仍须按当前作用域、调用资格复核。拉取失败不动旧注册；交换时冲突会清理已注册的新部分，不能承诺恢复旧版。公开名可能规范化或截断，桥接须保留原服务器与原始工具名。</p>
+</details>
+
 <h2>先作答，再展开</h2>
 <h3>1. 解释机制</h3>
 <p>加载排查手册以后，是否自动有写文件能力？</p>
@@ -151,6 +211,7 @@
 <p><a href="../previews/chapter-05.html#doc-2">← 第05讲：会话日志</a> · <a href="../previews/chapter-07.html#doc-2">第07讲：执行边界 →</a></p>
 </article>
 <article id="doc-4"><div class="doc-label">分享稿</div><h1>第06讲 · 有工具却总漏步骤，怎样带上排查手册</h1>
+<p>工程复述时，不要只背术语：能追踪目录发现、按名加载和资格复核；能区分外部目录同步的准备失败与交换失败。 用练习中的反例说明边界，再展示对应实现和实际测试结果。</p>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>
@@ -161,6 +222,11 @@
 <p>请结合<a href="../previews/chapter-06.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/skill/tool-skill/src/index.ts#L79-L91">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“读错工作区或执行被拒绝怎么办”继续。</p>
 </article>
 <article id="doc-5"><div class="doc-label">术语词典</div><h1>第06讲 · 有工具却总漏步骤，怎样带上排查手册</h1>
+<h2>本次工程推演补充</h2>
+<ul>
+<li>Resource Base（资源基址）：参考资源的解析起点，像书中地图的坐标原点；可能是目录、网址或提供者管理的标识。</li>
+<li>Generation（注册代）：一次完整工具目录集合；像一版路由表，不等于一次模型回答。</li>
+</ul>
 <blockquote>
 <p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
 </blockquote>

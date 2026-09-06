@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="textbook-version" content="3.0.1"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第02讲 · 源码事实矩阵</title><link rel="icon" href="data:,"><style>
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="textbook-version" content="4.0.0"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第02讲 · 源码事实矩阵</title><link rel="icon" href="data:,"><style>
     @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
     :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
     * { box-sizing:border-box; }
@@ -14,7 +14,7 @@
     h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
     h3 { margin:1.7em 0 .6em; font-size:20px; }
     p,li { font-size:20px; }
-    article { scroll-margin-top:82px; }
+    article { scroll-margin-top:82px; overflow-wrap:anywhere; }
     a { color:#2e5aa8; overflow-wrap:anywhere; }
     blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
     code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
@@ -50,6 +50,21 @@
 <td>C02-F01：轮次开始后执行步骤并处理停止原因</td>
 <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">packages/core/agent-loop/src/agent.ts</a>；实现或声明契约</td>
 <td>场景是该机制在本案例中的推演，不表示原仓库有运费服务</td>
+</tr>
+<tr>
+<td>C02-F02：步骤内部重试不增加外层步骤号；单步收齐响应后处理工具并返回结束候选</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L339-L434">agent.ts 单步实现</a>；实现</td>
+<td>重试由错误扩展点决定；不是所有错误默认重试；教学实验只采用明确的两类错误和三次预算</td>
+</tr>
+<tr>
+<td>C02-F03：实际执行的教学循环，正常为三步三尝试，注入两次请求失败后为三步五尝试</td>
+<td>私有 case/agent-loop.cjs、case/agent-loop.test.cjs；正文练习页直接内嵌相同脚本</td>
+<td>模型是根据反馈选择动作的确定性替身；没有真实模型、网络或 Java 执行；上游工具批次不是教学程序的顺序简化</td>
+</tr>
+<tr>
+<td>C02-F04：取消、工具调用、请求错误行为有已执行上游局部验证</td>
+<td><a href="https://github.com/deepseek-ai/deepseek-harness/tree/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/tests">上游 agent-loop 测试目录</a>；2026-09-06 request-error、tool-calls、cancel 三文件 62 项通过</td>
+<td>不是全上游测试，不是生产模型可靠性证明</td>
 </tr>
 <tr>
 <td>模型输出与受控动作、持久事实分开</td>

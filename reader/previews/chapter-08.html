@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
+  <meta charset="utf-8"><meta name="textbook-version" content="4.0.0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第08讲-中断恢复</title>
@@ -21,7 +21,7 @@
     h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
     h3 { margin:1.7em 0 .6em; font-size:20px; }
     p,li { font-size:20px; }
-    article { scroll-margin-top:82px; }
+    article { scroll-margin-top:82px; overflow-wrap:anywhere; }
     a { color:#2e5aa8; overflow-wrap:anywhere; }
     blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
     code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
@@ -60,6 +60,8 @@
 <p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
 <h2>本讲交接</h2>
 <p>恢复记录后检查当前文件，不把恢复等同于重执行。但下一步还要解决：材料多到一次看不完，怎样留下关键证据。</p>
+<h2>工程深度验收</h2>
+<p>能沿文件后端、协调器和内存会话追踪恢复路径；能区分只读检查、提交修复和现场业务核对。 正文提供对应上游局部测试命令，练习要求先预测再读断言，不用付费模型也能观察机制。</p>
 <p><a href="../previews/chapter-07.html#doc-2">← 第07讲：执行边界</a> · <a href="../previews/chapter-09.html#doc-2">第09讲：长材料与压缩 →</a></p>
 </article>
 <article id="doc-1"><div class="doc-label">视觉课件</div><h1>第08讲 · 关掉后再打开，能从哪一步继续</h1>
@@ -74,6 +76,9 @@
 <p>本讲最容易误会的是：恢复后的日志完整，是否证明所有旧进程也恢复了？ 不是。日志恢复的是事实与结构，不是进程栈或外部世界；后台任务要看独立生命周期。</p>
 <h2>从图返回源码</h2>
 <p>图只表达教学关联与状态变化，不代替完整调用顺序。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/session/session-persistence/src/index.ts#L178-L214">源码定位</a>提供实现或契约证据，<a href="../previews/chapter-08.html#doc-2">正文</a>解释映射和边界。</p>
+<h2>从场景走到内部机制</h2>
+<p><img src="../assets/chapter-08/reader/fig-02-crash-seam.png" alt="外部文件修改与持久回执之间的崩溃窗口"></p>
+<p>沿正文给出的具体时刻、条件或数据解释图，不把箭头都当成同一种关系。</p>
 <p><a href="../previews/chapter-07.html#doc-2">← 第07讲：执行边界</a> · <a href="../previews/chapter-09.html#doc-2">第09讲：长材料与压缩 →</a></p>
 </article>
 <article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第08讲 · 关掉后再打开，能从哪一步继续</h1>
@@ -110,14 +115,30 @@
 </code></pre>
 <p>这里的 <code>prepare</code> 取得持久化记录，把事件和元数据交给内存会话准备入口。后面的 <code>load</code> 是服务声明，注释规定如何处理冷恢复：为中断尾部补齐缺失工具错误和开放的步骤、轮次边界；只丢弃撕裂的最后物理记录，已提交前缀损坏应拒绝。</p>
 <p>这不是“见到错误就尽量猜着修”。未知版本、无法支持的事实或已提交内容损坏，可能意味着程序无法可靠理解记录，拒绝比编造连续历史更诚实。具体文件与数据库后端必须实现这份契约。</p>
+<h3>3.1 从声明走进文件后端：谁读、谁修、谁发布</h3>
+<p>只看到上面的接口还不足以理解恢复。本讲选择 JSONL（逐行存储结构化记录的文本格式）文件后端，沿<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/session/session-persistence-jsonl/src/index.ts#L171-L209">后端入口</a>继续：后端的 <code>load</code> 把编排交给持久化协调器，文件后端负责读物理字节、识别完整前缀与截断位置，并实施最终写入。</p>
+<p>接着看<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/session/session-persistence/src/coordinator.ts#L971-L1012">协调器的冷恢复准备</a>。它取得存储前缀后，核对会话身份、格式版本、事件支持范围；再生成缺失的结束记录，把原始完整事件与补记事件组成平衡日志；最后准备一个尚未发布的内存会话。不是一边读到半条记录、一边把半成品实例暴露给其他调用者。</p>
+<p>“先准备、后提交、再交接”像接班前先检查账本。读取阶段看到的修复结果不一定已经写回磁盘。<code>inspect</code>（只读检查）可以给出内存中的逻辑修复视图；<code>load</code>（加载并提交必要恢复）则负责让需要的冷修复成为持久事实。只读查看不该悄悄更改原始文件，这也是排障工具和真正恢复操作要分开的原因。</p>
+<h3>3.2 文件正在被写入时，怎样避免读到两版拼接的历史</h3>
+<p>文件后端的<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/session/session-persistence-jsonl/src/index.ts#L295-L354">稳定读取</a>先取文件修订标识，读字节，再取一次标识。前后相同才接受这次读取，否则重读，并持续检查取消。这里的修订标识像账本封条，不是业务代码摘要，也不是绝对排除一切外部并发修改的分布式锁。</p>
+<p>对明文记录，扫描器返回完整事件前缀和已提交字节数。如果总字节数更长，后端携带一个撕裂尾部标记交给协调器。提交修复时，<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/session/session-persistence-jsonl/src/index.ts#L447-L461">物理修复方法</a>先处理截断，再追加应保留的恢复事件与缺失闭合事件。两步分别要求写入确认，不把它宣传为不可分割的一次原子事务。</p>
+<p>这解释了两个看似严格的限制：已提交前缀损坏不能按“尾巴没写完”处理；仍绑定活跃实例的身份也不能任意当成崩溃对象去修复。否则两个活跃执行者可能同时“帮对方补结束”，制造本来不存在的事实。</p>
 <h2>四、日志修复与业务恢复是不同动作</h2>
 <p>补上一条“结果未知”的终止记录，只让日志结构能够被解释，并没有证明运费文件未修改。文件属于外部世界，它可能在进程中断后继续变化。</p>
 <p>因此本书恢复流程先重新核对代码内容与版本；如果已经是正确比较符号，就不要再次应用同一补丁，而要查看是否有针对当前版本的测试证据。若授权是否仍有效不明确，应重新取得限定许可。本书教学执行器在恢复后不自动恢复写许可；这是教学策略选择，不声称上游一律采用同样策略。</p>
 <p>可以类比 Java 服务里的事务日志和远端接口调用：本地状态恢复不自动给远端动作提供恰好一次语义。要声称不会重复执行，需要专门的身份与幂等设计及证据。</p>
+<p><img src="../assets/chapter-08/reader/fig-02-crash-seam.png" alt="文件修改与回执保存之间的崩溃窗口"></p>
+<p>将中断放在三个位置分别推演：编辑申请还未派发，文件可能未变；文件已经写好但回执未持久化，结果未知；回执与当前版本测试都已确认保存，恢复可以核对后继续。三者最后都可能显示“进程不在了”，但安全的下一步不同。</p>
+<p>如果你的 Java 服务调用远端付款接口，这相当于本地没记录到响应，不能据此再扣一次款。解决方法可能是持久动作标识、远端幂等键、状态查询和人工处理未知结果。对于本例补丁，重新读文件并核对前置内容更直接；不能宣称这种补丁策略自动解决任意外部副作用。</p>
 <h2>五、怎样做一个不花模型费用的恢复实验</h2>
 <p>在本书教学运行器里，先只写入编辑请求，不写结果；保存快照后建立一个新执行器。恢复应补成未知结果，文件仍保持原样。再恢复一次，不能为同一个请求重复补两条结果。</p>
 <p>另一个实验让文件已经修改，却没有新测试记录；恢复后验收仍必须失败。它检验“修改完成”和“测试通过”没有混在一起，而不是测试真实模型是否聪明。</p>
 <p>这些实验不依赖外部服务，也不能替代真实后端的崩溃与磁盘写入测试。将实验层次说清，才能知道通过的究竟是哪一种约束。</p>
+<p>因此再运行上游真正文件后端的局部测试，而不是停在内存快照：</p>
+<pre><code class="language-powershell">node node_modules/vitest/vitest.mjs run packages/session/session-persistence-jsonl/tests/jsonl.spec.ts --maxWorkers=1 --no-file-parallelism
+</code></pre>
+<p>作者已在第八至十讲四文件验证批次中执行，合计 274 项通过；该批次包含文件后端、基础压缩、子任务结果收束与进程内创建。文件测试使用临时材料，不是破坏真实会话来验证恢复。练习时重点阅读测试如何区分尾部撕裂、完整前缀损坏、只读检查与提交恢复，不要在你自己的真实会话文件上随意剪字节。</p>
+<p>从成本看，全量恢复最容易理解，但长日志反复扫描开销不小；准备结果可复用会更快，却增加修订核验和所有权管理。只要外部持续写入，稳定读取就可能迟迟不能完成；这是需要可观测等待和取消的条件，不该用“恢复成功”掩盖它。</p>
 <h2>六、恢复得越多，记录就越长</h2>
 <p>断点续做让任务可以延续，也让材料越积越多。报告、代码、尝试、失败、解释都挤在一起。第九讲面对新的容量问题：原始记录不能丢，模型一次又看不完，怎样留下足够的关键材料？</p>
 <p><a href="../previews/chapter-07.html#doc-2">← 第07讲：执行边界</a> · <a href="../previews/chapter-09.html#doc-2">第09讲：长材料与压缩 →</a></p>
@@ -152,6 +173,18 @@
 <p>沿 <code>prepare</code> 看加载事件怎样送入会话准备入口，再读持久化加载的冷恢复契约。图中档案柜恢复的是记录，不是外部进程；缺失回执只能标记未知，不能推断文件未修改。</p>
 </details>
 
+<h2>工程练习：在三个地方切断时间线</h2>
+<ol>
+<li>编辑申请已保存，文件已修改，工具回执未保存时崩溃。日志修复该补“失败、未执行”，还是“结果未知”？恢复后先做什么？</li>
+<li>文件最后半条记录撕裂，与完整历史前缀中的一条记录损坏，有何不同？为什么不能统一丢掉出错行？</li>
+<li>只想观察旧会话时，应使用只读检查还是可能提交恢复的加载操作？如何验证观察没有改字节？</li>
+</ol>
+<details>
+<summary>参考答案</summary>
+
+<p>结果未知，不证明外部文件未改；先重读现场代码及版本。撕裂尾部可按受支持契约处理，完整前缀损坏应拒绝以免丢掉已承诺事实。只读检查不提交修复；测试可比较观察前后的文件字节或摘要。不要对真实个人会话做破坏性实验，使用上游临时文件测试。</p>
+</details>
+
 <p><a href="../previews/chapter-07.html#doc-2">← 第07讲：执行边界</a> · <a href="../previews/chapter-09.html#doc-2">第09讲：长材料与压缩 →</a></p>
 </article>
 <article id="doc-4"><div class="doc-label">分享稿</div><h1>第08讲 · 关掉后再打开，能从哪一步继续</h1>
@@ -163,6 +196,8 @@
 <p>如果不补这一层，会遇到的问题是：恢复时发现编辑请求没有结果，应立即重做吗？ 不应。外部修改可能已发生，只是回执未保存；先标记未知并回读当前文件。 所以本讲新增的不是要背的名词，而是任务中一项明确的责任。</p>
 <p>现在能做到：恢复记录后检查当前文件，不把恢复等同于重执行。但还要守住反例：恢复后的日志完整，是否证明所有旧进程也恢复了？ 不是。日志恢复的是事实与结构，不是进程栈或外部世界；后台任务要看独立生命周期。</p>
 <p>请结合<a href="../previews/chapter-08.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/session/session-persistence/src/index.ts#L178-L214">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“材料多到一次看不完，怎样留下关键证据”继续。</p>
+<h2>深入一层再收尾</h2>
+<p>能沿文件后端、协调器和内存会话追踪恢复路径；能区分只读检查、提交修复和现场业务核对。 分享时选一个故障分支，把正常路径与异常路径的证据区别讲清楚。作者验证来自受控测试，不冒充真实模型生产评测。</p>
 </article>
 <article id="doc-5"><div class="doc-label">术语词典</div><h1>第08讲 · 关掉后再打开，能从哪一步继续</h1>
 <blockquote>
@@ -173,6 +208,31 @@
 <p>根据可恢复记录继续任务，像交班后重新查工单和当前现场。恢复记录不代表重放编辑命令，更不保证恢复原来的进程。</p>
 <h2>核对来源</h2>
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/session/session-persistence/src/index.ts#L178-L214">本讲源码定位</a>与<a href="../previews/chapter-08.html#doc-2">完整正文</a>。本例报告和金额属于教学夹具，不来自这份上游源码。</p>
+<h2>新增工程术语</h2>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>定义、比喻与边界</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>JSONL</td>
+<td>逐行结构化记录格式：每行是一条记录，便于追加；不意味着任意坏行都能忽略</td>
+</tr>
+<tr>
+<td>Inspect / Load</td>
+<td>只读检查／加载并提交必要恢复：前者像查看账本草稿，后者可能真正修复并保存；调用名相近但副作用不同</td>
+</tr>
+<tr>
+<td>Torn Tail</td>
+<td>撕裂尾部：末尾物理记录未写完整；不是已经提交的历史前缀可以损坏的许可</td>
+</tr>
+<tr>
+<td>Revision</td>
+<td>修订标识：检查读取前后材料是否属于稳定版本；不是业务成功证明</td>
+</tr>
+</tbody></table>
 </article></main>
 </body>
 </html>
