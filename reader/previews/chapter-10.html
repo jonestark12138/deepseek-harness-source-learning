@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第10讲-分工与后台</title>
@@ -92,18 +92,9 @@
 <p>主助手留在中间核对两份结论。甲不需要等乙，乙不需要等甲；二者都不能自己宣布全任务完成。如果让甲负责“先猜原因”，乙负责“等甲说完再确认”，并没有形成有用的并行。</p>
 <p>同样，两个执行者同时修改同一行会制造冲突。读证据的任务容易并行，写同一文件的任务必须明确所有权和协调。子任务不是规避用户“不要修改”的办法。</p>
 <h2>三、源码先检查提供者能力，再创建工作</h2>
-<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/subagent/subagent/src/index.ts#L542-L563">固定提交中的定位片段</a>（仅显示这一段前至多 20 行，不是完整函数）：</p>
-<pre><code class="language-ts">  /**
-   * Establish a published child on the named provider. Capability and semantic
-   * checks run before delegation. Provider ownership lasts until its promise
-   * fulfills; a rejection therefore has no run for the caller to dispose and
-   * emits no run lifecycle events. Post-publication turn and infrastructure
-   * failures settle through the returned run.
-   * @param name - the provider to use.
-   * @param request - child label, prompt, parent, signal, and optional capabilities.
-   * @returns the published holder-owned run.
-   */
-  async start(name: string, request: SubagentStartRequest): Promise&lt;SubagentRun&gt; {
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/subagent/subagent/src/index.ts#L552-L564">固定提交中的定位片段</a>（连续原文；中文说明放在代码之外）：</p>
+<!-- source-excerpt: packages/subagent/subagent/src/index.ts#L552-L564 -->
+<pre><code class="language-ts">  async start(name: string, request: SubagentStartRequest): Promise&lt;SubagentRun&gt; {
     const provider = this.expectProvider(name)
     this.assertCapabilities(provider, request)
     assertSubagentMaxDepth(request.maxDepth)
@@ -113,6 +104,9 @@
       provider: name,
       ...request.label !== undefined ? { label: request.label } : {},
     })
+    const resolved: ResolvedSubagentStartRequest = { ...request, descriptor }
+    return observeRun(this.emitLifecycle, name, request.parent, await provider.start(resolved))
+  }
 </code></pre>
 <p>这段先找提供者，再检查能力、最大深度和结构化输出要求，然后生成子任务描述并调用提供者。不是任意后端都支持相同选项；调用者请求了不支持的能力，服务会拒绝，而不是静默丢弃要求。</p>
 <p>Provider（子智能体提供者）可能创建进程内助手，也可能通过另一运行环境委派任务。能力是否隔离、工作区怎样传递、取消如何落实，必须看所选实现。不能由“子”这个字推断它有独立容器或独立磁盘。</p>
@@ -139,7 +133,7 @@
 <details>
 <summary>查看解释与边界</summary>
 
-<p>业务约定与实现证据可独立读取，各交出处；最终归因、授权和验收由主助手核对。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+<p>业务约定与实现证据可独立读取，各交出处；最终归因、授权和验收由主助手核对。</p>
 </details>
 
 <h3>2. 预测反例</h3>
@@ -147,7 +141,7 @@
 <details>
 <summary>查看推演</summary>
 
-<p>不可以。启动接受、消息入队、开始执行和结果完成是不同状态；要等待并检查实际报告。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+<p>不可以。启动接受、消息入队、开始执行和结果完成是不同状态；要等待并检查实际报告。</p>
 </details>
 
 <h3>3. 源码与图相互校验</h3>
@@ -155,7 +149,8 @@
 <details>
 <summary>参考核对方式</summary>
 
-<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“排查扩展到多个模块，串行阅读耗时增加”，右格是“把独立证据任务分开，主助手负责核对与授权边界”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+<p>图的顺序是：材料分散，主任务拆分（同一运费案例，不分裂目标）→甲查约定，乙查实现（独立读取，各交证据）→主助手核对后合并（子助手的结论不是验收证据）。</p>
+<p>在 <code>start</code> 中先找能力与深度检查，再找 <code>provider.start</code>。图中甲乙分别取得约定和实现证据，主助手才合并；子任务报告不是当前版本三测的替代品。</p>
 </details>
 
 <p><a href="../previews/chapter-09.html#doc-2">← 第09讲：长材料与压缩</a> · <a href="../previews/chapter-11.html#doc-2">第11讲：固定流程与动态决策 →</a></p>

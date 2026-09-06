@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第12讲-配置装配</title>
@@ -245,7 +245,7 @@
 <details>
 <summary>查看解释与边界</summary>
 
-<p>若覆盖的是整个配置对象，目录不会由补丁算法自动保留；插件自己的默认值是另一阶段。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+<p>若覆盖的是整个配置对象，目录不会由补丁算法自动保留；插件自己的默认值是另一阶段。</p>
 </details>
 
 <h3>2. 预测反例</h3>
@@ -253,7 +253,7 @@
 <details>
 <summary>查看推演</summary>
 
-<p>模块可能未加载、初始化失败或缺依赖，需区分配置组合、加载与激活审计。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+<p>模块可能未加载、初始化失败或缺依赖，需区分配置组合、加载与激活审计。</p>
 </details>
 
 <h3>3. 源码与图相互校验</h3>
@@ -261,7 +261,8 @@
 <details>
 <summary>参考核对方式</summary>
 
-<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“明确了所需能力，却发现当前配置缺项”，右格是“区分配置替换、插件加载和依赖激活”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+<p>图的顺序是：配置缺项，报告读不到（上层换掉整张配置页）→核对最终装配内容（不是只看原始配置）→依赖齐备才开工（配置存在不代表已经激活）。</p>
+<p>先沿正文的配置补丁算法查整对象替换，再在 <code>boot()</code> 中定位装配与激活审计。图不是按配置行顺序排出的运行时序；配置值正确仍可能因依赖缺失而未激活。</p>
 </details>
 
 <p><a href="../previews/chapter-11.html#doc-2">← 第11讲：固定流程与动态决策</a> · <a href="../previews/chapter-13.html#doc-2">第13讲：插件生命周期 →</a></p>

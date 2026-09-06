@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第17讲-综合迁移</title>
@@ -220,7 +220,7 @@ module.exports = { TeachingHarness, baseline, ORIGINAL, FIXED, digest }
 <details>
 <summary>查看解释与边界</summary>
 
-<p>不证明。它是固定决策与模拟工具，只验证选定工程约束；还缺真实模型、真实环境和端到端评测。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+<p>不证明。它是固定决策与模拟工具，只验证选定工程约束；还缺真实模型、真实环境和端到端评测。</p>
 </details>
 
 <h3>2. 预测反例</h3>
@@ -228,7 +228,7 @@ module.exports = { TeachingHarness, baseline, ORIGINAL, FIXED, digest }
 <details>
 <summary>查看推演</summary>
 
-<p>不能凭名字判断。追踪记录、模型输入与恢复路径，检查责任由谁承担，而非强行匹配本书类名。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+<p>不能凭名字判断。追踪记录、模型输入与恢复路径，检查责任由谁承担，而非强行匹配本书类名。</p>
 </details>
 
 <h3>3. 源码与图相互校验</h3>
@@ -236,7 +236,8 @@ module.exports = { TeachingHarness, baseline, ORIGINAL, FIXED, digest }
 <details>
 <summary>参考核对方式</summary>
 
-<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“具备从报告到验证的完整证据链”，右格是“用最小教学运行器复现拒绝、恢复、分工与验收约束”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+<p>图的顺序是：起点：只有一条失败（先找报告、约定和实现）→中段：授权后的受控动作（记录、恢复、分工有边界）→终点：当前版本证据（解释机制，不靠背框架名）。</p>
+<p>先用默认循环理解反馈如何继续，再与正文教学运行器的 <code>execute</code>、<code>snapshot</code>、<code>verify</code> 对照。图保留证据与责任，省略真实模型、操作系统与插件框架；模拟通过不能替其余实验层作证。</p>
 </details>
 
 <p><a href="../previews/chapter-16.html#doc-2">← 第16讲：完成验收</a> · 主线正文完结</p>

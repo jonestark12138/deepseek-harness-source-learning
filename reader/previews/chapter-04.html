@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第04讲-受控工具</title>
@@ -92,7 +92,8 @@
 <p>本项目还在可扩展执行前处理之后运行 Guard（执行拒绝检查）。它只有拒绝或不表态，没有“强制允许”的返回值。这样后面的检查不能撤销其他检查提出的拒绝。它解决的是拒绝约束不能被可重排的外围处理偷偷放开的风险。</p>
 <p>不是每次读取都一定弹出审批框，也不是所有部署都自动懂得用户这句中文的权限范围；具体策略要由已装配的提供者执行。本书的教学执行器将“未授权不改”作为显式状态检查。</p>
 <h2>三、在源码里找到拒绝真正发生的位置</h2>
-<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/tools/src/index.ts#L1485-L1502">固定提交中的定位片段</a>（只保留本节要读的源码边界）：</p>
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/tools/src/index.ts#L1485-L1502">固定提交中的定位片段</a>（连续原文；中文说明放在代码之外）：</p>
+<!-- source-excerpt: packages/core/tools/src/index.ts#L1485-L1502 -->
 <pre><code class="language-ts">      const denialReason = decision.kind === &#39;allow&#39;
         ? this.guardReason(exec)
         : decision.reason
@@ -163,7 +164,7 @@
 <details>
 <summary>查看解释与边界</summary>
 
-<p>需要。一次审批不强制覆盖其他执行约束；任一适用拒绝仍应阻止主体执行。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+<p>需要。一次审批不强制覆盖其他执行约束；任一适用拒绝仍应阻止主体执行。</p>
 </details>
 
 <h3>2. 预测反例</h3>
@@ -171,7 +172,7 @@
 <details>
 <summary>查看推演</summary>
 
-<p>可能是命令成功执行后测试断言失败，须看输出；不能把工具通道完成等同于业务通过。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+<p>可能是命令成功执行后测试断言失败，须看输出；不能把工具通道完成等同于业务通过。</p>
 </details>
 
 <h3>3. 源码与图相互校验</h3>
@@ -179,7 +180,8 @@
 <details>
 <summary>参考核对方式</summary>
 
-<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“模型已经提出读代码或修改的请求”，右格是“拒绝、失败和成功分别形成真实结果；未授权不写入”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+<p>图的顺序是：未获准的编辑（请求被拒绝，文件不变）→得到限定许可（核对原文后再执行）→文件已改，仍待测试（写入成功不等于验收通过）。</p>
+<p>沿 <code>denialReason</code> 非空时返回错误结果、无拒绝才进入 <code>dispatch</code> 的分支核对。图右格只有改后的代码，不是测试通过报告；拒绝检查和真实写入是两个不同阶段。</p>
 </details>
 
 <p><a href="../previews/chapter-03.html#doc-2">← 第03讲：模型请求</a> · <a href="../previews/chapter-05.html#doc-2">第05讲：会话日志 →</a></p>

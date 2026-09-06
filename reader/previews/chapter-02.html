@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第02讲-智能体循环</title>
@@ -93,7 +93,8 @@
 <p>为什么一轮会有零步？因为系统先受理一项输入，再在请求前检查时拒绝它，或者把最初输入改为空。工单被登记过，却没有发生模型请求；日志仍应能解释这次尝试。</p>
 <h2>三、真正控制继续的是状态，不是一句“继续工作”</h2>
 <p>阅读源码前先做预测：若工具刚读回报告，调度者为什么不能在返回报告后立即把整轮判为完成？因为下一次判断仍需要消费结果。反过来，若没有欠下的工具反馈，也没有新的待处理输入，就不应无条件再请求模型。</p>
-<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">固定提交中的定位片段</a>（仅显示这一段前至多 20 行，不是完整函数）：</p>
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">固定提交中的定位片段</a>（连续原文；中文说明放在代码之外）：</p>
+<!-- source-excerpt: packages/core/agent-loop/src/agent.ts#L268-L308 -->
 <pre><code class="language-ts">    let target: InboxTarget = &#39;next-turn&#39;
     try {
       while (true) {
@@ -114,6 +115,27 @@
         signal.throwIfAborted()
         this.session.append(&#39;step/start&#39;, { turn, step })
         phase.step = step
+        try {
+          for (const message of decision.messages) {
+            this.session.append(&#39;user/message&#39;, message, { surfaceOp: &#39;append&#39; })
+          }
+          // max-tokens is sticky: once any step hits the ceiling, later steps
+          // that complete normally must not downgrade the turn outcome.
+          const stepEnd = await this.step(decision.assembly, decision.startsRequestSeries === true)
+          // max-tokens stays sticky: a later completed step must not
+          // downgrade the turn outcome.
+          if (turnEnds === null || turnEnds.kind !== &#39;max-tokens&#39;) turnEnds = stepEnd
+        } finally {
+          this.session.append(&#39;step/end&#39;, { turn, step })
+        }
+        signal.throwIfAborted()
+        if (turnEnds &amp;&amp; this.inbox.nextStep.length === 0) {
+          await this.dispatch.serial(&#39;agent/turn-stopping&#39;, { turn, signal })
+          signal.throwIfAborted()
+        }
+        if (turnEnds &amp;&amp; this.inbox.nextStep.length === 0) break
+        target = &#39;next-step&#39;
+      }
 </code></pre>
 <p>这段按顺序读 <code>preStep</code>、拒绝分支、<code>step/start</code>、<code>step</code> 和 <code>nextStep</code>。它们分别对应请求前准入、零步退出、开始记录、模型交互，以及下一步待处理材料。源码节选为连续片段，不展示全部异常处理；完整证据链接可继续往下看关闭轮次的部分。</p>
 <p>常见误读是“循环里有一个无限循环，所以智能体会一直跑”。循环是否继续由状态与返回条件控制，和 Java 的服务消费循环一样，不能只看语法外形。</p>
@@ -138,7 +160,7 @@
 <details>
 <summary>查看解释与边界</summary>
 
-<p>结果改变了可用证据，模型还需要基于它决定读源码或解释原因；结束工具不等于结束任务。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+<p>结果改变了可用证据，模型还需要基于它决定读源码或解释原因；结束工具不等于结束任务。</p>
 </details>
 
 <h3>2. 预测反例</h3>
@@ -146,7 +168,7 @@
 <details>
 <summary>查看推演</summary>
 
-<p>不一定。首次输入在请求前被拒绝或改为空，可以形成零步骤轮次；应核对对应分支。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+<p>不一定。首次输入在请求前被拒绝或改为空，可以形成零步骤轮次；应核对对应分支。</p>
 </details>
 
 <h3>3. 源码与图相互校验</h3>
@@ -154,7 +176,8 @@
 <details>
 <summary>参考核对方式</summary>
 
-<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“已有任务目标，但一次回答还不能完成排查”，右格是“读报告的结果触发下一次模型判断”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+<p>图的顺序是：报告读取已结束（但原因还没确认）→再请求相关源码（结果推动下一次判断）→本轮停在原因说明（没有许可，不进入修改）。</p>
+<p>沿 <code>preStep</code> 的拒绝与空输入分支，再看 <code>this.step</code> 和 <code>inbox.nextStep</code>。前者决定是否花一次模型调用，后者参与继续条件；图省略了取消和输出上限等停止原因。</p>
 </details>
 
 <p><a href="../previews/chapter-01.html#doc-2">← 第01讲：任务全景</a> · <a href="../previews/chapter-03.html#doc-2">第03讲：模型请求 →</a></p>

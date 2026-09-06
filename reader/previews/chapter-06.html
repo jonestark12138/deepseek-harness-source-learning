@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第06讲-技能与外部接入</title>
@@ -90,20 +90,14 @@
 <h2>二、先看目录，再按需拿整本手册</h2>
 <p>如果每次都把所有手册全文塞进请求，会挤掉真正重要的报告和代码。本项目把发现与读取分开：目录提供名称和简述；匹配任务时，再通过加载工具取得完整内容。</p>
 <p>可以想成书架索引卡和书本正文。索引卡写“边界条件排查”，并不意味着模型已经读懂其中的每一步。用户明确要求使用某份手册时，只看见目录而不加载正文，也不能称为遵循了手册。</p>
-<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/skill/tool-skill/src/index.ts#L79-L91">固定提交中的定位片段</a>（仅显示这一段前至多 20 行，不是完整函数）：</p>
-<pre><code class="language-ts">  assertPositiveInteger(&#39;catalogDescriptionMaxLength&#39;, catalogDescriptionMaxLength, 3)
-
-  const skillTool = defineTool({
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/skill/tool-skill/src/index.ts#L81-L86">固定提交中的定位片段</a>（连续原文；中文说明放在代码之外）：</p>
+<!-- source-excerpt: packages/skill/tool-skill/src/index.ts#L81-L86 -->
+<pre><code class="language-ts">  const skillTool = defineTool({
     name: &#39;skill&#39;,
     description: &#39;Load the full instructions for an available skill. Call this with the exact skill name from the session skill catalog before acting on a task that names or clearly matches that skill.&#39;,
     parameters: {
       name: { type: &#39;string&#39;, required: true, description: &#39;The exact skill name from the available skills list.&#39; },
     },
-    output: {
-      schema: {
-        type: &#39;object&#39;,
-        additionalProperties: false,
-        properties: {
 </code></pre>
 <p>这里的 <code>skill</code> 是模型可调用的加载工具，参数是精确名称。再向后读 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/skill/tool-skill/src/index.ts#L128-L170">名称与可见性检查</a>：工具根据当前范围查目录和正文。目录、正文、当前是否允许调用，是不同问题。</p>
 <h2>三、一份真正有用的案例手册应该写什么</h2>
@@ -134,7 +128,7 @@
 <details>
 <summary>查看解释与边界</summary>
 
-<p>没有。手册是指令，执行仍依赖工具、提供者和授权；它不能代替任何一层。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+<p>没有。手册是指令，执行仍依赖工具、提供者和授权；它不能代替任何一层。</p>
 </details>
 
 <h3>2. 预测反例</h3>
@@ -142,7 +136,7 @@
 <details>
 <summary>查看推演</summary>
 
-<p>若缺的是获取报告的动作，需要接入能力；手册改善方法。外部协议只是接入方式，结果仍需查验。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+<p>若缺的是获取报告的动作，需要接入能力；手册改善方法。外部协议只是接入方式，结果仍需查验。</p>
 </details>
 
 <h3>3. 源码与图相互校验</h3>
@@ -150,7 +144,8 @@
 <details>
 <summary>参考核对方式</summary>
 
-<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“能取得材料，但可能忘记业务约定与边界测试”，右格是“加载方法说明，并分清手册、工具和外部协议接入”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+<p>图的顺序是：能读文件，却漏边界（只盯着 10000 这一项）→按需加载排查手册（补读约定与左右边界）→工具尝试真正动作（手册不授予修改许可）。</p>
+<p>找到名为 <code>skill</code> 的加载工具以及精确名称参数，再沿正文链接查看可见性检查。图中的手册提供排查方法，不能自动执行测试或授予修改权；外部接入还需要单独的协议桥接。</p>
 </details>
 
 <p><a href="../previews/chapter-05.html#doc-2">← 第05讲：会话日志</a> · <a href="../previews/chapter-07.html#doc-2">第07讲：执行边界 →</a></p>

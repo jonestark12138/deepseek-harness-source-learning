@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第11讲-固定流程与动态决策</title>
@@ -93,7 +93,8 @@
 <p>可以类比 Java 业务流程中的确定性校验与规则选择。模型适合处理开放材料，但不应独占权限和验收的最终约束。</p>
 <h2>三、流程引擎与面向模型的工具怎么分工</h2>
 <p>模型工具负责接收脚本和参数、调用引擎、整理最终结果。引擎负责运行、子任务上限、取消和释放。元数据里的阶段名字只是给观察者看的进度名称，不会自动形成依赖图；真正顺序由脚本执行结构决定。</p>
-<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/workflow/tool-workflow/src/index.ts#L300-L323">固定提交中的定位片段</a>（只保留本节要读的源码边界）：</p>
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/workflow/tool-workflow/src/index.ts#L300-L320">固定提交中的定位片段</a>（连续原文；中文说明放在代码之外）：</p>
+<!-- source-excerpt: packages/workflow/tool-workflow/src/index.ts#L300-L320 -->
 <pre><code class="language-ts">
       let result: WorkflowResult | undefined
       try {
@@ -115,9 +116,6 @@
           // Keep member listeners alive through disposal: an engine may
           // synthesize cancelled member endings while reaching quiescence.
           await run.dispose()
-          if (recordsRun) {
-            /* v8 ignore next -- WorkflowRun.result never rejects by contract, so result is assigned before finally. */
-            if (result === undefined) throw new Error(&#39;workflow run settled without a result&#39;)
 </code></pre>
 <p>这段先等待 <code>run.result</code>，检查停止原因，非正常完成会形成工具错误；最后无论成功还是失败都释放运行对象。不要只看“拿到一个结果对象”，就认为结果已经成功；其停止原因和清理是否完成仍有意义。</p>
 <p><code>finally</code> 与 Java 的最终清理结构相似，但异步子任务和取消传播让清理本身也需要等待。它不是打印一句“流程结束”就算资源收回。</p>
@@ -149,7 +147,7 @@
 <details>
 <summary>查看解释与边界</summary>
 
-<p>不是。固定安全约束与验收有价值，但原因假设应随材料变化；不能给每种失败套同一补丁。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+<p>不是。固定安全约束与验收有价值，但原因假设应随材料变化；不能给每种失败套同一补丁。</p>
 </details>
 
 <h3>2. 预测反例</h3>
@@ -157,7 +155,7 @@
 <details>
 <summary>查看推演</summary>
 
-<p>不能。部分证据可以保留，但非正常停止要按错误或取消报告，并等待必要清理。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+<p>不能。部分证据可以保留，但非正常停止要按错误或取消报告，并等待必要清理。</p>
 </details>
 
 <h3>3. 源码与图相互校验</h3>
@@ -165,7 +163,8 @@
 <details>
 <summary>参考核对方式</summary>
 
-<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“多份子任务结果到齐，但处理顺序不能靠随口约定”，右格是“固定安全检查和验收，保留假设选择的动态判断”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+<p>图的顺序是：证据已到，顺序未定（不是每次随口决定流程）→固定授权检查（写入前检查，不在写后补票）→变化部分再判断（测试结果决定是否结束）。</p>
+<p>先看工具等待 <code>run.result</code>，再检查停止原因，最后确认 <code>finally</code> 中释放资源。图固定写前授权与写后验收，推理路线仍随证据变化；它不是上游执行引擎的完整流程定义。</p>
 </details>
 
 <p><a href="../previews/chapter-10.html#doc-2">← 第10讲：分工与后台</a> · <a href="../previews/chapter-12.html#doc-2">第12讲：配置装配 →</a></p>

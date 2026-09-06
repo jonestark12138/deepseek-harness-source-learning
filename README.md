@@ -2,7 +2,7 @@
 
 通过一次 Java 运费服务测试排查，学习智能体如何取证、受控行动、恢复任务并核验完成。
 
-[在线阅读](https://jonestark12138.github.io/deepseek-harness-source-learning/) · [完整离线包](https://github.com/jonestark12138/deepseek-harness-source-learning/releases/tag/complete-course-v3.0.0)
+[在线阅读](https://jonestark12138.github.io/deepseek-harness-source-learning/) · [完整离线包](https://github.com/jonestark12138/deepseek-harness-source-learning/releases/tag/complete-course-v3.0.1)
 
 ## 按顺序阅读主线
 

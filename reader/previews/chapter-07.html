@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第07讲-执行边界</title>
@@ -92,27 +92,16 @@
 <p>本讲的直觉是一间维修房：工单标了在哪个房间工作，通讯录告诉你联系哪台设备，门禁限制你能进入哪些区域。类比到此为止；不能因为目录被称为“工作区”，就认为操作系统自动阻止访问其他目录。</p>
 <p>对 Java 工程师，容器目录与权限控制的区别很熟悉。把宿主目录挂进容器，并不自动保证应用没有别的能力；同理，工具描述里写“只读”不能替代底层执行约束。</p>
 <h2>三、源码里为什么按平台选择执行器</h2>
-<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/sandbox/sandbox-local/src/index.ts#L151-L177">固定提交中的定位片段</a>（仅显示这一段前至多 20 行，不是完整函数）：</p>
-<pre><code class="language-ts"> * The runner chain per platform — selection is BY PLATFORM first, probes
- * second: a platform&#39;s chain is probed in preference order only when it has
- * MORE than one candidate (probing arbitrates; it does not re-validate a
- * choice that has no alternative). A platform with no chain fails closed at
- * `confine()`. Linux prefers `bwrap` (its mount profile is closest to the
- * mode vocabulary) over the Landlock launcher; darwin has exactly one
- * candidate, selected without any probe.
- */
-const PLATFORM_CHAINS: Record&lt;string, readonly SelectedRunner[&#39;runner&#39;][]&gt; = {
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/sandbox/sandbox-local/src/index.ts#L159-L166">固定提交中的定位片段</a>（连续原文；中文说明放在代码之外）：</p>
+<!-- source-excerpt: packages/sandbox/sandbox-local/src/index.ts#L159-L166 -->
+<pre><code class="language-ts">const PLATFORM_CHAINS: Record&lt;string, readonly SelectedRunner[&#39;runner&#39;][]&gt; = {
   linux: [&#39;bwrap&#39;, &#39;landlock&#39;],
   darwin: [&#39;seatbelt&#39;],
-  // The Windows（操作系统） restricted-token runner (@deepseek-ai/dsh-sandbox-windows-acl):
+  // The Windows restricted-token runner (@deepseek-ai/dsh-sandbox-windows-acl):
   // a sole candidate, selected without a probe — its execution-time refusal
   // fails closed through its stderr signature (windows-acl-run:) and exit 127.
   win32: [&#39;windows-acl&#39;],
 }
-
-/**
- * Enforcement completeness a rung claims when selected WITHOUT a probe (a
- * chain of one). `bwrap` and Seatbelt govern every promised file effect by
 </code></pre>
 <p>这里列的是不同操作系统对应的执行器候选链。它说明“有沙箱服务”并不是各平台都拥有完全相同的隔离机制。尤其应继续读 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/sandbox/sandbox-local/src/index.ts#L168-L188">约束完整性标记</a>：固定源码中的 Windows（操作系统） 后端报告部分约束，不能把它宣传成绝对隔离。</p>
 <p>本讲是读取源码，不是在你机器上证明这些平台约束已经有效。实际使用还需要检查当前平台、后端可用性和明确的拒绝结果。教材不会为了让测试跑通而建议关闭安全边界。</p>
@@ -136,7 +125,7 @@ const PLATFORM_CHAINS: Record&lt;string, readonly SelectedRunner[&#39;runner&#39
 <details>
 <summary>查看解释与边界</summary>
 
-<p>不能。需确认实际执行世界、路径与版本，文件服务和进程服务不能指向不同副本。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+<p>不能。需确认实际执行世界、路径与版本，文件服务和进程服务不能指向不同副本。</p>
 </details>
 
 <h3>2. 预测反例</h3>
@@ -144,7 +133,7 @@ const PLATFORM_CHAINS: Record&lt;string, readonly SelectedRunner[&#39;runner&#39
 <details>
 <summary>查看推演</summary>
 
-<p>不能把它作为自动替代。应报告限制，查明可支持路径或取得所需新授权；未验证不报通过。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+<p>不能把它作为自动替代。应报告限制，查明可支持路径或取得所需新授权；未验证不报通过。</p>
 </details>
 
 <h3>3. 源码与图相互校验</h3>
@@ -152,7 +141,8 @@ const PLATFORM_CHAINS: Record&lt;string, readonly SelectedRunner[&#39;runner&#39
 <details>
 <summary>参考核对方式</summary>
 
-<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“模型知道要改什么，但执行世界和权限还未确认”，右格是“在正确工作区、明确边界内尝试动作；拒绝不降级绕过”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+<p>图的顺序是：甲目录改，乙目录测（同名文件不是同一版本）→确认路径和执行边界（拒绝时不换通道绕过）→在同一工作区重测（结果必须关联当前代码）。</p>
+<p>在 <code>PLATFORM_CHAINS</code> 中找当前系统的执行器，在 <code>STATIC_ENFORCEMENT</code> 中核对约束能力。图右格要同时满足执行目录和代码版本对应；这些源码声明不是在本机实际完成隔离测试的证据。</p>
 </details>
 
 <p><a href="../previews/chapter-06.html#doc-2">← 第06讲：技能与外部接入</a> · <a href="../previews/chapter-08.html#doc-2">第08讲：中断恢复 →</a></p>

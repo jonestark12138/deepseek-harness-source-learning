@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第05讲-会话日志</title>
@@ -100,16 +100,9 @@
 <p>如果一条结果没有对应调用，或者一个调用在中断后没有结果，系统就需要明确处理这个缺口，不能由语言流畅程度决定相信哪一版。</p>
 <h2>三、为什么强调仅追加与输入快照</h2>
 <p>Append-only（仅追加）表示新增事实继续追加，而不是回头改写已经记下的历史。Projection（派生视图）则是从原始日志计算出适合某种用途的内容，例如模型消息或用户界面。</p>
-<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L602-L646">固定提交中的定位片段</a>（仅显示这一段前至多 20 行，不是完整函数）：</p>
-<pre><code class="language-ts">  append&lt;T extends SessionEventType&gt;(
-    type: T,
-    data: SessionEventMap[T],
-    ...opts: T extends SurfaceEventType ? [opts: SurfaceIntent] : []
-  ): SessionEvent&lt;T&gt; {
-    const surfaceOpts: SurfaceIntent | undefined = opts[0]
-    const surfaceMetadata = {
-      ...surfaceOpts?.sourceEventSeqs === undefined ? {} : { sourceEventSeqs: surfaceOpts.sourceEventSeqs },
-      ...surfaceOpts?.surfaceOp === undefined ? {} : { surfaceOp: surfaceOpts.surfaceOp },
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L610-L620">固定提交中的定位片段</a>（连续原文；中文说明放在代码之外）：</p>
+<!-- source-excerpt: packages/core/session/src/index.ts#L610-L620 -->
+<pre><code class="language-ts">      ...surfaceOpts?.surfaceOp === undefined ? {} : { surfaceOp: surfaceOpts.surfaceOp },
     }
     const dataSnapshot = snapshotJsonValue(data)
     if (dataSnapshot === undefined) {
@@ -120,9 +113,8 @@
     if (surfaceMetadataSnapshot === undefined) {
       throw new Error(`session event &quot;${type}&quot; carries non-JSON-serializable surface metadata`)
     }
-    const entry = attachments.get(this)
 </code></pre>
-<p>读 <code>append</code> 时关注写入前的快照验证、序号建立、投影验证和真正进入日志的位置。调用方传入一个对象后，再修改原对象，不应该让过去的报告悄悄变了。否则同一段历史在不同时间会显示不同原因，根本谈不上复核。</p>
+<p>这里先看写入前的快照验证。调用方传入一个对象后，再修改原对象，不应该让过去的报告悄悄变了。否则同一段历史在不同时间会显示不同原因，根本谈不上复核。序号建立、投影验证和真正追加到日志发生在<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L625-L642">后续写入段落</a>，不在上面这段快照代码中；继续阅读时依次找 <code>seq</code>、<code>validateNext</code> 和 <code>log.push</code>。</p>
 <p>可以联想到 Java 的事件溯源：原始事实和查询视图区分。但不要由这个类比推断本项目自动具备跨服务事务、消息中间件或数据库持久化；那些要另外查看具体实现。</p>
 <h2>四、模型看见的不是整本记录簿的原样复印</h2>
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L699-L744">消息派生</a> 根据当前消息投影结构生成消息数组。原始流式片段和内部边界事件有自己的用途，不必都原样放进每一次模型请求。</p>
@@ -145,7 +137,7 @@
 <details>
 <summary>查看解释与边界</summary>
 
-<p>请求记录想做什么，结果记录实际发生什么，并靠调用身份关联；二者混同会把意图当事实。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+<p>请求记录想做什么，结果记录实际发生什么，并靠调用身份关联；二者混同会把意图当事实。</p>
 </details>
 
 <h3>2. 预测反例</h3>
@@ -153,7 +145,7 @@
 <details>
 <summary>查看推演</summary>
 
-<p>不能。要看持久化后端是否存在以及保存是否完成；会话包的等待入口不是磁盘实现。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+<p>不能。要看持久化后端是否存在以及保存是否完成；会话包的等待入口不是磁盘实现。</p>
 </details>
 
 <h3>3. 源码与图相互校验</h3>
@@ -161,7 +153,8 @@
 <details>
 <summary>参考核对方式</summary>
 
-<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“报告和代码分次获得，不能依靠模型凭空记忆”，右格是“日志记录事实，再派生下一次请求的消息”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+<p>图的顺序是：先后读回两份证据（调用和结果各有身份）→事实进入日志（保留发生过的事情）→下次请求取派生消息（不是第二份独立真相）。</p>
+<p>先查 <code>snapshotJsonValue</code> 固定输入，再查 <code>log.push</code> 追加事实，最后对照 <code>deriveMessages()</code>。日志保留原事实，模型使用派生消息；图没有承诺磁盘已经持久化。</p>
 </details>
 
 <p><a href="../previews/chapter-04.html#doc-2">← 第04讲：受控工具</a> · <a href="../previews/chapter-06.html#doc-2">第06讲：技能与外部接入 →</a></p>

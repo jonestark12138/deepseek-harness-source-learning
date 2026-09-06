@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第01讲-任务全景</title>
@@ -138,17 +138,9 @@
 <p>没有新测试结果，就只能说“已修改，待验证”。报告通过后，还要确认测试针对当前文件、退出码成功、测试预期没被偷偷改掉。全书最终交付沿用这组标准。</p>
 <h2>六、回到运行支撑源码：谁让过程继续</h2>
 <p>上面的业务服务是虚构夹具，下面的运行机制才来自固定的 DeepSeek Harness 源码。循环驱动检查模型回复中有没有工具调用；没有工具调用可以返回本轮完成状态，有工具调用则执行并根据结果决定是否继续。注意源码允许工具批次明确结束，不能把“调用工具后必然无限继续”当规则。</p>
-<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L417-L433">固定提交中的定位片段</a>（仅显示这一段前至多 20 行，不是完整函数）：</p>
-<pre><code class="language-ts">        &#39;assistant/message&#39;,
-        {
-          turn,
-          step,
-          message,
-          ...assembler.usage === undefined ? {} : { usage: assembler.usage },
-        },
-        { surfaceOp: &#39;append&#39;, sourceEventSeqs: chunkSeqs },
-      )
-      if (finish.kind === &#39;max-tokens&#39;) return { kind: &#39;max-tokens&#39; }
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L426-L434">固定提交中的定位片段</a>（连续原文；中文说明放在代码之外）：</p>
+<!-- source-excerpt: packages/core/agent-loop/src/agent.ts#L426-L434 -->
+<pre><code class="language-ts">      if (finish.kind === &#39;max-tokens&#39;) return { kind: &#39;max-tokens&#39; }
 
       const toolCalls = message.content.filter(block =&gt; block.type === &#39;tool-call&#39;)
       if (toolCalls.length === 0) return { kind: &#39;completed&#39; }
@@ -156,6 +148,7 @@
         this.loopCtx, turn, step, toolCalls, signal,
         context =&gt; this.inbox.splice(&#39;next-step&#39;, this.inbox.nextStep.length, 0, [context]),
       )
+      return concluded ? { kind: &#39;completed&#39; } : null
 </code></pre>
 <p>这段先看三个位置：过滤工具调用、执行调用、根据返回状态结束或继续。报告不在模型脑中自动出现，文件也不会因模型说“已修改”而变化。本讲只建立闭环；第二讲就沿“读完报告，还欠一次读代码”拆开这个继续机制。</p>
 <p>主线起点 · <a href="../previews/chapter-02.html#doc-2">第02讲：智能体循环 →</a></p>
@@ -170,7 +163,7 @@
 <details>
 <summary>查看解释与边界</summary>
 
-<p>不算。猜想可作为候选，但还要报告实际值、业务约定与实现分支互相印证。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+<p>不算。猜想可作为候选，但还要报告实际值、业务约定与实现分支互相印证。</p>
 </details>
 
 <h3>2. 预测反例</h3>
@@ -178,7 +171,7 @@
 <details>
 <summary>查看推演</summary>
 
-<p>不能。9999 应收 800，修改破坏了边界外行为；还须保留测试预期与授权范围。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+<p>不能。9999 应收 800，修改破坏了边界外行为；还须保留测试预期与授权范围。</p>
 </details>
 
 <h3>3. 源码与图相互校验</h3>
@@ -186,7 +179,8 @@
 <details>
 <summary>参考核对方式</summary>
 
-<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“只有失败通知，没有报告和源码”，右格是“形成读报告、读代码、申请修改、重跑测试的任务闭环”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+<p>图的顺序是：只听说失败（尚无报告与实现）→补齐证据（10000 分：预期 0，实际 800）→许可后修复并重测（不是说完成，而是拿到新证据）。</p>
+<p>在 <code>toolCalls.length === 0</code> 与 <code>executeToolCalls</code> 附近区分“没有新动作请求”和“实际执行了动作”；正文末尾的 <code>concluded</code> 决定工具批次后是否结束。图把授权和测试压成了概览，不能据此声称源码自带运费业务或已经完成三测。</p>
 </details>
 
 <p>主线起点 · <a href="../previews/chapter-02.html#doc-2">第02讲：智能体循环 →</a></p>

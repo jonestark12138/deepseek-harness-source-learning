@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第09讲-长材料与压缩</title>
@@ -92,7 +92,8 @@
 <p>可以压缩重复日志，却不能把“用户只允许排查”压成“处理完即可”，也不能把“旧版本测试通过”压成“所有测试通过”。这两种看似更短的摘要都会改变后续动作，属于失真，而不是节省容量。</p>
 <p>Compaction（上下文压缩）在这里是用较短的模型可见材料替换一段历史视图，原始事件仍保留。它不是对原始日志随意删行，也不是保证无损的文件压缩算法。</p>
 <h2>三、工具请求与结果为什么不能从中间剪开</h2>
-<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/compaction/compaction/src/index.ts#L145-L170">固定提交中的定位片段</a>（仅显示这一段前至多 20 行，不是完整函数）：</p>
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/compaction/compaction/src/index.ts#L145-L170">固定提交中的定位片段</a>（连续原文；中文说明放在代码之外）：</p>
+<!-- source-excerpt: packages/compaction/compaction/src/index.ts#L145-L170 -->
 <pre><code class="language-ts">  /**
    * Forcibly compact a range of surface nodes into a single summary node.
    * `start` and `end` name an inclusive span by surface position, not numeric seq
@@ -113,6 +114,12 @@
    * @returns the appended event seqs, summary, replaced range, and token accounting.
    */
   abstract compactRegion(
+    start: number,
+    end: number,
+    agent: CompactionAgentContext,
+    signal?: AbortSignal,
+  ): Promise&lt;CompactionResult&gt;
+}
 </code></pre>
 <p>接口明确要求压缩范围按消息投影位置选择，而不是简单按事件编号大小截断；边界必须平衡，不能留下工具结果却丢掉其调用，或留下调用却把结果剪掉。压缩后的摘要也要携带对应事务标识。</p>
 <p>想象接班记录只剩“成功”，却不知道成功的是读取报告、编辑代码还是测试。调用与结果配对，就是让结果仍有归属。它不是形式洁癖，而是避免模型和读者将某个成功错误归给别的动作。</p>
@@ -137,7 +144,7 @@
 <details>
 <summary>查看解释与边界</summary>
 
-<p>不可以。失去调用身份会无法判断成功属于什么动作，范围必须保持工具调用结果配对。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+<p>不可以。失去调用身份会无法判断成功属于什么动作，范围必须保持工具调用结果配对。</p>
 </details>
 
 <h3>2. 预测反例</h3>
@@ -145,7 +152,7 @@
 <details>
 <summary>查看推演</summary>
 
-<p>执行器不能把摘要当新权限。回查可信授权；摘要用于理解，不授予动作能力。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+<p>执行器不能把摘要当新权限。回查可信授权；摘要用于理解，不授予动作能力。</p>
 </details>
 
 <h3>3. 源码与图相互校验</h3>
@@ -153,7 +160,8 @@
 <details>
 <summary>参考核对方式</summary>
 
-<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“日志不断增长，失败与授权可能淹没在历史里”，右格是“保留可追溯摘要、关键边界和工具调用结果配对”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+<p>图的顺序是：历史材料挤满桌面（关键授权可能被淹没）→保留原档，整理摘要（来源与未知项都留下）→带摘要继续判断（摘要不变成新许可）。</p>
+<p>在 <code>compactRegion</code> 契约中找按投影位置选范围、两端调用结果平衡、摘要事务标识三项约束。图里的摘要保留出处和未知项；它不是新授权，也不替代原档案。</p>
 </details>
 
 <p><a href="../previews/chapter-08.html#doc-2">← 第08讲：中断恢复</a> · <a href="../previews/chapter-10.html#doc-2">第10讲：分工与后台 →</a></p>

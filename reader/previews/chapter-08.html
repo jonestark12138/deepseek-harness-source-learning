@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第08讲-中断恢复</title>
@@ -91,7 +91,8 @@
 <p>内存会话有记录，不等于持久化后端已经保存；磁盘有完整记录，不等于外部动作被完整记录；记录能够重放，不等于外部动作应该重做。</p>
 <p>例如编辑已经落在文件上，而工具结果未保存。如果恢复时直接重跑编辑，可能重复修改或覆盖别人后来改动。正确做法是恢复事实、标记缺失结果，再读当前文件判断下一步。只读操作的重试也要有理由，而非把整个历史命令一股脑再执行一遍。</p>
 <h2>三、恢复契约与具体实现要分开看</h2>
-<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/session/session-persistence/src/index.ts#L186-L199">固定提交中的定位片段</a>（只保留本节要读的源码边界）：</p>
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/session/session-persistence/src/index.ts#L186-L199">固定提交中的定位片段</a>（连续原文；中文说明放在代码之外）：</p>
+<!-- source-excerpt: packages/session/session-persistence/src/index.ts#L186-L199 -->
 <pre><code class="language-ts">  async prepare(id: SessionId, signal?: AbortSignal): Promise&lt;SessionPreparation&gt; {
     signal?.throwIfAborted()
     const loaded = await this.load(id)
@@ -131,7 +132,7 @@
 <details>
 <summary>查看解释与边界</summary>
 
-<p>不应。外部修改可能已发生，只是回执未保存；先标记未知并回读当前文件。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+<p>不应。外部修改可能已发生，只是回执未保存；先标记未知并回读当前文件。</p>
 </details>
 
 <h3>2. 预测反例</h3>
@@ -139,7 +140,7 @@
 <details>
 <summary>查看推演</summary>
 
-<p>不是。日志恢复的是事实与结构，不是进程栈或外部世界；后台任务要看独立生命周期。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+<p>不是。日志恢复的是事实与结构，不是进程栈或外部世界；后台任务要看独立生命周期。</p>
 </details>
 
 <h3>3. 源码与图相互校验</h3>
@@ -147,7 +148,8 @@
 <details>
 <summary>参考核对方式</summary>
 
-<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“已经记录报告和修改意图，但进程中断”，右格是“恢复记录后检查当前文件，不把恢复等同于重执行”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+<p>图的顺序是：中断留下未完记录（请求存在，结果未知）→恢复保存的事实（不是把命令再执行一遍）→回读当前文件（先确认现场，再决定继续）。</p>
+<p>沿 <code>prepare</code> 看加载事件怎样送入会话准备入口，再读持久化加载的冷恢复契约。图中档案柜恢复的是记录，不是外部进程；缺失回执只能标记未知，不能推断文件未修改。</p>
 </details>
 
 <p><a href="../previews/chapter-07.html#doc-2">← 第07讲：执行边界</a> · <a href="../previews/chapter-09.html#doc-2">第09讲：长材料与压缩 →</a></p>

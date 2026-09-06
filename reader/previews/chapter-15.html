@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第15讲-事件协作</title>
@@ -96,7 +96,7 @@
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L177-L187">并行实现</a> 等待所有监听器成功或失败，再统一检查结果；若存在失败，抛出 AggregateError（汇总错误）。一个人交了失败卷，不表示其他人的工作自动取消。</p>
 <p>这里的并行指异步任务可以共同推进，不保证每个监听器分配一条线程，也不能让耗时同步计算凭空并行。不要把 Java 线程池的执行模型直接套过来。</p>
 <h2>四、只需要一个裁决，为什么还分两种模式</h2>
-<p>有些问题不是“所有人做完”，而是“找到第一个明确结论就停”。例如逐个询问处理者有没有意见。bail（同步遇到结论就停）与逐个等待裁决（逐个等待后再判断结论）共享停止值规则，但等待方式不同。</p>
+<p>有些问题不是“所有人做完”，而是“找到第一个明确结论就停”。例如逐个询问处理者有没有意见。bail（同步遇到结论就停）与 serial（逐个等待裁决）共享停止值规则，但等待方式不同：后者会先等待当前处理者的异步结果，再决定要不要问下一位。</p>
 <p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L7-L15">停止值判定</a> 将 <code>null</code>、<code>false</code>、<code>undefined</code> 视为还没有结论，其他值都能停止。因此 <code>0</code> 和空字符串也能停止；不能把规则记成“真值才停止”。</p>
 <p>看 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/vendor/cordis/src/events.ts#L198-L222">两种遍历实现</a>：同步版本直接检查返回对象；逐个等待版本先等到异步最终值，再做判定。</p>
 <p>做一个思想实验：首个监听器返回 <code>Promise.resolve(false)</code>。同步版本拿到的是一个对象，因此立刻停止；逐个等待版本拿到最终的 <code>false</code>，因此继续。两种模式停止的不是同一个层次上的“值”。这也是补课 A异步知识在真实源码中的用处。</p>
@@ -173,7 +173,7 @@
 <details>
 <summary>查看解释与边界</summary>
 
-<p>不同。同步裁决看到的是异步结果对象而停止；逐个等待得到 <code>false</code>（布尔假值） 后继续。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+<p>不同。同步裁决看到的是异步结果对象而停止；逐个等待得到 <code>false</code>（布尔假值） 后继续。</p>
 </details>
 
 <h3>2. 预测反例</h3>
@@ -181,7 +181,7 @@
 <details>
 <summary>查看推演</summary>
 
-<p>不能。此处继续函数不接受替换参数，闭包保留原参数；不调用继续函数会短路后续。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+<p>不能。此处继续函数不接受替换参数，闭包保留原参数；不调用继续函数会短路后续。</p>
 </details>
 
 <h3>3. 源码与图相互校验</h3>
@@ -189,7 +189,8 @@
 <details>
 <summary>参考核对方式</summary>
 
-<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“正确能力已装好，多方仍需有序协作”，右格是“分清通知、等待、裁决和接力，拒绝错误控制流”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+<p>图的顺序是：报告到达，观察者通知（不等待不等于全部完成）→修改要经过裁决（继续或拒绝要遵守契约）→动作结果向外返回（记录事实，而不是想象成功）。</p>
+<p>分别查 <code>emit</code>、<code>parallel</code>、<code>bail</code>、<code>serial</code> 与 <code>waterfall</code> 的等待规则。图强调写前必须等裁决；接力链的 <code>next()</code> 不接收替换输入，同步通知也不保证异步工作已完成。</p>
 </details>
 
 <p><a href="../previews/chapter-14.html#doc-2">← 第14讲：服务依赖</a> · <a href="../previews/chapter-16.html#doc-2">第16讲：完成验收 →</a></p>
@@ -217,6 +218,8 @@
 <p>把多个失败一起表达的汇总错误，像把检查者的失败卷放进同一个档案袋。它保留多个原因，不表示此前操作都被回滚。</p>
 <h2>bail（同步遇到结论就停）</h2>
 <p>同步遇到停止值就结束的裁决模式，像当场要一个结论。本实现只有空值、布尔假值和未定义值不停止，异步凭据对象本身会使它停止。</p>
+<h2>serial（逐个等待裁决）</h2>
+<p>先等当前处理者给出最终结果，再决定是否询问下一位，像逐位等待审批者答复。与同步裁决相比，它先展开异步结果凭据；拿到布尔假值仍继续，而不是把凭据对象当结论。</p>
 <h2>waterfall（包裹式接力链）</h2>
 <p>由当前处理者决定是否继续、并可处理返回结果的包裹式接力链，像进门检查与回程审计。本项目按队列推进，继续函数不接收替换参数。</p>
 <h2>next（继续后续处理的函数）</h2>

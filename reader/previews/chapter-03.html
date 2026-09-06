@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第03讲-模型请求</title>
@@ -92,7 +92,8 @@
 <p>在本例中，“有读取文件的工具”不能证明读过 <code>ShippingCase.java</code>；“用户要求修复”也不能被误写成“文件已经修改”。前者是能力目录，后者是请求意图，二者都不能替代事实记录。</p>
 <p>把这些放到一次模型请求中时，还要选择使用哪个提供者和模型。Provider（模型服务提供者）在这里负责对接模型接口，不是文件服务提供者；同一个英文词需要按它提供的能力解释。</p>
 <h2>三、看看源码实际把什么交到请求里</h2>
-<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L339-L364">固定提交中的定位片段</a>（仅显示这一段前至多 20 行，不是完整函数）：</p>
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L339-L364">固定提交中的定位片段</a>（连续原文；中文说明放在代码之外）：</p>
+<!-- source-excerpt: packages/core/agent-loop/src/agent.ts#L339-L364 -->
 <pre><code class="language-ts">  private async step(assembly: PromptAssembly, startsRequestSeries: boolean): Promise&lt;StepEndReason | null&gt; {
     /* v8 ignore next -- private callers establish the running phase before executing a step */
     if (this.phase.kind !== &#39;running&#39;) throw new Error(`agent &quot;${this.id}&quot;: step outside running phase`)
@@ -113,6 +114,12 @@
         signal,
       )
       startsRequestSeries = false
+      const assembler = new BlockAssembler()
+      const chunkSeqs: number[] = []
+      try {
+        const stream = preparedCall?.stream(request) ?? this.loopCtx.llm.stream(request)
+        signal.throwIfAborted()
+        for await (const chunk of stream) {
 </code></pre>
 <p>这段先把已装配的提示渲染成文本，再把工具说明、系统提示和会话派生消息交给 <code>buildRequest</code>。随后才经过已准备的模型调用或模型服务的流式入口。也就是说，会话不是调用模型的对象；循环才是这里的调用者。</p>
 <p>再读 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/system-prompt/src/index.ts#L518-L592">提示组装</a>：它合并当前可见范围的段落、上下文与工具目录，并保留顺序。不要把源码里的多种段落来源都口头合并成“一个大字符串”，那样会看不出不同插件怎样贡献内容。</p>
@@ -138,7 +145,7 @@
 <details>
 <summary>查看解释与边界</summary>
 
-<p>不是。目录描述能力，读取结果承载实际内容；要追到本次请求的消息派生与组装。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+<p>不是。目录描述能力，读取结果承载实际内容；要追到本次请求的消息派生与组装。</p>
 </details>
 
 <h3>2. 预测反例</h3>
@@ -146,7 +153,7 @@
 <details>
 <summary>查看推演</summary>
 
-<p>不该。引用材料是数据，不能升级为许可；提示解释和执行授权分别负责。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+<p>不该。引用材料是数据，不能升级为许可；提示解释和执行授权分别负责。</p>
 </details>
 
 <h3>3. 源码与图相互校验</h3>
@@ -154,7 +161,8 @@
 <details>
 <summary>参考核对方式</summary>
 
-<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“报告在工作区中，却不在模型请求里”，右格是“能区分提示、历史、工具说明和实际工具结果”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+<p>图的顺序是：文件只在磁盘上（模型还看不到内容）→工具取得材料（不是只提供工具名字）→材料进入下一次请求（基于已读取内容判断）。</p>
+<p>找到 <code>renderPrompt</code>、<code>assembly.tools</code> 与 <code>deriveMessages()</code> 这三个输入来源。只有工具目录不能证明读过文件；图省略了流式消息组装，不表示工具输出原封不动成为最高优先级规则。</p>
 </details>
 
 <p><a href="../previews/chapter-02.html#doc-2">← 第02讲：智能体循环</a> · <a href="../previews/chapter-04.html#doc-2">第04讲：受控工具 →</a></p>

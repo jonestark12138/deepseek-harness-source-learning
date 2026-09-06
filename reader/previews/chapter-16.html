@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"><meta name="textbook-version" content="3.0.1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <title>DeepSeek Harness · 第16讲-完成验收</title>
@@ -91,10 +91,9 @@
 <p>原题是查清“满 100 元免运费”边界失败原因，在获得授权后修复并验证。若改的是测试预期，让 10000 的预期变成 800，测试会绿，但业务目标被替换了。若干脆让所有金额都返回零，10000 会绿，9999 却被破坏。</p>
 <p>因此三项验收不只是凑覆盖率，而是分别约束目标边界与左右行为。还应查看版本差异，确认只修比较符号，没有额外修改无关业务和测试预期。</p>
 <h2>三、运行结束不能当业务成功的证据</h2>
-<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L424-L433">固定提交中的定位片段</a>（仅显示这一段前至多 20 行，不是完整函数）：</p>
-<pre><code class="language-ts">        { surfaceOp: &#39;append&#39;, sourceEventSeqs: chunkSeqs },
-      )
-      if (finish.kind === &#39;max-tokens&#39;) return { kind: &#39;max-tokens&#39; }
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L426-L434">固定提交中的定位片段</a>（连续原文；中文说明放在代码之外）：</p>
+<!-- source-excerpt: packages/core/agent-loop/src/agent.ts#L426-L434 -->
+<pre><code class="language-ts">      if (finish.kind === &#39;max-tokens&#39;) return { kind: &#39;max-tokens&#39; }
 
       const toolCalls = message.content.filter(block =&gt; block.type === &#39;tool-call&#39;)
       if (toolCalls.length === 0) return { kind: &#39;completed&#39; }
@@ -102,6 +101,7 @@
         this.loopCtx, turn, step, toolCalls, signal,
         context =&gt; this.inbox.splice(&#39;next-step&#39;, this.inbox.nextStep.length, 0, [context]),
       )
+      return concluded ? { kind: &#39;completed&#39; } : null
 </code></pre>
 <p>这里没有工具调用时可以返回正常完成状态。这证明当前模型步骤不再请求工具，不证明它说的话正确。即使它根本没读报告就结束，运行状态仍可能是正常结束；业务验收必须另外检查证据。</p>
 <p>像一个 Java 请求返回了状态码成功，但数据库中该写的业务数据并未符合约束。传输或调度层完成，不等于目标事实成立。</p>
@@ -112,7 +112,7 @@
 <h2>五、反例比口号更能暴露问题</h2>
 <p>故意让系统遇到七种情况：没有报告、只有报告没有代码、未授权写入、恢复时有悬空调用、摘要伪造授权、子任务只有结论没有证据、测试成功后代码又变了。</p>
 <p>期望行为不是每次都成功，而是在证据不足时准确停止：能说明已经完成什么、哪里失败、还需要什么。失败后凭空生成漂亮结果，比明确报告未完成更危险。</p>
-<p>同时区分三层实验：自编运行器验证教学约束；上游局部测试验证对应实现；真实模型与真实工具评测验证端到端任务效果。本轮运行器通过不能冒充后两层已通过。</p>
+<p>同时区分四层实验：自编运行器验证教学约束；真实 Java 夹具检验业务代码；上游局部测试验证运行支撑实现；真实模型与真实工具评测验证端到端任务效果。本轮运行器通过不能冒充其余三层已通过。</p>
 <h2>六、可靠性不只看成功率</h2>
 <p>更多请求和更多帮手可能提高某些复杂任务成功率，也会增加费用、时延、重复材料和合并错误。评价时要记录任务是否正确、是否越权、失败是否可解释、耗时与请求量，而非只数工具调用次数。</p>
 <p>本例的业务逻辑很小，通常无需分工和自动流程。全书逐步增加困难是为了理解机制，不是在推荐把所有机制都装到每个简单任务里。</p>
@@ -131,7 +131,7 @@
 <details>
 <summary>查看解释与边界</summary>
 
-<p>它可能没读证据、没真正修改或没针对当前版本测试；运行完成不是业务事实满足。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+<p>它可能没读证据、没真正修改或没针对当前版本测试；运行完成不是业务事实满足。</p>
 </details>
 
 <h3>2. 预测反例</h3>
@@ -139,7 +139,7 @@
 <details>
 <summary>查看推演</summary>
 
-<p>缺新测试与当前文件版本的关联；内容指纹可发现版本不一致，但仍需正确测试和业务判断。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+<p>缺新测试与当前文件版本的关联；内容指纹可发现版本不一致，但仍需正确测试和业务判断。</p>
 </details>
 
 <h3>3. 源码与图相互校验</h3>
@@ -147,7 +147,8 @@
 <details>
 <summary>参考核对方式</summary>
 
-<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“补丁已写入，但还没有新测试证据”，右格是“用边界三测、实际退出码、差异和授权记录验收”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+<p>图的顺序是：补丁已写入（尚无当前版本的新报告）→重新执行三项边界检查（9999、10000、10001）→核对报告与实际差异（不改预期，不拿旧报告结案）。</p>
+<p>源码的 <code>completed</code> 只说明本步骤不再请求工具。再按正文把业务约定、限定授权、当前代码指纹和三测退出码串起来；图里的绿色报告只覆盖当前版本和明确的测试范围。</p>
 </details>
 
 <p><a href="../previews/chapter-15.html#doc-2">← 第15讲：事件协作</a> · <a href="../previews/chapter-17.html#doc-2">第17讲：综合迁移 →</a></p>
