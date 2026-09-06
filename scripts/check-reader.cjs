@@ -8,7 +8,7 @@ function validateSite(root){
   let links=0
   for(const f of files){
     const rel=path.relative(root,f).replaceAll('\\','/')
-    if(!/^(index\.html|site\.css|\.nojekyll|evidence\/lesson-0[1-9]\.html|previews\/lesson-0[1-9]\.html|assets\/fonts\/(workshop-hand\.woff2|OFL\.txt|provenance\.json)|assets\/lesson-0[1-9]\/reader\/fig-0[1-6]-[a-z-]+\.png)$/.test(rel))throw new Error(`Not publishable: ${rel}`)
+    if(!/^(index\.html|site\.css|\.nojekyll|evidence\/(?:lesson-0[1-9]|chapter-(?:0[1-9]|1[0-7])|appendix-[abc])\.html|previews\/(?:lesson-0[1-9]|chapter-(?:0[1-9]|1[0-7])|appendix-[abc])\.html|assets\/fonts\/(workshop-hand\.woff2|OFL\.txt|provenance\.json)|assets\/(?:lesson-0[1-9]|chapter-(?:0[1-9]|1[0-7])|appendix-[abc])\/reader\/fig-0[1-6]-[a-z-]+\.png)$/.test(rel))throw new Error(`Not publishable: ${rel}`)
     if(f.endsWith('.png')){
       const bytes=fs.readFileSync(f)
       if(bytes.length<24||!bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))||bytes.readUInt32BE(16)!==2400||bytes.readUInt32BE(20)!==1480)throw new Error(`Expected flattened 2400x1480 PNG: ${rel}`)
@@ -28,7 +28,7 @@ function validateSite(root){
       links++
     }
   }
-  for(const required of ['index.html','assets/fonts/OFL.txt',...['01','02','03','04','05','06','07','08','09'].flatMap(id=>[`previews/lesson-${id}.html`,`evidence/lesson-${id}.html`])])if(!fs.existsSync(path.join(root,required)))throw new Error(`Missing ${required}`)
+  for(const required of ['index.html','assets/fonts/OFL.txt',...["chapter-01","chapter-02","chapter-03","chapter-04","chapter-05","chapter-06","chapter-07","chapter-08","chapter-09","chapter-10","chapter-11","chapter-12","chapter-13","chapter-14","chapter-15","chapter-16","chapter-17","appendix-a","appendix-b","appendix-c"].flatMap(slug=>[`previews/${slug}.html`,`evidence/${slug}.html`])])if(!fs.existsSync(path.join(root,required)))throw new Error(`Missing ${required}`)
   return {files:files.length,localLinks:links,status:'passed'}
 }
 if(require.main===module){
@@ -36,7 +36,7 @@ if(require.main===module){
   if(process.argv.includes('--repository')){
     const {execFileSync}=require('node:child_process')
     const files=execFileSync('git',['ls-files','-z'],{encoding:'utf8'}).split('\0').filter(Boolean)
-    for(const file of files)if(!/^(reader\/|README\.md$|\.gitattributes$|\.github\/workflows\/pages\.yml$|scripts\/check-reader\.cjs$|releases\/(lesson-(01-v1\.0\.1|01-03-v1\.1\.0|01-05-v1\.2\.0|01-08-v1\.3\.0)|lessons-01-09-v2\.0\.0)\.md$)/.test(file))throw new Error(`Unexpected public repository file: ${file}`)
+    for(const file of files)if(!/^(reader\/|README\.md$|\.gitattributes$|\.github\/workflows\/pages\.yml$|scripts\/check-reader\.cjs$|releases\/(lesson-(01-v1\.0\.1|01-03-v1\.1\.0|01-05-v1\.2\.0|01-08-v1\.3\.0)|lessons-01-09-v2\.0\.0|complete-course-v3\.0\.0)\.md$)/.test(file))throw new Error(`Unexpected public repository file: ${file}`)
     console.log('Public repository boundary passed:',files.length)
   }
 }

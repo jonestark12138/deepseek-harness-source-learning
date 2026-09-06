@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>DeepSeek Harness · 第02讲-智能体循环</title>
+  <style>
+    @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/chapter-02.html#doc-0">学习导航</a><a href="../previews/chapter-02.html#doc-1">视觉课件</a><a href="../previews/chapter-02.html#doc-2">逐步讲解</a><a href="../previews/chapter-02.html#doc-3">练习与答案</a><a href="../previews/chapter-02.html#doc-4">分享稿</a><a href="../previews/chapter-02.html#doc-5">术语词典</a></nav>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第02讲 · 谁让助手读完报告后再读代码</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>从这里接上</h2>
+<p>已有任务目标，但一次回答还不能完成排查。本讲要回答：谁让助手读完报告后再读代码？</p>
+<p>上一讲解决了“形成读报告、读代码、申请修改、重跑测试的任务闭环”；这仍不能代替本讲要补的责任。</p>
+<h2>阅读与完成标准</h2>
+<p>先看<a href="../previews/chapter-02.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-02.html#doc-3">练习</a>。<a href="../previews/chapter-02.html#doc-1">视觉课件</a>用于复习，<a href="../previews/chapter-02.html#doc-5">词典</a>随用随查，不要求先背英文。预计正文阅读 20–35 分钟，练习 10–20 分钟；这是安排建议，不是学会的证明。</p>
+<p>读完应能解释：读报告的工具结束后，为什么还可能欠下一步？ 还要能预测：日志有一轮开始与结束，却没有模型步骤，一定损坏了吗？ 最后从<a href="../evidence/chapter-02.html">源码证据</a>定位相应责任。</p>
+<p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
+<h2>本讲交接</h2>
+<p>读报告的结果触发下一次模型判断。但下一步还要解决：报告明明在磁盘，模型为什么仍不知道。</p>
+<p><a href="../previews/chapter-01.html#doc-2">← 第01讲：任务全景</a> · <a href="../previews/chapter-03.html#doc-2">第03讲：模型请求 →</a></p>
+</article>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第02讲 · 谁让助手读完报告后再读代码</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>当前现场</h2>
+<p>已有任务目标，但一次回答还不能完成排查。固定业务约定不变：满 10000 分免运费；原实现在等于时返回 800。禁止用修改预期的方式让测试变绿。</p>
+<p><img src="../assets/chapter-02/reader/fig-01-case-state.png" alt="已有任务目标，但一次回答还不能完成排查，经过本讲机制，变为读报告的结果触发下一次模型判断"></p>
+<h2>三分钟复述</h2>
+<p>先描述左格缺什么，再说明中格采取的机制，最后指出右格新增了哪些证据或责任。读报告的结果触发下一次模型判断。不要只读图上的物件名；删掉中间这项机制，任务会在哪一步失去依据？</p>
+<p>本讲最容易误会的是：日志有一轮开始与结束，却没有模型步骤，一定损坏了吗？ 不一定。首次输入在请求前被拒绝或改为空，可以形成零步骤轮次；应核对对应分支。</p>
+<h2>从图返回源码</h2>
+<p>图只表达教学关联与状态变化，不代替完整调用顺序。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">源码定位</a>提供实现或契约证据，<a href="../previews/chapter-02.html#doc-2">正文</a>解释映射和边界。</p>
+<p><a href="../previews/chapter-01.html#doc-2">← 第01讲：任务全景</a> · <a href="../previews/chapter-03.html#doc-2">第03讲：模型请求 →</a></p>
+</article>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第02讲 · 谁让助手读完报告后再读代码</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>一、报告回来了，谁提醒模型接着看代码</h2>
+<p>第一讲得到一条失败报告：10000 分输入被收了 800 分。报告读取工具已经结束，可排查还没结束。如果程序只把工具输出显示给用户，然后退出，模型就没有机会结合结果提出“再读实现”的下一步。</p>
+<p>Agent Loop（智能体循环）正是这位负责接力的调度者：准备一次模型输入，接收模型输出，执行其中受控的动作，再把结果带回下一次请求。它不是给模型增加一颗新大脑，而是让多次判断和真实反馈组成任务过程。</p>
+<p><img src="../assets/chapter-02/reader/fig-01-case-state.png" alt="已有任务目标，但一次回答还不能完成排查，经过本讲机制，变为读报告的结果触发下一次模型判断"></p>
+<blockquote>
+<p>三格为同一运费任务的教学状态变化或故障对照。图不是实际运行日志；关键区别见各格说明。</p>
+</blockquote>
+<h2>二、别把一次请求、一步和一轮混成一个词</h2>
+<p>Step（一步）在本项目中是一回模型请求以及它调用的工具；Turn（一轮）可以包含零步或多步。可以把一轮想成接下一张排查工单，一步则是工单里“根据现有材料决定并尝试一个阶段动作”。</p>
+<p>在教学推演里，第一步请求读取报告；结果说明是边界失败，于是第二步请求读取业务约定和实现；第三步解释原因并等待授权。用户随后授权修复，可能形成新的输入和后续轮次。这里没有规定真实模型一定用三步，它也可能合并独立读取或选择别的合法路径。</p>
+<p>为什么一轮会有零步？因为系统先受理一项输入，再在请求前检查时拒绝它，或者把最初输入改为空。工单被登记过，却没有发生模型请求；日志仍应能解释这次尝试。</p>
+<h2>三、真正控制继续的是状态，不是一句“继续工作”</h2>
+<p>阅读源码前先做预测：若工具刚读回报告，调度者为什么不能在返回报告后立即把整轮判为完成？因为下一次判断仍需要消费结果。反过来，若没有欠下的工具反馈，也没有新的待处理输入，就不应无条件再请求模型。</p>
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">固定提交中的定位片段</a>（仅显示这一段前至多 20 行，不是完整函数）：</p>
+<pre><code class="language-ts">    let target: InboxTarget = &#39;next-turn&#39;
+    try {
+      while (true) {
+        signal.throwIfAborted()
+        const step = phase.step + 1
+        const decision = await this.preStep(target, { turn, step })
+        if (decision.kind === &#39;reject&#39;) {
+          turnEnds = { kind: &#39;blocked&#39; }
+          return false
+        }
+        if (turnEnds &amp;&amp; decision.messages.length === 0) break
+        // A removed waking message or an enter decision rewritten to empty
+        // still owns the initial turn boundary, but it spends no model call.
+        if (phase.step === 0 &amp;&amp; decision.messages.length === 0) {
+          turnEnds = { kind: &#39;completed&#39; }
+          return false
+        }
+        signal.throwIfAborted()
+        this.session.append(&#39;step/start&#39;, { turn, step })
+        phase.step = step
+</code></pre>
+<p>这段按顺序读 <code>preStep</code>、拒绝分支、<code>step/start</code>、<code>step</code> 和 <code>nextStep</code>。它们分别对应请求前准入、零步退出、开始记录、模型交互，以及下一步待处理材料。源码节选为连续片段，不展示全部异常处理；完整证据链接可继续往下看关闭轮次的部分。</p>
+<p>常见误读是“循环里有一个无限循环，所以智能体会一直跑”。循环是否继续由状态与返回条件控制，和 Java 的服务消费循环一样，不能只看语法外形。</p>
+<h2>四、到达、入队和进入模型是三件事</h2>
+<p>Inbox（待处理输入队列）像工单旁的收件盘：有些消息会唤醒驱动，有些注入材料先放在盘里，等下一次请求真正领取。材料已到达系统，不表示它已进入这一步模型输入。</p>
+<p>假设模型正在读源码，你又补充“只排查，不要修改”。这条边界必须通过系统输入与执行策略起作用，不能假设正在进行的模型请求会神奇地重算。对于本书练习，我们把修改权限放在执行器独立检查；消息用于帮助模型理解，权限检查用于阻止越界。</p>
+<p>可以类比 Java 队列的入队和消费者取走，但模型请求的上下文准备、日志事件与取消传播是额外职责，不能简化为一个普通阻塞队列。</p>
+<h2>五、停止的原因决定我们能说什么</h2>
+<p>停止可能是正常完成、被阻止、取消、错误，或输出达到上限。它们都表现为“不再向前运行”，却不代表同一种业务结果。上限停止尤其不能在后续某一步正常结束后被改写成整体毫无限制地完成。</p>
+<p>第一讲的任务还要保留更严格的业务判断：即使循环正常结束，助手仍可能没有测试或解释错误。因此运行结束是运行事实，业务验收要到第十六讲独立判断。</p>
+<h2>六、现在轮到检查模型究竟看见了什么</h2>
+<p>拿掉循环，报告结果无法推动下一次判断；有了循环，也仍可能一直猜错，因为每次输入里根本没放对材料。第三讲因此不再问“会不会继续”，而问“继续时，报告、源码和授权到底怎样成为模型请求”。</p>
+<p><a href="../previews/chapter-01.html#doc-2">← 第01讲：任务全景</a> · <a href="../previews/chapter-03.html#doc-2">第03讲：模型请求 →</a></p>
+</article>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第02讲 · 谁让助手读完报告后再读代码</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>先作答，再展开</h2>
+<h3>1. 解释机制</h3>
+<p>读报告的工具结束后，为什么还可能欠下一步？</p>
+<details>
+<summary>查看解释与边界</summary>
+
+<p>结果改变了可用证据，模型还需要基于它决定读源码或解释原因；结束工具不等于结束任务。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+</details>
+
+<h3>2. 预测反例</h3>
+<p>日志有一轮开始与结束，却没有模型步骤，一定损坏了吗？</p>
+<details>
+<summary>查看推演</summary>
+
+<p>不一定。首次输入在请求前被拒绝或改为空，可以形成零步骤轮次；应核对对应分支。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+</details>
+
+<h3>3. 源码与图相互校验</h3>
+<p>打开<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">本讲定位</a>，找到正文强调的分支或契约。遮住图中文字，解释左、中、右三格分别表示什么；指出图省略了哪一项实现细节。</p>
+<details>
+<summary>参考核对方式</summary>
+
+<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“已有任务目标，但一次回答还不能完成排查”，右格是“读报告的结果触发下一次模型判断”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+</details>
+
+<p><a href="../previews/chapter-01.html#doc-2">← 第01讲：任务全景</a> · <a href="../previews/chapter-03.html#doc-2">第03讲：模型请求 →</a></p>
+</article>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第02讲 · 谁让助手读完报告后再读代码</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>用自己的话讲给同事</h2>
+<p>我们还在查同一个 Java 运费问题：满 100 元应免运费，恰好边界却收了 8 元。走到本讲，已有条件是：已有任务目标，但一次回答还不能完成排查。</p>
+<p>如果不补这一层，会遇到的问题是：读报告的工具结束后，为什么还可能欠下一步？ 结果改变了可用证据，模型还需要基于它决定读源码或解释原因；结束工具不等于结束任务。 所以本讲新增的不是要背的名词，而是任务中一项明确的责任。</p>
+<p>现在能做到：读报告的结果触发下一次模型判断。但还要守住反例：日志有一轮开始与结束，却没有模型步骤，一定损坏了吗？ 不一定。首次输入在请求前被拒绝或改为空，可以形成零步骤轮次；应核对对应分支。</p>
+<p>请结合<a href="../previews/chapter-02.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“报告明明在磁盘，模型为什么仍不知道”继续。</p>
+</article>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第02讲 · 谁让助手读完报告后再读代码</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<p>词典用于回查，正文在首次使用处解释。代码、参数与路径保留原拼写；产品名称不逐字翻译。模型上下文和插件上下文不是一回事。</p>
+<h2>Agent Loop（智能体循环）</h2>
+<p>反复准备输入、调用模型、处理工具请求并决定下一步的驱动。像接力调度员：报告回来后再安排读源码。循环可以被拒绝、取消或结束，不等于无限重试。</p>
+<h2>Step（一步）</h2>
+<p>本项目的一次模型请求及其工具调用。像排查中的一次问答交接；一个步骤可能请求多个工具，不一定只读一个文件。</p>
+<h2>Turn（一轮）</h2>
+<p>一次由驱动组织的轮次，可以包含零个或多个步骤。像接手一轮工单处理；材料被拒绝时可能一步都没执行，也不等于整个业务任务已经完工。</p>
+<h2>Inbox（待处理输入队列）</h2>
+<p>等待被驱动领取的输入队列，像工作台的收件盘。材料入盘和真正进入模型请求是两个时点，不是消息送来就自动被模型看见。</p>
+<h2>核对来源</h2>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">本讲源码定位</a>与<a href="../previews/chapter-02.html#doc-2">完整正文</a>。本例报告和金额属于教学夹具，不来自这份上游源码。</p>
+</article></main>
+</body>
+</html>

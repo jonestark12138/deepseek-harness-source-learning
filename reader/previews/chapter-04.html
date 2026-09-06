@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>DeepSeek Harness · 第04讲-受控工具</title>
+  <style>
+    @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/chapter-04.html#doc-0">学习导航</a><a href="../previews/chapter-04.html#doc-1">视觉课件</a><a href="../previews/chapter-04.html#doc-2">逐步讲解</a><a href="../previews/chapter-04.html#doc-3">练习与答案</a><a href="../previews/chapter-04.html#doc-4">分享稿</a><a href="../previews/chapter-04.html#doc-5">术语词典</a></nav>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第04讲 · 想改代码，不等于已经获准修改</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>从这里接上</h2>
+<p>模型已经提出读代码或修改的请求。本讲要回答：想改代码，不等于已经获准修改？</p>
+<p>上一讲解决了“能区分提示、历史、工具说明和实际工具结果”；这仍不能代替本讲要补的责任。</p>
+<h2>阅读与完成标准</h2>
+<p>先看<a href="../previews/chapter-04.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-04.html#doc-3">练习</a>。<a href="../previews/chapter-04.html#doc-1">视觉课件</a>用于复习，<a href="../previews/chapter-04.html#doc-5">词典</a>随用随查，不要求先背英文。预计正文阅读 20–35 分钟，练习 10–20 分钟；这是安排建议，不是学会的证明。</p>
+<p>读完应能解释：审批通过后，执行拒绝检查还需要保留吗？ 还要能预测：测试工具返回了结果，但进程退出码为 1，属于哪种失败？ 最后从<a href="../evidence/chapter-04.html">源码证据</a>定位相应责任。</p>
+<p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
+<h2>本讲交接</h2>
+<p>拒绝、失败和成功分别形成真实结果；未授权不写入。但下一步还要解决：这次读到的证据，下次从哪里取。</p>
+<p><a href="../previews/chapter-03.html#doc-2">← 第03讲：模型请求</a> · <a href="../previews/chapter-05.html#doc-2">第05讲：会话日志 →</a></p>
+</article>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第04讲 · 想改代码，不等于已经获准修改</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>当前现场</h2>
+<p>模型已经提出读代码或修改的请求。固定业务约定不变：满 10000 分免运费；原实现在等于时返回 800。禁止用修改预期的方式让测试变绿。</p>
+<p><img src="../assets/chapter-04/reader/fig-01-case-state.png" alt="模型已经提出读代码或修改的请求，经过本讲机制，变为拒绝、失败和成功分别形成真实结果；未授权不写入"></p>
+<h2>三分钟复述</h2>
+<p>先描述左格缺什么，再说明中格采取的机制，最后指出右格新增了哪些证据或责任。拒绝、失败和成功分别形成真实结果；未授权不写入。不要只读图上的物件名；删掉中间这项机制，任务会在哪一步失去依据？</p>
+<p>本讲最容易误会的是：测试工具返回了结果，但进程退出码为 1，属于哪种失败？ 可能是命令成功执行后测试断言失败，须看输出；不能把工具通道完成等同于业务通过。</p>
+<h2>从图返回源码</h2>
+<p>图只表达教学关联与状态变化，不代替完整调用顺序。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/tools/src/index.ts#L1465-L1505">源码定位</a>提供实现或契约证据，<a href="../previews/chapter-04.html#doc-2">正文</a>解释映射和边界。</p>
+<p><a href="../previews/chapter-03.html#doc-2">← 第03讲：模型请求</a> · <a href="../previews/chapter-05.html#doc-2">第05讲：会话日志 →</a></p>
+</article>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第04讲 · 想改代码，不等于已经获准修改</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>一、理解了原因，为什么编辑仍可能失败</h2>
+<p>第三讲把报告、约定和源码送到了模型。模型现在建议把严格大于改成大于等于。这个建议正确，也不代表当前工具一定可以写入：用户可能尚未授权，文件可能已变化，执行服务可能不可用。</p>
+<p>Tool Call（工具调用请求）像一张施工申请单，写明动作与参数；Tool Result（工具结果）是系统尝试后给出的回执。申请单上写“修好了”不能让它自动变成回执。我们要跟的是实际执行路径。</p>
+<p><img src="../assets/chapter-04/reader/fig-01-case-state.png" alt="模型已经提出读代码或修改的请求，经过本讲机制，变为拒绝、失败和成功分别形成真实结果；未授权不写入"></p>
+<blockquote>
+<p>三格为同一运费任务的教学状态变化或故障对照。图不是实际运行日志；关键区别见各格说明。</p>
+</blockquote>
+<h2>二、先问能不能做，再问怎样做</h2>
+<p>参数必须符合动作定义，工具必须在当前可见范围中存在，取消信号不能已经生效。通过这些检查后，执行前策略可以允许、拒绝，或请求一次审批。Approval（审批）是针对这次动作的裁决，不是给整个后续任务发一张无限通行证。</p>
+<p>本项目还在可扩展执行前处理之后运行 Guard（执行拒绝检查）。它只有拒绝或不表态，没有“强制允许”的返回值。这样后面的检查不能撤销其他检查提出的拒绝。它解决的是拒绝约束不能被可重排的外围处理偷偷放开的风险。</p>
+<p>不是每次读取都一定弹出审批框，也不是所有部署都自动懂得用户这句中文的权限范围；具体策略要由已装配的提供者执行。本书的教学执行器将“未授权不改”作为显式状态检查。</p>
+<h2>三、在源码里找到拒绝真正发生的位置</h2>
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/tools/src/index.ts#L1485-L1502">固定提交中的定位片段</a>（只保留本节要读的源码边界）：</p>
+<pre><code class="language-ts">      const denialReason = decision.kind === &#39;allow&#39;
+        ? this.guardReason(exec)
+        : decision.reason
+      if (denialReason !== undefined) {
+        return await next({
+          kind: &#39;post-result&#39;,
+          exec,
+          result: this.materializeFinalResult({
+            content: [{ type: &#39;text&#39;, text: `Error: ${denialReason}` }],
+            isError: true,
+            error: { message: denialReason },
+          }),
+        })
+      }
+      if (this.callerCancelled(exec)) {
+        return await next({ kind: &#39;post-result&#39;, exec, result: toolAbortedBeforeDispatchResult() })
+      }
+      return await next({ kind: &#39;dispatch&#39;, exec })
+</code></pre>
+<p>前面的执行前裁决与审批给出 <code>decision</code>；这里在允许时继续做拒绝检查，并把 <code>denialReason</code> 作为是否进入工具主体的分界。只有没有拒绝且调用未取消，才进入 <code>dispatch</code> 分支。读到拒绝分支里的错误结果后，不能再把它描述成“工具主体已运行但结果不满意”。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/tools/src/index.ts#L1684-L1728">审批解析</a> 还说明一次允许与其他非授权结果怎样区分。没有可用审批通道不是默认允许。</p>
+<h2>四、拒绝、执行错误、测试失败不是一回事</h2>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>文件有没有改</th>
+<th>可以得出什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>用户未授权，编辑被拒绝</td>
+<td>不应修改</td>
+<td>当前动作没有被允许</td>
+</tr>
+<tr>
+<td>已允许，但编辑找不到原文</td>
+<td>没有完成目标补丁</td>
+<td>需要重读当前文件和匹配条件</td>
+</tr>
+<tr>
+<td>测试命令已启动，断言失败</td>
+<td>与编辑是否发生分开判断</td>
+<td>执行通道工作了，但业务测试未通过</td>
+</tr>
+<tr>
+<td>编辑成功，尚未运行测试</td>
+<td>已改变</td>
+<td>只能报告修改完成，不能报告验证通过</td>
+</tr>
+</tbody></table>
+<p>把所有负面结果都称为“模型失败”，会把排障方向带错。拒绝要处理权限或缩小动作；工具错误要查参数与环境；断言失败要回到业务证据。不能通过换一条不受检查的通道重试来“解决”拒绝。</p>
+<h2>五、回执还要经过整理与记录</h2>
+<p>工具主体前后还有可扩展处理和最终结果整理。外围处理可能替换或阻止内容，最终对外结果需要冻结、归一化，并与原调用对应。完整链路见 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/docs/tool-execution-pipeline.md">工具执行管线</a>。</p>
+<p>因此不要从某个内部函数打印了“成功”推断模型最终看到成功，也不要从模型最后一句话倒推系统实际执行过。应追到登记的最终结果和对应调用编号。</p>
+<h2>六、回到授权后的那一行</h2>
+<p>本书夹具只允许修正运费比较符号。读完最新源码、获得限定许可、应用匹配的补丁后，才进入重新测试。若文件在读取与编辑之间被别人改了，先重新读取，不能用旧材料覆盖新内容。</p>
+<p>这一讲保证每一次动作都有真实回执。第五讲继续解决另一个缺口：这些回执怎样保留下来，让下一次模型请求知道已经做了什么，而不是从头猜一次。</p>
+<p><a href="../previews/chapter-03.html#doc-2">← 第03讲：模型请求</a> · <a href="../previews/chapter-05.html#doc-2">第05讲：会话日志 →</a></p>
+</article>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第04讲 · 想改代码，不等于已经获准修改</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>先作答，再展开</h2>
+<h3>1. 解释机制</h3>
+<p>审批通过后，执行拒绝检查还需要保留吗？</p>
+<details>
+<summary>查看解释与边界</summary>
+
+<p>需要。一次审批不强制覆盖其他执行约束；任一适用拒绝仍应阻止主体执行。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+</details>
+
+<h3>2. 预测反例</h3>
+<p>测试工具返回了结果，但进程退出码为 1，属于哪种失败？</p>
+<details>
+<summary>查看推演</summary>
+
+<p>可能是命令成功执行后测试断言失败，须看输出；不能把工具通道完成等同于业务通过。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+</details>
+
+<h3>3. 源码与图相互校验</h3>
+<p>打开<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/tools/src/index.ts#L1465-L1505">本讲定位</a>，找到正文强调的分支或契约。遮住图中文字，解释左、中、右三格分别表示什么；指出图省略了哪一项实现细节。</p>
+<details>
+<summary>参考核对方式</summary>
+
+<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“模型已经提出读代码或修改的请求”，右格是“拒绝、失败和成功分别形成真实结果；未授权不写入”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+</details>
+
+<p><a href="../previews/chapter-03.html#doc-2">← 第03讲：模型请求</a> · <a href="../previews/chapter-05.html#doc-2">第05讲：会话日志 →</a></p>
+</article>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第04讲 · 想改代码，不等于已经获准修改</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>用自己的话讲给同事</h2>
+<p>我们还在查同一个 Java 运费问题：满 100 元应免运费，恰好边界却收了 8 元。走到本讲，已有条件是：模型已经提出读代码或修改的请求。</p>
+<p>如果不补这一层，会遇到的问题是：审批通过后，执行拒绝检查还需要保留吗？ 需要。一次审批不强制覆盖其他执行约束；任一适用拒绝仍应阻止主体执行。 所以本讲新增的不是要背的名词，而是任务中一项明确的责任。</p>
+<p>现在能做到：拒绝、失败和成功分别形成真实结果；未授权不写入。但还要守住反例：测试工具返回了结果，但进程退出码为 1，属于哪种失败？ 可能是命令成功执行后测试断言失败，须看输出；不能把工具通道完成等同于业务通过。</p>
+<p>请结合<a href="../previews/chapter-04.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/tools/src/index.ts#L1465-L1505">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“这次读到的证据，下次从哪里取”继续。</p>
+</article>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第04讲 · 想改代码，不等于已经获准修改</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<p>词典用于回查，正文在首次使用处解释。代码、参数与路径保留原拼写；产品名称不逐字翻译。模型上下文和插件上下文不是一回事。</p>
+<h2>Tool Call（工具调用请求）</h2>
+<p>模型提出的动作与参数，像施工申请单。它表示想做什么；审批拒绝后不能声称动作已经发生。</p>
+<h2>Tool Result（工具结果）</h2>
+<p>执行系统返回的回执，包含成功内容或失败原因。回执可能说明“命令运行了但测试失败”，所以工具通道成功不等于业务成功。</p>
+<h2>Approval（审批）</h2>
+<p>对具体动作是否允许的裁决，像只准修这处边界的施工许可。许可不授权删测试或顺便改其他业务，也不能保证工具一定执行成功。</p>
+<h2>Guard（执行拒绝检查）</h2>
+<p>执行前只负责提出拒绝的检查，像门口最后一道禁止通行检查。它能拒绝或不表态，不能强行推翻已有拒绝来批准动作。</p>
+<h2>核对来源</h2>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/tools/src/index.ts#L1465-L1505">本讲源码定位</a>与<a href="../previews/chapter-04.html#doc-2">完整正文</a>。本例报告和金额属于教学夹具，不来自这份上游源码。</p>
+</article></main>
+</body>
+</html>

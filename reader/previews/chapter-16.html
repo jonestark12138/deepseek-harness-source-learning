@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>DeepSeek Harness · 第16讲-完成验收</title>
+  <style>
+    @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/chapter-16.html#doc-0">学习导航</a><a href="../previews/chapter-16.html#doc-1">视觉课件</a><a href="../previews/chapter-16.html#doc-2">逐步讲解</a><a href="../previews/chapter-16.html#doc-3">练习与答案</a><a href="../previews/chapter-16.html#doc-4">分享稿</a><a href="../previews/chapter-16.html#doc-5">术语词典</a></nav>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第16讲 · 助手说修好了，怎样证明不是只说说</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>从这里接上</h2>
+<p>补丁已写入，但还没有新测试证据。本讲要回答：助手说修好了，怎样证明不是只说说？</p>
+<p>上一讲解决了“分清通知、等待、裁决和接力，拒绝错误控制流”；这仍不能代替本讲要补的责任。</p>
+<h2>阅读与完成标准</h2>
+<p>先看<a href="../previews/chapter-16.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-16.html#doc-3">练习</a>。<a href="../previews/chapter-16.html#doc-1">视觉课件</a>用于复习，<a href="../previews/chapter-16.html#doc-5">词典</a>随用随查，不要求先背英文。预计正文阅读 20–35 分钟，练习 10–20 分钟；这是安排建议，不是学会的证明。</p>
+<p>读完应能解释：助手回复完整且运行正常停止，为什么验收仍可能失败？ 还要能预测：修改后拿修改前的绿色报告交付，缺的是什么？ 最后从<a href="../evidence/chapter-16.html">源码证据</a>定位相应责任。</p>
+<p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
+<h2>本讲交接</h2>
+<p>用边界三测、实际退出码、差异和授权记录验收。但下一步还要解决：拆掉框架名字，你还能解释这次排查吗。</p>
+<p><a href="../previews/chapter-15.html#doc-2">← 第15讲：事件协作</a> · <a href="../previews/chapter-17.html#doc-2">第17讲：综合迁移 →</a></p>
+</article>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第16讲 · 助手说修好了，怎样证明不是只说说</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>当前现场</h2>
+<p>补丁已写入，但还没有新测试证据。固定业务约定不变：满 10000 分免运费；原实现在等于时返回 800。禁止用修改预期的方式让测试变绿。</p>
+<p><img src="../assets/chapter-16/reader/fig-01-case-state.png" alt="补丁已写入，但还没有新测试证据，经过本讲机制，变为用边界三测、实际退出码、差异和授权记录验收"></p>
+<h2>三分钟复述</h2>
+<p>先描述左格缺什么，再说明中格采取的机制，最后指出右格新增了哪些证据或责任。用边界三测、实际退出码、差异和授权记录验收。不要只读图上的物件名；删掉中间这项机制，任务会在哪一步失去依据？</p>
+<p>本讲最容易误会的是：修改后拿修改前的绿色报告交付，缺的是什么？ 缺新测试与当前文件版本的关联；内容指纹可发现版本不一致，但仍需正确测试和业务判断。</p>
+<h2>从图返回源码</h2>
+<p>图只表达教学关联与状态变化，不代替完整调用顺序。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L424-L433">源码定位</a>提供实现或契约证据，<a href="../previews/chapter-16.html#doc-2">正文</a>解释映射和边界。</p>
+<p><a href="../previews/chapter-15.html#doc-2">← 第15讲：事件协作</a> · <a href="../previews/chapter-17.html#doc-2">第17讲：综合迁移 →</a></p>
+</article>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第16讲 · 助手说修好了，怎样证明不是只说说</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>一、现在所有能力都工作了，为什么仍不能直接结案</h2>
+<p>前面已经把这次运费排查的执行器、插件和协作方式接好，补丁也确实应用了。助手输出一句“已修复”，看上去很完整。可这句话只是回复内容，不是测试证据。</p>
+<p>Verification（验收核对）把“系统停止了”“动作执行了”“业务要求满足了”拆开。Evaluation（效果评估）则在更多任务和故障上衡量系统表现。一次用例通过可以支持本例的有限结论，不能推出真实智能体对所有项目都可靠。</p>
+<p><img src="../assets/chapter-16/reader/fig-01-case-state.png" alt="补丁已写入，但还没有新测试证据，经过本讲机制，变为用边界三测、实际退出码、差异和授权记录验收"></p>
+<blockquote>
+<p>三格为同一运费任务的教学状态变化或故障对照。图不是实际运行日志；关键区别见各格说明。</p>
+</blockquote>
+<h2>二、先确认我们没有偷偷换题</h2>
+<p>原题是查清“满 100 元免运费”边界失败原因，在获得授权后修复并验证。若改的是测试预期，让 10000 的预期变成 800，测试会绿，但业务目标被替换了。若干脆让所有金额都返回零，10000 会绿，9999 却被破坏。</p>
+<p>因此三项验收不只是凑覆盖率，而是分别约束目标边界与左右行为。还应查看版本差异，确认只修比较符号，没有额外修改无关业务和测试预期。</p>
+<h2>三、运行结束不能当业务成功的证据</h2>
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L424-L433">固定提交中的定位片段</a>（仅显示这一段前至多 20 行，不是完整函数）：</p>
+<pre><code class="language-ts">        { surfaceOp: &#39;append&#39;, sourceEventSeqs: chunkSeqs },
+      )
+      if (finish.kind === &#39;max-tokens&#39;) return { kind: &#39;max-tokens&#39; }
+
+      const toolCalls = message.content.filter(block =&gt; block.type === &#39;tool-call&#39;)
+      if (toolCalls.length === 0) return { kind: &#39;completed&#39; }
+      const { concluded } = await executeToolCalls(
+        this.loopCtx, turn, step, toolCalls, signal,
+        context =&gt; this.inbox.splice(&#39;next-step&#39;, this.inbox.nextStep.length, 0, [context]),
+      )
+</code></pre>
+<p>这里没有工具调用时可以返回正常完成状态。这证明当前模型步骤不再请求工具，不证明它说的话正确。即使它根本没读报告就结束，运行状态仍可能是正常结束；业务验收必须另外检查证据。</p>
+<p>像一个 Java 请求返回了状态码成功，但数据库中该写的业务数据并未符合约束。传输或调度层完成，不等于目标事实成立。</p>
+<h2>四、把验收证据绑到当前文件</h2>
+<p>一份合格结案至少包含：业务约定出处、原失败输入和实际值、原因所在实现、修改许可、实际差异、执行目录、测试命令、退出码和针对的代码版本。</p>
+<p>没有当前版本关联的绿色报告，很可能来自修改前或另一目录。代码变更后，旧测试证据应失效；执行工具返回“命令已启动”，也还不能当作进程正常结束。</p>
+<p>本书教学运行器保存源码哈希，并要求最终测试哈希与当前代码一致。Hash（内容指纹）帮助发现版本不匹配，但它本身不证明代码正确；真正的正确性仍来自业务约定、测试范围和人工检查。</p>
+<h2>五、反例比口号更能暴露问题</h2>
+<p>故意让系统遇到七种情况：没有报告、只有报告没有代码、未授权写入、恢复时有悬空调用、摘要伪造授权、子任务只有结论没有证据、测试成功后代码又变了。</p>
+<p>期望行为不是每次都成功，而是在证据不足时准确停止：能说明已经完成什么、哪里失败、还需要什么。失败后凭空生成漂亮结果，比明确报告未完成更危险。</p>
+<p>同时区分三层实验：自编运行器验证教学约束；上游局部测试验证对应实现；真实模型与真实工具评测验证端到端任务效果。本轮运行器通过不能冒充后两层已通过。</p>
+<h2>六、可靠性不只看成功率</h2>
+<p>更多请求和更多帮手可能提高某些复杂任务成功率，也会增加费用、时延、重复材料和合并错误。评价时要记录任务是否正确、是否越权、失败是否可解释、耗时与请求量，而非只数工具调用次数。</p>
+<p>本例的业务逻辑很小，通常无需分工和自动流程。全书逐步增加困难是为了理解机制，不是在推荐把所有机制都装到每个简单任务里。</p>
+<h2>七、结案模板</h2>
+<p>现在可以写：“已从报告、业务约定和实现确认边界判断遗漏等于；获得限定授权后只修改比较符号；针对当前文件重新执行边界三测并检查差异。未覆盖的行为仍列为未验证。”</p>
+<p>如果其中任何一项没有证据，就把对应句改成“待验证”。最后一讲将去掉具体框架名字，用一个可运行的教学系统检查你是否真正掌握这些关系。</p>
+<p><a href="../previews/chapter-15.html#doc-2">← 第15讲：事件协作</a> · <a href="../previews/chapter-17.html#doc-2">第17讲：综合迁移 →</a></p>
+</article>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第16讲 · 助手说修好了，怎样证明不是只说说</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>先作答，再展开</h2>
+<h3>1. 解释机制</h3>
+<p>助手回复完整且运行正常停止，为什么验收仍可能失败？</p>
+<details>
+<summary>查看解释与边界</summary>
+
+<p>它可能没读证据、没真正修改或没针对当前版本测试；运行完成不是业务事实满足。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+</details>
+
+<h3>2. 预测反例</h3>
+<p>修改后拿修改前的绿色报告交付，缺的是什么？</p>
+<details>
+<summary>查看推演</summary>
+
+<p>缺新测试与当前文件版本的关联；内容指纹可发现版本不一致，但仍需正确测试和业务判断。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+</details>
+
+<h3>3. 源码与图相互校验</h3>
+<p>打开<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L424-L433">本讲定位</a>，找到正文强调的分支或契约。遮住图中文字，解释左、中、右三格分别表示什么；指出图省略了哪一项实现细节。</p>
+<details>
+<summary>参考核对方式</summary>
+
+<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“补丁已写入，但还没有新测试证据”，右格是“用边界三测、实际退出码、差异和授权记录验收”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+</details>
+
+<p><a href="../previews/chapter-15.html#doc-2">← 第15讲：事件协作</a> · <a href="../previews/chapter-17.html#doc-2">第17讲：综合迁移 →</a></p>
+</article>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第16讲 · 助手说修好了，怎样证明不是只说说</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>用自己的话讲给同事</h2>
+<p>我们还在查同一个 Java 运费问题：满 100 元应免运费，恰好边界却收了 8 元。走到本讲，已有条件是：补丁已写入，但还没有新测试证据。</p>
+<p>如果不补这一层，会遇到的问题是：助手回复完整且运行正常停止，为什么验收仍可能失败？ 它可能没读证据、没真正修改或没针对当前版本测试；运行完成不是业务事实满足。 所以本讲新增的不是要背的名词，而是任务中一项明确的责任。</p>
+<p>现在能做到：用边界三测、实际退出码、差异和授权记录验收。但还要守住反例：修改后拿修改前的绿色报告交付，缺的是什么？ 缺新测试与当前文件版本的关联；内容指纹可发现版本不一致，但仍需正确测试和业务判断。</p>
+<p>请结合<a href="../previews/chapter-16.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L424-L433">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“拆掉框架名字，你还能解释这次排查吗”继续。</p>
+</article>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第16讲 · 助手说修好了，怎样证明不是只说说</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<p>词典用于回查，正文在首次使用处解释。代码、参数与路径保留原拼写；产品名称不逐字翻译。模型上下文和插件上下文不是一回事。</p>
+<h2>Verification（验收核对）</h2>
+<p>针对本次交付核对证据与要求，像验收这张工单。补丁存在、当前版本三测通过、范围获准都要检查，系统停止不是业务成功。</p>
+<h2>Evaluation（效果评估）</h2>
+<p>用多种任务和失败条件评估系统表现，像抽查一批工单。一次验收成功不能证明系统普遍可靠，需明确样本和判定标准。</p>
+<h2>Hash（内容指纹）</h2>
+<p>从内容计算出的指纹，像给代码版本贴身份标签。本例用它发现测试报告对应旧代码；指纹相同不证明业务逻辑正确。</p>
+<h2>核对来源</h2>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L424-L433">本讲源码定位</a>与<a href="../previews/chapter-16.html#doc-2">完整正文</a>。本例报告和金额属于教学夹具，不来自这份上游源码。</p>
+</article></main>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>DeepSeek Harness · 第17讲-综合迁移</title>
+  <style>
+    @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/chapter-17.html#doc-0">学习导航</a><a href="../previews/chapter-17.html#doc-1">视觉课件</a><a href="../previews/chapter-17.html#doc-2">逐步讲解</a><a href="../previews/chapter-17.html#doc-3">练习与答案</a><a href="../previews/chapter-17.html#doc-4">分享稿</a><a href="../previews/chapter-17.html#doc-5">术语词典</a></nav>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第17讲 · 拆掉框架名字，你还能解释这次排查吗</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>从这里接上</h2>
+<p>具备从报告到验证的完整证据链。本讲要回答：拆掉框架名字，你还能解释这次排查吗？</p>
+<p>上一讲解决了“用边界三测、实际退出码、差异和授权记录验收”；这仍不能代替本讲要补的责任。</p>
+<h2>阅读与完成标准</h2>
+<p>先看<a href="../previews/chapter-17.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-17.html#doc-3">练习</a>。<a href="../previews/chapter-17.html#doc-1">视觉课件</a>用于复习，<a href="../previews/chapter-17.html#doc-5">词典</a>随用随查，不要求先背英文。预计正文阅读 20–35 分钟，练习 10–20 分钟；这是安排建议，不是学会的证明。</p>
+<p>读完应能解释：教学运行器通过所有断言，是否证明真实模型可靠？ 还要能预测：去另一个框架找不到 Session（会话）类，是不是没有记忆机制？ 最后从<a href="../evidence/chapter-17.html">源码证据</a>定位相应责任。</p>
+<p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
+<h2>本讲交接</h2>
+<p>用最小教学运行器复现拒绝、恢复、分工与验收约束。从头到尾复述任务，并明确教学实验与真实端到端验证的差别。</p>
+<p><a href="../previews/chapter-16.html#doc-2">← 第16讲：完成验收</a> · 主线正文完结</p>
+</article>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第17讲 · 拆掉框架名字，你还能解释这次排查吗</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>当前现场</h2>
+<p>具备从报告到验证的完整证据链。固定业务约定不变：满 10000 分免运费；原实现在等于时返回 800。禁止用修改预期的方式让测试变绿。</p>
+<p><img src="../assets/chapter-17/reader/fig-01-case-state.png" alt="具备从报告到验证的完整证据链，经过本讲机制，变为用最小教学运行器复现拒绝、恢复、分工与验收约束"></p>
+<h2>三分钟复述</h2>
+<p>先描述左格缺什么，再说明中格采取的机制，最后指出右格新增了哪些证据或责任。用最小教学运行器复现拒绝、恢复、分工与验收约束。不要只读图上的物件名；删掉中间这项机制，任务会在哪一步失去依据？</p>
+<p>本讲最容易误会的是：去另一个框架找不到 Session（会话）类，是不是没有记忆机制？ 不能凭名字判断。追踪记录、模型输入与恢复路径，检查责任由谁承担，而非强行匹配本书类名。</p>
+<h2>从图返回源码</h2>
+<p>图只表达教学关联与状态变化，不代替完整调用顺序。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">源码定位</a>提供实现或契约证据，<a href="../previews/chapter-17.html#doc-2">正文</a>解释映射和边界。</p>
+<p><a href="../previews/chapter-16.html#doc-2">← 第16讲：完成验收</a> · 主线正文完结</p>
+</article>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第17讲 · 拆掉框架名字，你还能解释这次排查吗</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>一、把所有英文遮住，只剩这次任务</h2>
+<p>第十六讲已经说明怎样验真。现在回到第一讲的请求：一个 Java 服务边界测试失败，先排查；获得修改授权后修复，再重新测试。你应能不依赖包名，说出信息如何进来、动作如何执行、事实如何留下、任务如何继续以及完成怎样证明。</p>
+<p>这就是学习 DeepSeek Harness 的迁移目标。不同智能体常面对相近的输入、动作、状态与验证问题，但可能使用不同调度方式、记忆结构、工具协议和权限体系。共性在问题与责任，不在一定拥有同名类或使用相同插件框架。</p>
+<p><img src="../assets/chapter-17/reader/fig-01-case-state.png" alt="具备从报告到验证的完整证据链，经过本讲机制，变为用最小教学运行器复现拒绝、恢复、分工与验收约束"></p>
+<blockquote>
+<p>三格为同一运费任务的教学状态变化或故障对照。图不是实际运行日志；关键区别见各格说明。</p>
+</blockquote>
+<h2>二、最小运行器故意省掉什么</h2>
+<p>本书提供确定性的教学运行器：用内存文件替代真实磁盘，用预设调用替代真实模型，用金额比较的对应实验替代 Java 运行。它不接网络、不执行任意命令、不花模型费用。它能验证几条工程约束，不能评估模型推理质量。</p>
+<p>Stub（测试替身）像排练时按固定台词说话的演员，帮助我们检查舞台机关和交接规则。真实模型可能给错参数、读错材料、反复尝试或过早结束；固定台词不会暴露所有这些问题。所以别把排练顺利叫作真实首演成功。</p>
+<h2>三、保留哪些最小责任</h2>
+<p>运行器保存调用与结果、一份可恢复快照、独立写许可、有限补丁规则和当前代码指纹。它拒绝未授权写入，拒绝旧版本补丁，不在恢复时重放外部动作，并要求新的测试结果才能验收。</p>
+<p>这些职责与上游机制有对应关系，但没有实现 Cordis 插件生命周期、完整消息协议、持久化崩溃事务或真实沙箱。对照 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">主循环</a>，你应能指出教学运行器省略了哪些部分，而非把它当另一份官方实现。</p>
+<h2>四、复制后先走一次失败，再走一次正确过程</h2>
+<p>把下方完整教学代码复制为 <code>runner.cjs</code>，再将示例复制为同目录的 <code>demo.cjs</code>。使用 Node.js（JavaScript 运行环境）24 或以上运行 <code>node demo.cjs</code>。这里的测试输出明确标为模拟结果。</p>
+<details>
+<summary>展开完整教学运行器（无真实工具与模型调用）</summary>
+
+<pre><code class="language-js">// Deterministic teaching model. No LLM, real shell, network or Java execution.
+const { createHash } = require(&#39;node:crypto&#39;)
+const digest = text =&gt; createHash(&#39;sha256&#39;).update(text).digest(&#39;hex&#39;)
+const ORIGINAL = &#39;return orderCents &gt; 10000 ? 0 : 800;&#39;
+const FIXED = &#39;return orderCents &gt;= 10000 ? 0 : 800;&#39;
+const CONTRACT = &#39;满 10000 分免运费；否则 800 分；不得改测试预期。&#39;
+const baseline = () =&gt; ({ code: ORIGINAL, contract: CONTRACT, report: &#39;amount=10000 expected=0 actual=800 FAIL&#39; })
+
+class TeachingHarness {
+  constructor(files = baseline(), persisted = []) {
+    this.files = files
+    this.log = structuredClone(persisted)
+    this.allowed = false // A new live executor requires fresh authorization.
+    this.view = null
+    // Close incomplete calls as unknown outcomes, never rerun them on recovery.
+    const settled = new Set(this.log.filter(e =&gt; e.type === &#39;result&#39;).map(e =&gt; e.data.callId))
+    for (const event of [...this.log]) if (event.type === &#39;call&#39; &amp;&amp; !settled.has(event.seq)) {
+      this.append(&#39;result&#39;, { callId: event.seq, ok: false, error: &#39;interrupted; external outcome unknown&#39; })
+    }
+  }
+  append(type, data) {
+    const event = { seq: this.log.length, type, data: structuredClone(data) }
+    this.log.push(event)
+    return event.seq
+  }
+  grant() {
+    this.allowed = true
+    this.append(&#39;authorization&#39;, { scope: &#39;one boundary fix; preserve tests&#39; })
+  }
+  async execute(name, args = {}) {
+    const callId = this.append(&#39;call&#39;, { name, args })
+    let result
+    try {
+      if (name === &#39;read&#39;) {
+        if (!Object.hasOwn(this.files, args.file)) throw Error(&#39;file not found&#39;)
+        const text = this.files[args.file]
+        result = { ok: true, file: args.file, text, hash: digest(text) }
+      } else if (name === &#39;patch&#39;) {
+        if (!this.allowed) throw Error(&#39;modification not authorized&#39;)
+        if (args.expectedHash !== digest(this.files.code)) throw Error(&#39;code changed; read again&#39;)
+        if (this.files.code !== ORIGINAL) throw Error(&#39;patch target no longer matches&#39;)
+        this.files.code = FIXED
+        this.allowed = false
+        result = { ok: true, changed: true, hash: digest(this.files.code) }
+      } else if (name === &#39;test&#39;) {
+        if (![ORIGINAL, FIXED].includes(this.files.code)) throw Error(&#39;unknown teaching implementation&#39;)
+        const rows = [9999, 10000, 10001].map(amount =&gt; {
+          const actual = (this.files.code === FIXED ? amount &gt;= 10000 : amount &gt; 10000) ? 0 : 800
+          return { amount, expected: amount &gt;= 10000 ? 0 : 800, actual }
+        })
+        result = { ok: true, simulated: true, codeHash: digest(this.files.code), rows,
+          exitCode: rows.some(r =&gt; r.actual !== r.expected) ? 1 : 0 }
+      } else throw Error(&#39;unknown tool&#39;)
+    } catch (error) { result = { ok: false, error: error.message } }
+    this.append(&#39;result&#39;, { callId, ...result })
+    return structuredClone(result)
+  }
+  compact(summary, sourceSeqs) {
+    if (!Array.isArray(sourceSeqs) || !sourceSeqs.length || sourceSeqs.some(i =&gt; !Number.isInteger(i) || !this.log[i])) throw Error(&#39;missing source&#39;)
+    const selected = sourceSeqs.map(i =&gt; this.log[i])
+    for (const event of selected) {
+      if (event.type === &#39;call&#39; &amp;&amp; !selected.some(e =&gt; e.type === &#39;result&#39; &amp;&amp; e.data.callId === event.seq)) throw Error(&#39;unpaired tool call&#39;)
+      if (event.type === &#39;result&#39; &amp;&amp; !sourceSeqs.includes(event.data.callId)) throw Error(&#39;unpaired tool result&#39;)
+    }
+    this.append(&#39;summary&#39;, { text: summary, sourceSeqs })
+    this.view = { text: summary, sourceSeqs: [...sourceSeqs] }
+  }
+  snapshot() { return structuredClone(this.log) }
+  verify() {
+    const results = this.log.filter(e =&gt; e.type === &#39;result&#39;).map(e =&gt; e.data)
+    const has = file =&gt; results.some(r =&gt; r.ok &amp;&amp; r.file === file)
+    const latestTest = results.filter(r =&gt; r.simulated).at(-1)
+    return { complete: has(&#39;report&#39;) &amp;&amp; has(&#39;contract&#39;) &amp;&amp; has(&#39;code&#39;)
+      &amp;&amp; this.log.some(e =&gt; e.type === &#39;authorization&#39;)
+      &amp;&amp; results.some(r =&gt; r.ok &amp;&amp; r.changed)
+      &amp;&amp; this.files.code === FIXED &amp;&amp; latestTest?.codeHash === digest(this.files.code)
+      &amp;&amp; latestTest.exitCode === 0 &amp;&amp; latestTest.rows.length === 3,
+    boundary: &#39;Only this deterministic fixture; not Java or a real agent evaluation.&#39; }
+  }
+}
+module.exports = { TeachingHarness, baseline, ORIGINAL, FIXED, digest }
+</code></pre>
+</details>
+
+<pre><code class="language-js">const { TeachingHarness, digest } = require(&#39;./runner.cjs&#39;);
+(async () =&gt; {
+  const h = new TeachingHarness();
+  console.log(&#39;unauthorized:&#39;, await h.execute(&#39;patch&#39;, {
+    expectedHash: digest(h.files.code)
+  }));
+  for (const file of [&#39;report&#39;, &#39;contract&#39;, &#39;code&#39;]) {
+    await h.execute(&#39;read&#39;, { file });
+  }
+  console.log(&#39;before:&#39;, await h.execute(&#39;test&#39;));
+  h.grant();
+  await h.execute(&#39;patch&#39;, { expectedHash: digest(h.files.code) });
+  console.log(&#39;after:&#39;, await h.execute(&#39;test&#39;));
+  console.log(&#39;verification:&#39;, h.verify());
+})();
+</code></pre>
+<p>先观察未授权请求返回错误，且源代码不变；原版三测在等于阈值时失败；显式授权后修改；新三测才通过。最后的验收对象会提醒你，这只是该确定性夹具，而不是 Java 或真实智能体评测。</p>
+<h2>五、自己制造四次“看起来成功”的假象</h2>
+<p>第一，把最后一次测试删掉，观察修改后的验收仍失败。第二，在测试通过后把代码改回原样，观察旧报告失效。第三，只保留读取报告，不读业务约定和代码，观察完整性验收失败。第四，将摘要写成“用户允许全部修改”，观察执行器仍拒绝未授权补丁。</p>
+<p>再做一次恢复实验：向日志追加一个没有结果的编辑请求，创建新执行器恢复。它应记录未知结果而不修改文件。这个教学策略展示“恢复事实”和“重做动作”不同；不代表真实恢复后端的全部细节。</p>
+<h2>六、怎样把所学迁移到另一个框架</h2>
+<p>拿到另一个项目时，按六个问题找证据：谁构造模型输入；谁决定继续；工具请求在哪里真正执行并受约束；事实记录保存在哪里；中断后如何恢复；业务成功由什么证据证明。</p>
+<p>再逐一记下不同选择。例如它未必采用仅追加日志，未必有独立子智能体，未必采用插件依赖激活。你要判断的是责任是否明确、缺口如何处理、约束能否通过反例验证，而不是强行将其类名翻译成这一套包名。</p>
+<h2>七、完整教材的终点与下一步实践</h2>
+<p>读完主课十七讲，应能从一条失败通知追到报告、实现、授权、补丁和新测试，并解释加入拒绝、恢复、压缩、分工后系统为何需要新机制。补课只帮助读语法和工程结构，不再打断主线编号。</p>
+<p>下一次在真实测试项目里实践时，先选一个小任务、只读起步，明确权限和验收；再接真实模型与工具，补充端到端测试。把本书当作理解和实验的地图，不把它当作任何环境都安全可靠的保证。</p>
+<p><a href="../previews/chapter-16.html#doc-2">← 第16讲：完成验收</a> · 主线正文完结</p>
+</article>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第17讲 · 拆掉框架名字，你还能解释这次排查吗</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>先作答，再展开</h2>
+<h3>1. 解释机制</h3>
+<p>教学运行器通过所有断言，是否证明真实模型可靠？</p>
+<details>
+<summary>查看解释与边界</summary>
+
+<p>不证明。它是固定决策与模拟工具，只验证选定工程约束；还缺真实模型、真实环境和端到端评测。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+</details>
+
+<h3>2. 预测反例</h3>
+<p>去另一个框架找不到 Session（会话）类，是不是没有记忆机制？</p>
+<details>
+<summary>查看推演</summary>
+
+<p>不能凭名字判断。追踪记录、模型输入与恢复路径，检查责任由谁承担，而非强行匹配本书类名。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+</details>
+
+<h3>3. 源码与图相互校验</h3>
+<p>打开<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">本讲定位</a>，找到正文强调的分支或契约。遮住图中文字，解释左、中、右三格分别表示什么；指出图省略了哪一项实现细节。</p>
+<details>
+<summary>参考核对方式</summary>
+
+<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“具备从报告到验证的完整证据链”，右格是“用最小教学运行器复现拒绝、恢复、分工与验收约束”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+</details>
+
+<p><a href="../previews/chapter-16.html#doc-2">← 第16讲：完成验收</a> · 主线正文完结</p>
+</article>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第17讲 · 拆掉框架名字，你还能解释这次排查吗</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>用自己的话讲给同事</h2>
+<p>我们还在查同一个 Java 运费问题：满 100 元应免运费，恰好边界却收了 8 元。走到本讲，已有条件是：具备从报告到验证的完整证据链。</p>
+<p>如果不补这一层，会遇到的问题是：教学运行器通过所有断言，是否证明真实模型可靠？ 不证明。它是固定决策与模拟工具，只验证选定工程约束；还缺真实模型、真实环境和端到端评测。 所以本讲新增的不是要背的名词，而是任务中一项明确的责任。</p>
+<p>现在能做到：用最小教学运行器复现拒绝、恢复、分工与验收约束。但还要守住反例：去另一个框架找不到 Session（会话）类，是不是没有记忆机制？ 不能凭名字判断。追踪记录、模型输入与恢复路径，检查责任由谁承担，而非强行匹配本书类名。</p>
+<p>请结合<a href="../previews/chapter-17.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">源码</a>；不要宣称这段教学推演就是实际模型日志。到这里应能对照另一个实现，识别共同问题和不同选择。</p>
+</article>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第17讲 · 拆掉框架名字，你还能解释这次排查吗</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<p>词典用于回查，正文在首次使用处解释。代码、参数与路径保留原拼写；产品名称不逐字翻译。模型上下文和插件上下文不是一回事。</p>
+<h2>Stub（测试替身）</h2>
+<p>按预定行为返回结果的测试替身，像排练时按台词办事的演员。能检验交接规则，不能衡量真实模型会不会推理正确。</p>
+<h2>Node.js（JavaScript 运行环境）</h2>
+<p>在浏览器外运行 JavaScript 的环境。本讲用它执行无网络、无真实工具的内存教学程序；不是 Java 虚拟机，也没有实际运行 Java 测试。</p>
+<h2>核对来源</h2>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L268-L308">本讲源码定位</a>与<a href="../previews/chapter-17.html#doc-2">完整正文</a>。本例报告和金额属于教学夹具，不来自这份上游源码。</p>
+</article></main>
+</body>
+</html>

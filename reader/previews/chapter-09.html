@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>DeepSeek Harness · 第09讲-长材料与压缩</title>
+  <style>
+    @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/chapter-09.html#doc-0">学习导航</a><a href="../previews/chapter-09.html#doc-1">视觉课件</a><a href="../previews/chapter-09.html#doc-2">逐步讲解</a><a href="../previews/chapter-09.html#doc-3">练习与答案</a><a href="../previews/chapter-09.html#doc-4">分享稿</a><a href="../previews/chapter-09.html#doc-5">术语词典</a></nav>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第09讲 · 材料多到一次看不完，怎样留下关键证据</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>从这里接上</h2>
+<p>日志不断增长，失败与授权可能淹没在历史里。本讲要回答：材料多到一次看不完，怎样留下关键证据？</p>
+<p>上一讲解决了“恢复记录后检查当前文件，不把恢复等同于重执行”；这仍不能代替本讲要补的责任。</p>
+<h2>阅读与完成标准</h2>
+<p>先看<a href="../previews/chapter-09.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-09.html#doc-3">练习</a>。<a href="../previews/chapter-09.html#doc-1">视觉课件</a>用于复习，<a href="../previews/chapter-09.html#doc-5">词典</a>随用随查，不要求先背英文。预计正文阅读 20–35 分钟，练习 10–20 分钟；这是安排建议，不是学会的证明。</p>
+<p>读完应能解释：压缩时只留下一个成功结果，删掉对应调用可以吗？ 还要能预测：摘要说已授权，而可信执行状态没有许可，应该听谁？ 最后从<a href="../evidence/chapter-09.html">源码证据</a>定位相应责任。</p>
+<p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
+<h2>本讲交接</h2>
+<p>保留可追溯摘要、关键边界和工具调用结果配对。但下一步还要解决：一个查契约，一个查实现，结果怎样合回来。</p>
+<p><a href="../previews/chapter-08.html#doc-2">← 第08讲：中断恢复</a> · <a href="../previews/chapter-10.html#doc-2">第10讲：分工与后台 →</a></p>
+</article>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第09讲 · 材料多到一次看不完，怎样留下关键证据</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>当前现场</h2>
+<p>日志不断增长，失败与授权可能淹没在历史里。固定业务约定不变：满 10000 分免运费；原实现在等于时返回 800。禁止用修改预期的方式让测试变绿。</p>
+<p><img src="../assets/chapter-09/reader/fig-01-case-state.png" alt="日志不断增长，失败与授权可能淹没在历史里，经过本讲机制，变为保留可追溯摘要、关键边界和工具调用结果配对"></p>
+<h2>三分钟复述</h2>
+<p>先描述左格缺什么，再说明中格采取的机制，最后指出右格新增了哪些证据或责任。保留可追溯摘要、关键边界和工具调用结果配对。不要只读图上的物件名；删掉中间这项机制，任务会在哪一步失去依据？</p>
+<p>本讲最容易误会的是：摘要说已授权，而可信执行状态没有许可，应该听谁？ 执行器不能把摘要当新权限。回查可信授权；摘要用于理解，不授予动作能力。</p>
+<h2>从图返回源码</h2>
+<p>图只表达教学关联与状态变化，不代替完整调用顺序。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/compaction/compaction/src/index.ts#L145-L170">源码定位</a>提供实现或契约证据，<a href="../previews/chapter-09.html#doc-2">正文</a>解释映射和边界。</p>
+<p><a href="../previews/chapter-08.html#doc-2">← 第08讲：中断恢复</a> · <a href="../previews/chapter-10.html#doc-2">第10讲：分工与后台 →</a></p>
+</article>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第09讲 · 材料多到一次看不完，怎样留下关键证据</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>一、把所有历史塞进去，不等于让模型记得更好</h2>
+<p>第八讲恢复后，运费任务的记录已经包含旧报告、源码、失败尝试和用户更正。再加入长测试日志，一次请求可能装不下全部材料。Context Window（上下文窗口）是一次模型交互可容纳材料的范围；Token（文本计量单位）用于估算这些材料占多少容量，不能直接等同于汉字个数。</p>
+<p>问题不是把记录簿扔掉，而是为下一次判断准备一份合适的工作材料。就像值班交接时保留完整档案，同时在桌面放一张带出处的摘要卡。</p>
+<p><img src="../assets/chapter-09/reader/fig-01-case-state.png" alt="日志不断增长，失败与授权可能淹没在历史里，经过本讲机制，变为保留可追溯摘要、关键边界和工具调用结果配对"></p>
+<blockquote>
+<p>三格为同一运费任务的教学状态变化或故障对照。图不是实际运行日志；关键区别见各格说明。</p>
+</blockquote>
+<h2>二、摘要必须保留能改变动作的事实</h2>
+<p>本例中，不应该丢掉：满 10000 分免运费的约定；实际收了 800 分的失败报告；当前代码版本与比较符号；修改授权的范围；尚未测试或测试针对旧版本的状态。</p>
+<p>可以压缩重复日志，却不能把“用户只允许排查”压成“处理完即可”，也不能把“旧版本测试通过”压成“所有测试通过”。这两种看似更短的摘要都会改变后续动作，属于失真，而不是节省容量。</p>
+<p>Compaction（上下文压缩）在这里是用较短的模型可见材料替换一段历史视图，原始事件仍保留。它不是对原始日志随意删行，也不是保证无损的文件压缩算法。</p>
+<h2>三、工具请求与结果为什么不能从中间剪开</h2>
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/compaction/compaction/src/index.ts#L145-L170">固定提交中的定位片段</a>（仅显示这一段前至多 20 行，不是完整函数）：</p>
+<pre><code class="language-ts">  /**
+   * Forcibly compact a range of surface nodes into a single summary node.
+   * `start` and `end` name an inclusive span by surface position, not numeric seq
+   * order; replacements can make visible seqs non-monotonic. Both edges must be
+   * balanced so assistant tool calls remain paired with their results. A model-
+   * backed implementation forwards cancellation and rejects active, missing,
+   * reversed, or unbalanced ranges. The target session is `agent.session`.
+   * Its replacement user message must use {@link compactCheckpointSource} with
+   * the transaction&#39;s `CompactionId`.
+   * Use {@link toolPairingBalancedBefore} and {@link toolPairingBalancedAfter}
+   * for the edge checks.
+   *
+   * @param start - first surface seq, inclusive.
+   * @param end - last surface seq, inclusive.
+   * @param agent - context whose session is mutated and whose routing options guide summarization.
+   * @param signal - optional cancellation; model-backed implementations must forward it.
+   * @throws when compaction is active or the range is missing, reversed, or unbalanced.
+   * @returns the appended event seqs, summary, replaced range, and token accounting.
+   */
+  abstract compactRegion(
+</code></pre>
+<p>接口明确要求压缩范围按消息投影位置选择，而不是简单按事件编号大小截断；边界必须平衡，不能留下工具结果却丢掉其调用，或留下调用却把结果剪掉。压缩后的摘要也要携带对应事务标识。</p>
+<p>想象接班记录只剩“成功”，却不知道成功的是读取报告、编辑代码还是测试。调用与结果配对，就是让结果仍有归属。它不是形式洁癖，而是避免模型和读者将某个成功错误归给别的动作。</p>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/compaction/compaction-basic/src/index.ts#L97-L150">基础压缩后端</a> 使用计量能力和模型相关配置，并挂到请求前等扩展点。服务声明规定契约，具体后端实现策略；不要把接口本身说成已经完成摘要生成。</p>
+<h2>四、什么情况压缩也救不了</h2>
+<p>如果当前必须保留的一份材料本身就超过窗口，或者工具目录和请求外层已经太大，只压旧历史不一定够。此时需要更精确地读取范围、筛选相关内容，或明确说明还缺哪些材料。</p>
+<p>摘要还可能错。对足以改变权限、补丁或验收的事实，应保留出处并允许回读原记录；执行器也不应因为一张摘要卡写着“已授权”就跳过自己的权限状态。本书的反例测试会故意伪造这句话，确认它不能产生写许可。</p>
+<h2>五、用本例检验一张摘要卡</h2>
+<p>一份合格的教学摘要可以写：“测试 10000→0 实际得 800；约定含等于；当前实现严格大于；只获准排查；尚未修改和重测。证据见对应报告和源码读取结果。”</p>
+<p>看起来不华丽，但它保住了下一步选择所需的信息。若已经获得修改授权，应写清范围而非泛化成“用户同意所有操作”。若测试在旧版本运行，也必须保留版本关系。</p>
+<h2>六、材料分得开，任务也可以分开吗</h2>
+<p>压缩解决一次请求的容量，不直接解决多模块阅读的耗时。假设业务约定、运费实现和调用链分散在不同模块，第十讲会把独立证据任务分给帮手，再由主助手合并，而不是期待更长上下文自动解决所有复杂度。</p>
+<p><a href="../previews/chapter-08.html#doc-2">← 第08讲：中断恢复</a> · <a href="../previews/chapter-10.html#doc-2">第10讲：分工与后台 →</a></p>
+</article>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第09讲 · 材料多到一次看不完，怎样留下关键证据</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>先作答，再展开</h2>
+<h3>1. 解释机制</h3>
+<p>压缩时只留下一个成功结果，删掉对应调用可以吗？</p>
+<details>
+<summary>查看解释与边界</summary>
+
+<p>不可以。失去调用身份会无法判断成功属于什么动作，范围必须保持工具调用结果配对。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+</details>
+
+<h3>2. 预测反例</h3>
+<p>摘要说已授权，而可信执行状态没有许可，应该听谁？</p>
+<details>
+<summary>查看推演</summary>
+
+<p>执行器不能把摘要当新权限。回查可信授权；摘要用于理解，不授予动作能力。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+</details>
+
+<h3>3. 源码与图相互校验</h3>
+<p>打开<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/compaction/compaction/src/index.ts#L145-L170">本讲定位</a>，找到正文强调的分支或契约。遮住图中文字，解释左、中、右三格分别表示什么；指出图省略了哪一项实现细节。</p>
+<details>
+<summary>参考核对方式</summary>
+
+<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“日志不断增长，失败与授权可能淹没在历史里”，右格是“保留可追溯摘要、关键边界和工具调用结果配对”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+</details>
+
+<p><a href="../previews/chapter-08.html#doc-2">← 第08讲：中断恢复</a> · <a href="../previews/chapter-10.html#doc-2">第10讲：分工与后台 →</a></p>
+</article>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第09讲 · 材料多到一次看不完，怎样留下关键证据</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>用自己的话讲给同事</h2>
+<p>我们还在查同一个 Java 运费问题：满 100 元应免运费，恰好边界却收了 8 元。走到本讲，已有条件是：日志不断增长，失败与授权可能淹没在历史里。</p>
+<p>如果不补这一层，会遇到的问题是：压缩时只留下一个成功结果，删掉对应调用可以吗？ 不可以。失去调用身份会无法判断成功属于什么动作，范围必须保持工具调用结果配对。 所以本讲新增的不是要背的名词，而是任务中一项明确的责任。</p>
+<p>现在能做到：保留可追溯摘要、关键边界和工具调用结果配对。但还要守住反例：摘要说已授权，而可信执行状态没有许可，应该听谁？ 执行器不能把摘要当新权限。回查可信授权；摘要用于理解，不授予动作能力。</p>
+<p>请结合<a href="../previews/chapter-09.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/compaction/compaction/src/index.ts#L145-L170">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“一个查契约，一个查实现，结果怎样合回来”继续。</p>
+</article>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第09讲 · 材料多到一次看不完，怎样留下关键证据</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<p>词典用于回查，正文在首次使用处解释。代码、参数与路径保留原拼写；产品名称不逐字翻译。模型上下文和插件上下文不是一回事。</p>
+<h2>Context Window（上下文窗口）</h2>
+<p>一次模型交互可容纳的材料范围，像桌面面积有限。能放多少取决于模型及请求预算；不是磁盘容量，也不表示放得下就一定会正确理解。</p>
+<h2>Token（文本计量单位）</h2>
+<p>模型计量输入输出的文本单位，像装箱时的计量刻度。它不固定对应一个汉字或一个英文词，不能直接用字符数替代真实计量。</p>
+<h2>Compaction（上下文压缩）</h2>
+<p>用更短的模型可见材料替换历史视图的一部分，像把厚卷宗整理成带出处的交接页。压缩可能丢细节；原始事件仍保留，摘要不能新授权限。</p>
+<h2>核对来源</h2>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/compaction/compaction/src/index.ts#L145-L170">本讲源码定位</a>与<a href="../previews/chapter-09.html#doc-2">完整正文</a>。本例报告和金额属于教学夹具，不来自这份上游源码。</p>
+</article></main>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>DeepSeek Harness · 第05讲-会话日志</title>
+  <style>
+    @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/chapter-05.html#doc-0">学习导航</a><a href="../previews/chapter-05.html#doc-1">视觉课件</a><a href="../previews/chapter-05.html#doc-2">逐步讲解</a><a href="../previews/chapter-05.html#doc-3">练习与答案</a><a href="../previews/chapter-05.html#doc-4">分享稿</a><a href="../previews/chapter-05.html#doc-5">术语词典</a></nav>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第05讲 · 这次读到的证据，下次从哪里取</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>从这里接上</h2>
+<p>报告和代码分次获得，不能依靠模型凭空记忆。本讲要回答：这次读到的证据，下次从哪里取？</p>
+<p>上一讲解决了“拒绝、失败和成功分别形成真实结果；未授权不写入”；这仍不能代替本讲要补的责任。</p>
+<h2>阅读与完成标准</h2>
+<p>先看<a href="../previews/chapter-05.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-05.html#doc-3">练习</a>。<a href="../previews/chapter-05.html#doc-1">视觉课件</a>用于复习，<a href="../previews/chapter-05.html#doc-5">词典</a>随用随查，不要求先背英文。预计正文阅读 20–35 分钟，练习 10–20 分钟；这是安排建议，不是学会的证明。</p>
+<p>读完应能解释：为什么调用请求和工具结果必须分别留痕？ 还要能预测：日志在内存里有新事件，能保证重启后还在吗？ 最后从<a href="../evidence/chapter-05.html">源码证据</a>定位相应责任。</p>
+<p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
+<h2>本讲交接</h2>
+<p>日志记录事实，再派生下一次请求的消息。但下一步还要解决：有工具却总漏步骤，怎样带上排查手册。</p>
+<p><a href="../previews/chapter-04.html#doc-2">← 第04讲：受控工具</a> · <a href="../previews/chapter-06.html#doc-2">第06讲：技能与外部接入 →</a></p>
+</article>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第05讲 · 这次读到的证据，下次从哪里取</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>当前现场</h2>
+<p>报告和代码分次获得，不能依靠模型凭空记忆。固定业务约定不变：满 10000 分免运费；原实现在等于时返回 800。禁止用修改预期的方式让测试变绿。</p>
+<p><img src="../assets/chapter-05/reader/fig-01-case-state.png" alt="报告和代码分次获得，不能依靠模型凭空记忆，经过本讲机制，变为日志记录事实，再派生下一次请求的消息"></p>
+<h2>三分钟复述</h2>
+<p>先描述左格缺什么，再说明中格采取的机制，最后指出右格新增了哪些证据或责任。日志记录事实，再派生下一次请求的消息。不要只读图上的物件名；删掉中间这项机制，任务会在哪一步失去依据？</p>
+<p>本讲最容易误会的是：日志在内存里有新事件，能保证重启后还在吗？ 不能。要看持久化后端是否存在以及保存是否完成；会话包的等待入口不是磁盘实现。</p>
+<h2>从图返回源码</h2>
+<p>图只表达教学关联与状态变化，不代替完整调用顺序。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L602-L646">源码定位</a>提供实现或契约证据，<a href="../previews/chapter-05.html#doc-2">正文</a>解释映射和边界。</p>
+<p><a href="../previews/chapter-04.html#doc-2">← 第04讲：受控工具</a> · <a href="../previews/chapter-06.html#doc-2">第06讲：技能与外部接入 →</a></p>
+</article>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第05讲 · 这次读到的证据，下次从哪里取</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>一、每次请求都重新组织，证据放在哪里</h2>
+<p>第四讲保证读文件和编辑都有回执。现在第二次请求来了：模型怎样知道报告已经读过，文件还没获准修改？不能依赖模型“脑中记住了上一次”。系统必须把需要的事实再次组成可见历史。</p>
+<p>Session（会话）在本项目中首先是一份仅追加事件日志，像这次排查的工作记录簿。它不是模型本身，也不是一个永远不丢内容的神奇记忆。报告、调用、结果和轮次边界按事实发生顺序记录，之后再从记录派生模型要看的消息。</p>
+<p><img src="../assets/chapter-05/reader/fig-01-case-state.png" alt="报告和代码分次获得，不能依靠模型凭空记忆，经过本讲机制，变为日志记录事实，再派生下一次请求的消息"></p>
+<blockquote>
+<p>三格为同一运费任务的教学状态变化或故障对照。图不是实际运行日志；关键区别见各格说明。</p>
+</blockquote>
+<h2>二、记录“说过什么”和“做过什么”要分开</h2>
+<p>本书同一任务的简化记录可以这样阅读：</p>
+<pre><code class="language-text">用户请求：只排查
+调用 1：读取报告
+结果 1：10000 分，预期 0，实际 800
+调用 2：读取代码与约定
+结果 2：严格大于；约定却包含等于
+助手回复：原因已定位，等待修改授权
+</code></pre>
+<p>这不是上游事件的完整序列化格式，而是方便人阅读的投影。真实日志还包含轮次、步骤、流式片段等事件。调用和结果要靠标识关联；“助手回复说已读取”不能替代读取结果。</p>
+<p>如果一条结果没有对应调用，或者一个调用在中断后没有结果，系统就需要明确处理这个缺口，不能由语言流畅程度决定相信哪一版。</p>
+<h2>三、为什么强调仅追加与输入快照</h2>
+<p>Append-only（仅追加）表示新增事实继续追加，而不是回头改写已经记下的历史。Projection（派生视图）则是从原始日志计算出适合某种用途的内容，例如模型消息或用户界面。</p>
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L602-L646">固定提交中的定位片段</a>（仅显示这一段前至多 20 行，不是完整函数）：</p>
+<pre><code class="language-ts">  append&lt;T extends SessionEventType&gt;(
+    type: T,
+    data: SessionEventMap[T],
+    ...opts: T extends SurfaceEventType ? [opts: SurfaceIntent] : []
+  ): SessionEvent&lt;T&gt; {
+    const surfaceOpts: SurfaceIntent | undefined = opts[0]
+    const surfaceMetadata = {
+      ...surfaceOpts?.sourceEventSeqs === undefined ? {} : { sourceEventSeqs: surfaceOpts.sourceEventSeqs },
+      ...surfaceOpts?.surfaceOp === undefined ? {} : { surfaceOp: surfaceOpts.surfaceOp },
+    }
+    const dataSnapshot = snapshotJsonValue(data)
+    if (dataSnapshot === undefined) {
+      throw new Error(`session event &quot;${type}&quot; carries non-JSON-serializable data`)
+    }
+    assertSupportedRequestHeader(type, dataSnapshot, `session event &quot;${type}&quot;`)
+    const surfaceMetadataSnapshot = snapshotJsonValue(surfaceMetadata)
+    if (surfaceMetadataSnapshot === undefined) {
+      throw new Error(`session event &quot;${type}&quot; carries non-JSON-serializable surface metadata`)
+    }
+    const entry = attachments.get(this)
+</code></pre>
+<p>读 <code>append</code> 时关注写入前的快照验证、序号建立、投影验证和真正进入日志的位置。调用方传入一个对象后，再修改原对象，不应该让过去的报告悄悄变了。否则同一段历史在不同时间会显示不同原因，根本谈不上复核。</p>
+<p>可以联想到 Java 的事件溯源：原始事实和查询视图区分。但不要由这个类比推断本项目自动具备跨服务事务、消息中间件或数据库持久化；那些要另外查看具体实现。</p>
+<h2>四、模型看见的不是整本记录簿的原样复印</h2>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L699-L744">消息派生</a> 根据当前消息投影结构生成消息数组。原始流式片段和内部边界事件有自己的用途，不必都原样放进每一次模型请求。</p>
+<p>这既减少无关材料，也让后面的压缩成为可能：原始事实仍在，模型下一次看到的视图可以经过明确的替换。不能把“模型现在不再看这段旧内容”解释成“历史事实被删除了”。</p>
+<p>第五讲先记住两个问题：证据是否被记录？当前请求是否实际取用了对应投影？二者都需要查，不能只看内存里有个会话对象。</p>
+<h2>五、记在内存里，不等于已经保存到磁盘</h2>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L1010-L1036">持久化等待入口</a> 等待持久化监听者完成，但真正的文件或数据库后端在其他包。类比记录员在纸上记下事实，再交档案室保存；写进工作簿和档案室确认收到，不是同一时刻。</p>
+<p>如果没有相应后端，不能宣称关闭进程再打开必然恢复。即使后端存在，也要区分排队写入和完成写入。第八讲将接着处理断电时的半条记录和未闭合调用。</p>
+<h2>六、现在证据可以接续，方法还能复用吗</h2>
+<p>本讲解决的是“已经知道什么”。可助手即使准确保留所有报告，也可能漏掉业务约定，或者忘记验证 9999 和 10001。下一讲引入可复用的排查手册：它告诉助手怎样检查，但不代替工具，也不替用户授予修改权。</p>
+<p><a href="../previews/chapter-04.html#doc-2">← 第04讲：受控工具</a> · <a href="../previews/chapter-06.html#doc-2">第06讲：技能与外部接入 →</a></p>
+</article>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第05讲 · 这次读到的证据，下次从哪里取</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>先作答，再展开</h2>
+<h3>1. 解释机制</h3>
+<p>为什么调用请求和工具结果必须分别留痕？</p>
+<details>
+<summary>查看解释与边界</summary>
+
+<p>请求记录想做什么，结果记录实际发生什么，并靠调用身份关联；二者混同会把意图当事实。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+</details>
+
+<h3>2. 预测反例</h3>
+<p>日志在内存里有新事件，能保证重启后还在吗？</p>
+<details>
+<summary>查看推演</summary>
+
+<p>不能。要看持久化后端是否存在以及保存是否完成；会话包的等待入口不是磁盘实现。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+</details>
+
+<h3>3. 源码与图相互校验</h3>
+<p>打开<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L602-L646">本讲定位</a>，找到正文强调的分支或契约。遮住图中文字，解释左、中、右三格分别表示什么；指出图省略了哪一项实现细节。</p>
+<details>
+<summary>参考核对方式</summary>
+
+<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“报告和代码分次获得，不能依靠模型凭空记忆”，右格是“日志记录事实，再派生下一次请求的消息”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+</details>
+
+<p><a href="../previews/chapter-04.html#doc-2">← 第04讲：受控工具</a> · <a href="../previews/chapter-06.html#doc-2">第06讲：技能与外部接入 →</a></p>
+</article>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第05讲 · 这次读到的证据，下次从哪里取</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>用自己的话讲给同事</h2>
+<p>我们还在查同一个 Java 运费问题：满 100 元应免运费，恰好边界却收了 8 元。走到本讲，已有条件是：报告和代码分次获得，不能依靠模型凭空记忆。</p>
+<p>如果不补这一层，会遇到的问题是：为什么调用请求和工具结果必须分别留痕？ 请求记录想做什么，结果记录实际发生什么，并靠调用身份关联；二者混同会把意图当事实。 所以本讲新增的不是要背的名词，而是任务中一项明确的责任。</p>
+<p>现在能做到：日志记录事实，再派生下一次请求的消息。但还要守住反例：日志在内存里有新事件，能保证重启后还在吗？ 不能。要看持久化后端是否存在以及保存是否完成；会话包的等待入口不是磁盘实现。</p>
+<p>请结合<a href="../previews/chapter-05.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L602-L646">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“有工具却总漏步骤，怎样带上排查手册”继续。</p>
+</article>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第05讲 · 这次读到的证据，下次从哪里取</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<p>词典用于回查，正文在首次使用处解释。代码、参数与路径保留原拼写；产品名称不逐字翻译。模型上下文和插件上下文不是一回事。</p>
+<h2>Session（会话）</h2>
+<p>本项目以仅追加事件日志保存的一次任务会话，像排查记录簿。它记录读报告、工具结果等事实，但不是模型内部的永久记忆。</p>
+<h2>Append-only（仅追加）</h2>
+<p>新事实只追加，不回头改写已记事件。像账本用后续记录说明变化；不意味着每次模型请求都要全文携带整个账本。</p>
+<h2>Projection（派生视图）</h2>
+<p>从原始日志计算出的用途特定视图，像从工单账本整理给工程师看的摘要页。模型消息和界面可用不同视图，原始记录不是它们的同义词。</p>
+<h2>核对来源</h2>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/session/src/index.ts#L602-L646">本讲源码定位</a>与<a href="../previews/chapter-05.html#doc-2">完整正文</a>。本例报告和金额属于教学夹具，不来自这份上游源码。</p>
+</article></main>
+</body>
+</html>

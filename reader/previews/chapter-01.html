@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>DeepSeek Harness · 第01讲-任务全景</title>
+  <style>
+    @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/chapter-01.html#doc-0">学习导航</a><a href="../previews/chapter-01.html#doc-1">视觉课件</a><a href="../previews/chapter-01.html#doc-2">逐步讲解</a><a href="../previews/chapter-01.html#doc-3">练习与答案</a><a href="../previews/chapter-01.html#doc-4">分享稿</a><a href="../previews/chapter-01.html#doc-5">术语词典</a></nav>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第01讲 · 先别猜：从一条失败断言开始</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>从这里接上</h2>
+<p>只有失败通知，没有报告和源码。本讲要回答：先别猜：从一条失败断言开始？</p>
+<p>全书只围绕这一个任务：查清满 100 元却仍收 8 元的原因；得到限定许可后修复，再验证。</p>
+<h2>阅读与完成标准</h2>
+<p>先看<a href="../previews/chapter-01.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-01.html#doc-3">练习</a>。<a href="../previews/chapter-01.html#doc-1">视觉课件</a>用于复习，<a href="../previews/chapter-01.html#doc-5">词典</a>随用随查，不要求先背英文。预计正文阅读 20–35 分钟，练习 10–20 分钟；这是安排建议，不是学会的证明。</p>
+<p>读完应能解释：没读报告就猜到比较符错误，算查清原因吗？ 还要能预测：把所有金额都改成免运费，10000 的测试过了，能结案吗？ 最后从<a href="../evidence/chapter-01.html">源码证据</a>定位相应责任。</p>
+<p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
+<h2>本讲交接</h2>
+<p>形成读报告、读代码、申请修改、重跑测试的任务闭环。但下一步还要解决：谁让助手读完报告后再读代码。</p>
+<p>主线起点 · <a href="../previews/chapter-02.html#doc-2">第02讲：智能体循环 →</a></p>
+</article>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第01讲 · 先别猜：从一条失败断言开始</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>当前现场</h2>
+<p>只有失败通知，没有报告和源码。固定业务约定不变：满 10000 分免运费；原实现在等于时返回 800。禁止用修改预期的方式让测试变绿。</p>
+<p><img src="../assets/chapter-01/reader/fig-01-case-state.png" alt="只有失败通知，没有报告和源码，经过本讲机制，变为形成读报告、读代码、申请修改、重跑测试的任务闭环"></p>
+<h2>三分钟复述</h2>
+<p>先描述左格缺什么，再说明中格采取的机制，最后指出右格新增了哪些证据或责任。形成读报告、读代码、申请修改、重跑测试的任务闭环。不要只读图上的物件名；删掉中间这项机制，任务会在哪一步失去依据？</p>
+<p>本讲最容易误会的是：把所有金额都改成免运费，10000 的测试过了，能结案吗？ 不能。9999 应收 800，修改破坏了边界外行为；还须保留测试预期与授权范围。</p>
+<h2>从图返回源码</h2>
+<p>图只表达教学关联与状态变化，不代替完整调用顺序。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L417-L433">源码定位</a>提供实现或契约证据，<a href="../previews/chapter-01.html#doc-2">正文</a>解释映射和边界。</p>
+<p>主线起点 · <a href="../previews/chapter-02.html#doc-2">第02讲：智能体循环 →</a></p>
+</article>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第01讲 · 先别猜：从一条失败断言开始</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>一、先把一件小事说具体</h2>
+<p>你维护一个 Java 运费服务。业务约定是“满 100 元免运费，不满收 8 元”。金额以分存储，避免把本讲变成小数精度课。今天有人只发来一句话：“恰好 100 元的测试失败了，先帮我查原因，不要修改。”</p>
+<p>这句话没有告诉助手失败的实际值，也没有给实现。此时直接回答“把大于改成大于等于”可能恰好猜对，却还不是排查。也可能是测试预期错、输入单位错，或者执行的是旧版本。<strong>第一条规则是：猜想可以提出，事实必须通过材料取得。</strong></p>
+<p>Model（模型）负责根据输入推理和生成内容，像坐在桌前分析材料的人。Agent Harness（智能体运行支撑）负责把材料放上桌、安排受控动作、保存过程并决定怎样继续。Agent（智能体）在本书概览中指这套能围绕任务行动的整体；源码中的同名接口另有更窄的职责，不能把教学等式当作接口定义。</p>
+<p><img src="../assets/chapter-01/reader/fig-01-case-state.png" alt="只有失败通知，没有报告和源码，经过本讲机制，变为形成读报告、读代码、申请修改、重跑测试的任务闭环"></p>
+<blockquote>
+<p>三格为同一运费任务的教学状态变化或故障对照。图不是实际运行日志；关键区别见各格说明。</p>
+</blockquote>
+<h2>二、同一张报告，会怎样缩小猜测范围</h2>
+<p>第一次读取报告，得到下面的教学预期输出。它是本书固定夹具的预期，不是假装运行过真实模型的日志：</p>
+<pre><code class="language-text">amount=10000 expected=0 actual=800 FAIL
+</code></pre>
+<p>现在能确认的只有：该测试给出 10000 分，期望免运费，却收到 800 分。你仍然不知道实现是不是严格大于。下一次需要读业务约定和相关代码，不是把这条报告反复换一种说法。</p>
+<p>我们把这份证据称为“失败报告”。整部教材不换另一个数据库或旅游案例：后面的日志、工具、恢复、摘要、分工，都围绕这项排查增加条件。</p>
+<h2>三、报告与实现终于对上了</h2>
+<p>读取 <code>ShippingCase.java</code> 后，本书夹具中的核心实现是：</p>
+<pre><code class="language-java">static int shippingFee(int orderCents) {
+    if (orderCents &lt; 0) throw new IllegalArgumentException(&quot;negative amount&quot;);
+    return orderCents &gt; 10000 ? 0 : 800;
+}
+</code></pre>
+<p>把 10000 代进去，严格大于条件为假，返回 800；业务约定却包含“等于”这个边界。因此原因不是“模型感觉像边界问题”，而是<strong>约定包含等于，实现排除了等于，报告正好在这个输入上失败</strong>。三份材料互相支持，才形成解释。</p>
+<p>这种读法与你排查 Java 服务一致：报错是线索，不是原因；代码是实现，不一定符合业务；测试是一个可重复观察，不自动证明所有情况。</p>
+<h2>四、会修复，为什么还要停一下</h2>
+<p>用户说的是先查原因。修改文件是新的动作，不能因为原因明显就自动获得许可。Tool（工具）是系统提供的一种动作入口，例如读文件、编辑文件或运行测试；模型生成工具请求，真正的执行由运行支撑完成。</p>
+<p>因此第一阶段的正确交付是报告原因、证据和建议改动，然后等待修改授权。拿到“只修边界判断，保留测试”的明确许可后，才把返回行改成：</p>
+<pre><code class="language-java">return orderCents &gt;= 10000 ? 0 : 800;
+</code></pre>
+<p>这个改动很小，许可范围也很小。它不授权删除失败测试、升级所有依赖，或修改无关业务。系统执行侧还可能拒绝操作；“用户允许”和“本次工具真的执行成功”也要分开记录。</p>
+<h2>五、改了文件，还没有到终点</h2>
+<p>最后重新测试阈值附近三个输入：</p>
+<table>
+<thead>
+<tr>
+<th>金额（分）</th>
+<th>预期运费（分）</th>
+<th>这项检查排除什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>9999</td>
+<td>800</td>
+<td>不能为了免运费把所有情况都改成零</td>
+</tr>
+<tr>
+<td>10000</td>
+<td>0</td>
+<td>修复本次边界失败</td>
+</tr>
+<tr>
+<td>10001</td>
+<td>0</td>
+<td>不破坏原来已正确的高于阈值分支</td>
+</tr>
+</tbody></table>
+<p>没有新测试结果，就只能说“已修改，待验证”。报告通过后，还要确认测试针对当前文件、退出码成功、测试预期没被偷偷改掉。全书最终交付沿用这组标准。</p>
+<h2>六、回到运行支撑源码：谁让过程继续</h2>
+<p>上面的业务服务是虚构夹具，下面的运行机制才来自固定的 DeepSeek Harness 源码。循环驱动检查模型回复中有没有工具调用；没有工具调用可以返回本轮完成状态，有工具调用则执行并根据结果决定是否继续。注意源码允许工具批次明确结束，不能把“调用工具后必然无限继续”当规则。</p>
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L417-L433">固定提交中的定位片段</a>（仅显示这一段前至多 20 行，不是完整函数）：</p>
+<pre><code class="language-ts">        &#39;assistant/message&#39;,
+        {
+          turn,
+          step,
+          message,
+          ...assembler.usage === undefined ? {} : { usage: assembler.usage },
+        },
+        { surfaceOp: &#39;append&#39;, sourceEventSeqs: chunkSeqs },
+      )
+      if (finish.kind === &#39;max-tokens&#39;) return { kind: &#39;max-tokens&#39; }
+
+      const toolCalls = message.content.filter(block =&gt; block.type === &#39;tool-call&#39;)
+      if (toolCalls.length === 0) return { kind: &#39;completed&#39; }
+      const { concluded } = await executeToolCalls(
+        this.loopCtx, turn, step, toolCalls, signal,
+        context =&gt; this.inbox.splice(&#39;next-step&#39;, this.inbox.nextStep.length, 0, [context]),
+      )
+</code></pre>
+<p>这段先看三个位置：过滤工具调用、执行调用、根据返回状态结束或继续。报告不在模型脑中自动出现，文件也不会因模型说“已修改”而变化。本讲只建立闭环；第二讲就沿“读完报告，还欠一次读代码”拆开这个继续机制。</p>
+<p>主线起点 · <a href="../previews/chapter-02.html#doc-2">第02讲：智能体循环 →</a></p>
+</article>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第01讲 · 先别猜：从一条失败断言开始</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>先作答，再展开</h2>
+<h3>1. 解释机制</h3>
+<p>没读报告就猜到比较符错误，算查清原因吗？</p>
+<details>
+<summary>查看解释与边界</summary>
+
+<p>不算。猜想可作为候选，但还要报告实际值、业务约定与实现分支互相印证。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+</details>
+
+<h3>2. 预测反例</h3>
+<p>把所有金额都改成免运费，10000 的测试过了，能结案吗？</p>
+<details>
+<summary>查看推演</summary>
+
+<p>不能。9999 应收 800，修改破坏了边界外行为；还须保留测试预期与授权范围。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+</details>
+
+<h3>3. 源码与图相互校验</h3>
+<p>打开<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L417-L433">本讲定位</a>，找到正文强调的分支或契约。遮住图中文字，解释左、中、右三格分别表示什么；指出图省略了哪一项实现细节。</p>
+<details>
+<summary>参考核对方式</summary>
+
+<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“只有失败通知，没有报告和源码”，右格是“形成读报告、读代码、申请修改、重跑测试的任务闭环”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+</details>
+
+<p>主线起点 · <a href="../previews/chapter-02.html#doc-2">第02讲：智能体循环 →</a></p>
+</article>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第01讲 · 先别猜：从一条失败断言开始</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>用自己的话讲给同事</h2>
+<p>我们还在查同一个 Java 运费问题：满 100 元应免运费，恰好边界却收了 8 元。走到本讲，已有条件是：只有失败通知，没有报告和源码。</p>
+<p>如果不补这一层，会遇到的问题是：没读报告就猜到比较符错误，算查清原因吗？ 不算。猜想可作为候选，但还要报告实际值、业务约定与实现分支互相印证。 所以本讲新增的不是要背的名词，而是任务中一项明确的责任。</p>
+<p>现在能做到：形成读报告、读代码、申请修改、重跑测试的任务闭环。但还要守住反例：把所有金额都改成免运费，10000 的测试过了，能结案吗？ 不能。9999 应收 800，修改破坏了边界外行为；还须保留测试预期与授权范围。</p>
+<p>请结合<a href="../previews/chapter-01.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L417-L433">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“谁让助手读完报告后再读代码”继续。</p>
+</article>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第01讲 · 先别猜：从一条失败断言开始</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<p>词典用于回查，正文在首次使用处解释。代码、参数与路径保留原拼写；产品名称不逐字翻译。模型上下文和插件上下文不是一回事。</p>
+<h2>Model（模型）</h2>
+<p>根据本次收到的材料推理并生成回答或动作请求，像分析桌前证据的工程师。磁盘上的报告没有送进请求时，它并不知道报告内容；生成修改建议也不会直接改文件。</p>
+<h2>Agent Harness（智能体运行支撑）</h2>
+<p>围绕模型组织输入、动作执行、状态与继续规则的运行支撑，像配有资料台、工具和记录员的工作室。它不是另一个更聪明的大脑，也不只是一份工具清单。</p>
+<h2>Agent（智能体）</h2>
+<p>本书概览指模型与运行支撑共同组成的任务执行整体。像有资料、工具与协作规则的排障小组；上游同名类型的职责可能更窄，不能据教学等式推导接口。</p>
+<h2>Tool（工具）</h2>
+<p>Tool（工具）是系统提供的一种动作入口，例如读文件、编辑文件或运行测试；模型生成工具请求，真正的执行由运行支撑完成。</p>
+<h2>核对来源</h2>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/core/agent-loop/src/agent.ts#L417-L433">本讲源码定位</a>与<a href="../previews/chapter-01.html#doc-2">完整正文</a>。本例报告和金额属于教学夹具，不来自这份上游源码。</p>
+</article></main>
+</body>
+</html>

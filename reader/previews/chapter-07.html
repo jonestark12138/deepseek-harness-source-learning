@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>DeepSeek Harness · 第07讲-执行边界</title>
+  <style>
+    @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/chapter-07.html#doc-0">学习导航</a><a href="../previews/chapter-07.html#doc-1">视觉课件</a><a href="../previews/chapter-07.html#doc-2">逐步讲解</a><a href="../previews/chapter-07.html#doc-3">练习与答案</a><a href="../previews/chapter-07.html#doc-4">分享稿</a><a href="../previews/chapter-07.html#doc-5">术语词典</a></nav>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第07讲 · 读错工作区或执行被拒绝怎么办</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>从这里接上</h2>
+<p>模型知道要改什么，但执行世界和权限还未确认。本讲要回答：读错工作区或执行被拒绝怎么办？</p>
+<p>上一讲解决了“加载方法说明，并分清手册、工具和外部协议接入”；这仍不能代替本讲要补的责任。</p>
+<h2>阅读与完成标准</h2>
+<p>先看<a href="../previews/chapter-07.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-07.html#doc-3">练习</a>。<a href="../previews/chapter-07.html#doc-1">视觉课件</a>用于复习，<a href="../previews/chapter-07.html#doc-5">词典</a>随用随查，不要求先背英文。预计正文阅读 20–35 分钟，练习 10–20 分钟；这是安排建议，不是学会的证明。</p>
+<p>读完应能解释：工作区相同的名字可以证明在同一份文件上测试吗？ 还要能预测：平台无法提供要求的沙箱约束时，可以关闭限制再试吗？ 最后从<a href="../evidence/chapter-07.html">源码证据</a>定位相应责任。</p>
+<p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
+<h2>本讲交接</h2>
+<p>在正确工作区、明确边界内尝试动作；拒绝不降级绕过。但下一步还要解决：关掉后再打开，能从哪一步继续。</p>
+<p><a href="../previews/chapter-06.html#doc-2">← 第06讲：技能与外部接入</a> · <a href="../previews/chapter-08.html#doc-2">第08讲：中断恢复 →</a></p>
+</article>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第07讲 · 读错工作区或执行被拒绝怎么办</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>当前现场</h2>
+<p>模型知道要改什么，但执行世界和权限还未确认。固定业务约定不变：满 10000 分免运费；原实现在等于时返回 800。禁止用修改预期的方式让测试变绿。</p>
+<p><img src="../assets/chapter-07/reader/fig-01-case-state.png" alt="模型知道要改什么，但执行世界和权限还未确认，经过本讲机制，变为在正确工作区、明确边界内尝试动作；拒绝不降级绕过"></p>
+<h2>三分钟复述</h2>
+<p>先描述左格缺什么，再说明中格采取的机制，最后指出右格新增了哪些证据或责任。在正确工作区、明确边界内尝试动作；拒绝不降级绕过。不要只读图上的物件名；删掉中间这项机制，任务会在哪一步失去依据？</p>
+<p>本讲最容易误会的是：平台无法提供要求的沙箱约束时，可以关闭限制再试吗？ 不能把它作为自动替代。应报告限制，查明可支持路径或取得所需新授权；未验证不报通过。</p>
+<h2>从图返回源码</h2>
+<p>图只表达教学关联与状态变化，不代替完整调用顺序。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/sandbox/sandbox-local/src/index.ts#L151-L177">源码定位</a>提供实现或契约证据，<a href="../previews/chapter-07.html#doc-2">正文</a>解释映射和边界。</p>
+<p><a href="../previews/chapter-06.html#doc-2">← 第06讲：技能与外部接入</a> · <a href="../previews/chapter-08.html#doc-2">第08讲：中断恢复 →</a></p>
+</article>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第07讲 · 读错工作区或执行被拒绝怎么办</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>一、同名文件不一定是同一份实现</h2>
+<p>第六讲让助手拿到排查手册和可能的外部工具。现在故意增加一个困难：机器上有两个运费服务副本，一个已修改，一个未修改。如果助手在甲目录编辑，却在乙目录运行测试，绿色报告仍不能证明甲目录的修改正确。</p>
+<p>Filesystem（文件系统能力）和 Subprocess（子进程能力）需要处于一致的执行世界：相同的工作目录语义、路径约定和文件状态。目录不是装饰性参数，而是证据身份的一部分。</p>
+<p><img src="../assets/chapter-07/reader/fig-01-case-state.png" alt="模型知道要改什么，但执行世界和权限还未确认，经过本讲机制，变为在正确工作区、明确边界内尝试动作；拒绝不降级绕过"></p>
+<blockquote>
+<p>三格为同一运费任务的教学状态变化或故障对照。图不是实际运行日志；关键区别见各格说明。</p>
+</blockquote>
+<h2>二、工作区、服务范围、沙箱不是同一道墙</h2>
+<p>Workspace（工作区）描述这次任务针对哪组文件；服务可见范围决定代码查询同名服务时找到谁；Sandbox（沙箱）则限制进程能够执行哪些访问或操作。这三个概念都可能画成边界，但问题不同。</p>
+<p>本讲的直觉是一间维修房：工单标了在哪个房间工作，通讯录告诉你联系哪台设备，门禁限制你能进入哪些区域。类比到此为止；不能因为目录被称为“工作区”，就认为操作系统自动阻止访问其他目录。</p>
+<p>对 Java 工程师，容器目录与权限控制的区别很熟悉。把宿主目录挂进容器，并不自动保证应用没有别的能力；同理，工具描述里写“只读”不能替代底层执行约束。</p>
+<h2>三、源码里为什么按平台选择执行器</h2>
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/sandbox/sandbox-local/src/index.ts#L151-L177">固定提交中的定位片段</a>（仅显示这一段前至多 20 行，不是完整函数）：</p>
+<pre><code class="language-ts"> * The runner chain per platform — selection is BY PLATFORM first, probes
+ * second: a platform&#39;s chain is probed in preference order only when it has
+ * MORE than one candidate (probing arbitrates; it does not re-validate a
+ * choice that has no alternative). A platform with no chain fails closed at
+ * `confine()`. Linux prefers `bwrap` (its mount profile is closest to the
+ * mode vocabulary) over the Landlock launcher; darwin has exactly one
+ * candidate, selected without any probe.
+ */
+const PLATFORM_CHAINS: Record&lt;string, readonly SelectedRunner[&#39;runner&#39;][]&gt; = {
+  linux: [&#39;bwrap&#39;, &#39;landlock&#39;],
+  darwin: [&#39;seatbelt&#39;],
+  // The Windows（操作系统） restricted-token runner (@deepseek-ai/dsh-sandbox-windows-acl):
+  // a sole candidate, selected without a probe — its execution-time refusal
+  // fails closed through its stderr signature (windows-acl-run:) and exit 127.
+  win32: [&#39;windows-acl&#39;],
+}
+
+/**
+ * Enforcement completeness a rung claims when selected WITHOUT a probe (a
+ * chain of one). `bwrap` and Seatbelt govern every promised file effect by
+</code></pre>
+<p>这里列的是不同操作系统对应的执行器候选链。它说明“有沙箱服务”并不是各平台都拥有完全相同的隔离机制。尤其应继续读 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/sandbox/sandbox-local/src/index.ts#L168-L188">约束完整性标记</a>：固定源码中的 Windows（操作系统） 后端报告部分约束，不能把它宣传成绝对隔离。</p>
+<p>本讲是读取源码，不是在你机器上证明这些平台约束已经有效。实际使用还需要检查当前平台、后端可用性和明确的拒绝结果。教材不会为了让测试跑通而建议关闭安全边界。</p>
+<h2>四、拒绝以后，先解释拒绝属于哪一层</h2>
+<p>如果运行测试被拒绝，先看是用户未授权、工具策略拒绝，还是平台执行器无法实现要求。如果是工作目录错误，就修正目录；如果确实需要新的访问范围，就说明理由与影响并重新请求许可；如果当前环境不支持所需安全约束，则停在未验证状态。</p>
+<p>不能把“换到另一条未受约束的执行通道”当成重试，也不能把子进程创建成功等同于测试成功。测试进程可能随后因缺少依赖退出；这时报告的是环境失败，而非运费逻辑通过。</p>
+<h2>五、替换提供者时需要一起检查什么</h2>
+<p>文件读取和命令运行若一边在远端、一边仍在本地，会制造最隐蔽的错配。系统能力可以替换，前提是调用契约、路径、取消与生命周期一致；不是把实现类名换掉就结束。</p>
+<p>与本书三测联系起来：报告必须标识当前代码版本和执行目录；如果只是看见另一份历史报告，不能跳过对现有文件的验证。第十四讲会进一步读同名服务怎样解析到对应实现。</p>
+<h2>六、边界确认了，进程中断怎么办</h2>
+<p>本讲使我们知道动作应在哪儿发生、为什么可能被拒绝。但机器重启或任务被停止时，内存状态仍会消失。第八讲沿着这个缺口继续：重新打开后哪些事实可以恢复，哪些外部结果仍要重新核对？</p>
+<p><a href="../previews/chapter-06.html#doc-2">← 第06讲：技能与外部接入</a> · <a href="../previews/chapter-08.html#doc-2">第08讲：中断恢复 →</a></p>
+</article>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第07讲 · 读错工作区或执行被拒绝怎么办</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>先作答，再展开</h2>
+<h3>1. 解释机制</h3>
+<p>工作区相同的名字可以证明在同一份文件上测试吗？</p>
+<details>
+<summary>查看解释与边界</summary>
+
+<p>不能。需确认实际执行世界、路径与版本，文件服务和进程服务不能指向不同副本。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+</details>
+
+<h3>2. 预测反例</h3>
+<p>平台无法提供要求的沙箱约束时，可以关闭限制再试吗？</p>
+<details>
+<summary>查看推演</summary>
+
+<p>不能把它作为自动替代。应报告限制，查明可支持路径或取得所需新授权；未验证不报通过。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+</details>
+
+<h3>3. 源码与图相互校验</h3>
+<p>打开<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/sandbox/sandbox-local/src/index.ts#L151-L177">本讲定位</a>，找到正文强调的分支或契约。遮住图中文字，解释左、中、右三格分别表示什么；指出图省略了哪一项实现细节。</p>
+<details>
+<summary>参考核对方式</summary>
+
+<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“模型知道要改什么，但执行世界和权限还未确认”，右格是“在正确工作区、明确边界内尝试动作；拒绝不降级绕过”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+</details>
+
+<p><a href="../previews/chapter-06.html#doc-2">← 第06讲：技能与外部接入</a> · <a href="../previews/chapter-08.html#doc-2">第08讲：中断恢复 →</a></p>
+</article>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第07讲 · 读错工作区或执行被拒绝怎么办</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>用自己的话讲给同事</h2>
+<p>我们还在查同一个 Java 运费问题：满 100 元应免运费，恰好边界却收了 8 元。走到本讲，已有条件是：模型知道要改什么，但执行世界和权限还未确认。</p>
+<p>如果不补这一层，会遇到的问题是：工作区相同的名字可以证明在同一份文件上测试吗？ 不能。需确认实际执行世界、路径与版本，文件服务和进程服务不能指向不同副本。 所以本讲新增的不是要背的名词，而是任务中一项明确的责任。</p>
+<p>现在能做到：在正确工作区、明确边界内尝试动作；拒绝不降级绕过。但还要守住反例：平台无法提供要求的沙箱约束时，可以关闭限制再试吗？ 不能把它作为自动替代。应报告限制，查明可支持路径或取得所需新授权；未验证不报通过。</p>
+<p>请结合<a href="../previews/chapter-07.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/sandbox/sandbox-local/src/index.ts#L151-L177">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“关掉后再打开，能从哪一步继续”继续。</p>
+</article>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第07讲 · 读错工作区或执行被拒绝怎么办</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<p>词典用于回查，正文在首次使用处解释。代码、参数与路径保留原拼写；产品名称不逐字翻译。模型上下文和插件上下文不是一回事。</p>
+<h2>Filesystem（文件系统能力）</h2>
+<p>读写和定位文件的能力，像档案室的取放接口。本例要读到实际测试使用的代码；有读接口不代表任何路径都可写。</p>
+<h2>Subprocess（子进程能力）</h2>
+<p>启动并观察另一个程序的能力，像把测试命令交给执行工位。它必须与文件服务指向一致的工作环境，否则读的是甲版本、测的却可能是乙版本。</p>
+<h2>Workspace（工作区）</h2>
+<p>本次任务对应的一组文件与工作环境，像排查指定的项目工位。不是包管理工作区的所有含义，也不天然构成安全隔离。</p>
+<h2>Sandbox（沙箱）</h2>
+<p>约束进程可以访问或操作什么的执行边界，像受控施工围栏。具体能力由平台和后端决定；服务作用域隔离不能代替它。</p>
+<h2>核对来源</h2>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/sandbox/sandbox-local/src/index.ts#L151-L177">本讲源码定位</a>与<a href="../previews/chapter-07.html#doc-2">完整正文</a>。本例报告和金额属于教学夹具，不来自这份上游源码。</p>
+</article></main>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>DeepSeek Harness · 第06讲-技能与外部接入</title>
+  <style>
+    @font-face { font-family:"Workshop Hand"; src:url('../assets/fonts/workshop-hand.woff2') format('woff2'); font-display:swap; }
+    :root { --paper:#f5eee1; --surface:#fffdf7; --ink:#50483f; --muted:#756a5f; --accent:#996344; --rule:rgba(80,72,63,.17); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Workshop Hand","Microsoft YaHei",sans-serif; line-height:1.9; }
+    nav { position:sticky; top:0; z-index:10; display:flex; gap:8px; overflow-x:auto; padding:12px max(20px,calc((100vw - 1180px)/2)); background:rgba(255,249,238,.97); border-bottom:1px solid var(--rule); }
+    nav a { flex:none; padding:6px 12px; color:var(--muted); text-decoration:none; font-size:14px; border:1px solid var(--rule); border-radius:4px; background:var(--surface); }
+    main { width:min(1180px,calc(100% - 40px)); margin:32px auto 80px; }
+    article { margin:0 0 48px; padding:40px clamp(20px,5vw,64px); background:var(--surface); border:1px solid var(--rule); border-radius:8px; }
+    .doc-label { color:var(--accent); font:600 12px/1.4 "Cascadia Mono",Consolas,monospace; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3 { color:var(--ink); line-height:1.35; scroll-margin-top:72px; }
+    h1 { margin:.4em 0 .8em; font-size:clamp(30px,5vw,44px); font-weight:400; }
+    h2 { margin:2.2em 0 .8em; padding-top:.3em; border-top:1px solid var(--rule); font-size:26px; }
+    h3 { margin:1.7em 0 .6em; font-size:20px; }
+    p,li { font-size:20px; }
+    article { scroll-margin-top:82px; }
+    a { color:#2e5aa8; overflow-wrap:anywhere; }
+    blockquote { margin:1.4em 0; padding:12px 18px; color:var(--muted); border-left:4px solid var(--accent); background:rgba(235,108,54,.05); }
+    code { padding:.12em .35em; border-radius:4px; background:rgba(45,49,66,.06); font-family:"Cascadia Mono",Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+    pre { overflow:auto; padding:18px; border:1px solid var(--rule); border-radius:6px; background:#f8f9fa; }
+    pre code { padding:0; background:none; }
+    table { width:100%; margin:1.4em 0; border-collapse:collapse; font-size:18px; }
+    th,td { padding:10px 12px; border:1px solid var(--rule); text-align:left; vertical-align:top; }
+    th { background:rgba(45,49,66,.04); }
+    article p:has(> img) { margin:24px 0 10px; overflow-x:auto; scroll-margin-top:85px; }
+    article img { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+    details { margin:12px 0; padding:10px 14px; border:1px solid var(--rule); border-radius:6px; background:#fafafa; }
+    summary { cursor:pointer; color:var(--ink); font-weight:600; }
+    hr { margin:40px 0; border:0; border-top:1px solid var(--rule); }
+    @media (max-width:700px) {
+      main { width:calc(100% - 24px); margin-top:16px; }
+      article { padding:28px 18px; }
+      p,li { font-size:18px; }
+      table { display:block; overflow-x:auto; white-space:nowrap; }
+      article p:has(> img)::before { content:"← 左右滑动查看完整图片 →"; display:block; margin-bottom:8px; color:#7a8399; font-size:13px; }
+      article p>img { width:1080px; max-width:none; }
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="教材文档导航"><a href="../index.html">← 阅读首页</a><a href="../previews/chapter-06.html#doc-0">学习导航</a><a href="../previews/chapter-06.html#doc-1">视觉课件</a><a href="../previews/chapter-06.html#doc-2">逐步讲解</a><a href="../previews/chapter-06.html#doc-3">练习与答案</a><a href="../previews/chapter-06.html#doc-4">分享稿</a><a href="../previews/chapter-06.html#doc-5">术语词典</a></nav>
+  <main><article id="doc-0"><div class="doc-label">学习导航</div><h1>第06讲 · 有工具却总漏步骤，怎样带上排查手册</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>从这里接上</h2>
+<p>能取得材料，但可能忘记业务约定与边界测试。本讲要回答：有工具却总漏步骤，怎样带上排查手册？</p>
+<p>上一讲解决了“日志记录事实，再派生下一次请求的消息”；这仍不能代替本讲要补的责任。</p>
+<h2>阅读与完成标准</h2>
+<p>先看<a href="../previews/chapter-06.html#doc-2">逐步讲解</a>，再做<a href="../previews/chapter-06.html#doc-3">练习</a>。<a href="../previews/chapter-06.html#doc-1">视觉课件</a>用于复习，<a href="../previews/chapter-06.html#doc-5">词典</a>随用随查，不要求先背英文。预计正文阅读 20–35 分钟，练习 10–20 分钟；这是安排建议，不是学会的证明。</p>
+<p>读完应能解释：加载排查手册以后，是否自动有写文件能力？ 还要能预测：报告来自外部平台，应新增手册还是接入工具？ 最后从<a href="../evidence/chapter-06.html">源码证据</a>定位相应责任。</p>
+<p>现在必须懂的是本讲怎样改变证据或动作状态；具体框架中的其他选项知道存在即可，不用一次读完整个包。语法卡住可查<a href="../previews/appendix-a.html#doc-2">补课 A</a>、<a href="../previews/appendix-b.html#doc-2">补课 B</a>，工程定位查<a href="../previews/appendix-c.html#doc-2">补课 C</a>，看完返回此处即可。</p>
+<h2>本讲交接</h2>
+<p>加载方法说明，并分清手册、工具和外部协议接入。但下一步还要解决：读错工作区或执行被拒绝怎么办。</p>
+<p><a href="../previews/chapter-05.html#doc-2">← 第05讲：会话日志</a> · <a href="../previews/chapter-07.html#doc-2">第07讲：执行边界 →</a></p>
+</article>
+<article id="doc-1"><div class="doc-label">视觉课件</div><h1>第06讲 · 有工具却总漏步骤，怎样带上排查手册</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>当前现场</h2>
+<p>能取得材料，但可能忘记业务约定与边界测试。固定业务约定不变：满 10000 分免运费；原实现在等于时返回 800。禁止用修改预期的方式让测试变绿。</p>
+<p><img src="../assets/chapter-06/reader/fig-01-case-state.png" alt="能取得材料，但可能忘记业务约定与边界测试，经过本讲机制，变为加载方法说明，并分清手册、工具和外部协议接入"></p>
+<h2>三分钟复述</h2>
+<p>先描述左格缺什么，再说明中格采取的机制，最后指出右格新增了哪些证据或责任。加载方法说明，并分清手册、工具和外部协议接入。不要只读图上的物件名；删掉中间这项机制，任务会在哪一步失去依据？</p>
+<p>本讲最容易误会的是：报告来自外部平台，应新增手册还是接入工具？ 若缺的是获取报告的动作，需要接入能力；手册改善方法。外部协议只是接入方式，结果仍需查验。</p>
+<h2>从图返回源码</h2>
+<p>图只表达教学关联与状态变化，不代替完整调用顺序。<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/skill/tool-skill/src/index.ts#L79-L91">源码定位</a>提供实现或契约证据，<a href="../previews/chapter-06.html#doc-2">正文</a>解释映射和边界。</p>
+<p><a href="../previews/chapter-05.html#doc-2">← 第05讲：会话日志</a> · <a href="../previews/chapter-07.html#doc-2">第07讲：执行边界 →</a></p>
+</article>
+<article id="doc-2"><div class="doc-label">逐步讲解</div><h1>第06讲 · 有工具却总漏步骤，怎样带上排查手册</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>一、证据记住了，排查习惯却没有自动形成</h2>
+<p>第五讲的日志能够保留失败报告。可是下一次类似任务，助手仍可能只修 10000 这一个输入，忘记检查左右边界。把这次成功的方法总结成可发现、可加载的说明，就能减少每次重新解释的成本。</p>
+<p>Skill（技能说明）像放在工作台上的排查手册：先核对业务约定，再读报告和实现，提出原因，得到许可后修改，最后测试边界。它主要提供指令内容，不是可执行工具，也不是授予权限的证书。手册说“运行测试”，仍需要工具和正确环境去做。</p>
+<p><img src="../assets/chapter-06/reader/fig-01-case-state.png" alt="能取得材料，但可能忘记业务约定与边界测试，经过本讲机制，变为加载方法说明，并分清手册、工具和外部协议接入"></p>
+<blockquote>
+<p>三格为同一运费任务的教学状态变化或故障对照。图不是实际运行日志；关键区别见各格说明。</p>
+</blockquote>
+<h2>二、先看目录，再按需拿整本手册</h2>
+<p>如果每次都把所有手册全文塞进请求，会挤掉真正重要的报告和代码。本项目把发现与读取分开：目录提供名称和简述；匹配任务时，再通过加载工具取得完整内容。</p>
+<p>可以想成书架索引卡和书本正文。索引卡写“边界条件排查”，并不意味着模型已经读懂其中的每一步。用户明确要求使用某份手册时，只看见目录而不加载正文，也不能称为遵循了手册。</p>
+<p>以下是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/skill/tool-skill/src/index.ts#L79-L91">固定提交中的定位片段</a>（仅显示这一段前至多 20 行，不是完整函数）：</p>
+<pre><code class="language-ts">  assertPositiveInteger(&#39;catalogDescriptionMaxLength&#39;, catalogDescriptionMaxLength, 3)
+
+  const skillTool = defineTool({
+    name: &#39;skill&#39;,
+    description: &#39;Load the full instructions for an available skill. Call this with the exact skill name from the session skill catalog before acting on a task that names or clearly matches that skill.&#39;,
+    parameters: {
+      name: { type: &#39;string&#39;, required: true, description: &#39;The exact skill name from the available skills list.&#39; },
+    },
+    output: {
+      schema: {
+        type: &#39;object&#39;,
+        additionalProperties: false,
+        properties: {
+</code></pre>
+<p>这里的 <code>skill</code> 是模型可调用的加载工具，参数是精确名称。再向后读 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/skill/tool-skill/src/index.ts#L128-L170">名称与可见性检查</a>：工具根据当前范围查目录和正文。目录、正文、当前是否允许调用，是不同问题。</p>
+<h2>三、一份真正有用的案例手册应该写什么</h2>
+<p>下面是本书建议的手册正文，不是上游自带的一项技能：</p>
+<pre><code class="language-text">先读取失败报告、业务约定和相关实现。
+分别列出已知事实与待验证猜测。
+仅排查时不要修改；得到限定授权后只改原因所在位置。
+保留测试预期，重跑阈值前、等于阈值、阈值后三项。
+结束时给出命令、结果、版本与尚未验证范围。
+</code></pre>
+<p>这五条的价值不在格式，而在能改变动作选择。例如读到了报告却没有约定时，手册会促使补读；测试工具失败时，手册会阻止把“已尝试”写成“已验证”。如果指令只是重复“认真、专业、准确”，就没有解决具体遗漏。</p>
+<h2>四、外部测试平台不是另一种手册</h2>
+<p>假设报告不在本地，而在外部测试平台。现在缺的是接入能力，不是检查方法。MCP（模型上下文协议）可以作为外部能力的一种接入协议；在本项目中，客户端把外部工具转换并注册到运行支撑的工具体系。</p>
+<p>读 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/mcp/mcp-client/src/tools.ts#L1-L12">外部工具桥接</a> 和 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/mcp/mcp-client/src/tools.ts#L76-L93">调用请求</a>。桥接要保存外部服务器和原始工具名的身份关系，再发送协议请求；不能把显示名称随便拆开来猜原始身份。</p>
+<p>可以类比 Java 服务的接口适配层，但协议工具仍可能失败、超时、返回不可信内容。接入成功不表示我们对该平台的数据拥有访问许可，也不表示返回内容成为系统指令。</p>
+<h2>五、手册、工具和模型各自还欠什么</h2>
+<p>模型选择下一步，手册改善选择方法，工具提供动作，执行策略限制动作。四者有重叠的使用场景，却不是相同职责。多安装手册不会自动多出磁盘权限，多接一个工具也不会自动保证模型善用它。</p>
+<p>回到运费案例：用手册确保不漏边界，用工具读取报告，用源码验证原因，用执行策略守住授权。下一讲进一步追问：即使工具已接好，它到底在哪个工作区操作，受什么边界约束？</p>
+<p><a href="../previews/chapter-05.html#doc-2">← 第05讲：会话日志</a> · <a href="../previews/chapter-07.html#doc-2">第07讲：执行边界 →</a></p>
+</article>
+<article id="doc-3"><div class="doc-label">练习与答案</div><h1>第06讲 · 有工具却总漏步骤，怎样带上排查手册</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>先作答，再展开</h2>
+<h3>1. 解释机制</h3>
+<p>加载排查手册以后，是否自动有写文件能力？</p>
+<details>
+<summary>查看解释与边界</summary>
+
+<p>没有。手册是指令，执行仍依赖工具、提供者和授权；它不能代替任何一层。 回到本例的 10000 分输入，把“想做”“做过”“有结果”分别说清。</p>
+</details>
+
+<h3>2. 预测反例</h3>
+<p>报告来自外部平台，应新增手册还是接入工具？</p>
+<details>
+<summary>查看推演</summary>
+
+<p>若缺的是获取报告的动作，需要接入能力；手册改善方法。外部协议只是接入方式，结果仍需查验。 不是所有停止都叫完成，不是所有模型可见文字都有权限。</p>
+</details>
+
+<h3>3. 源码与图相互校验</h3>
+<p>打开<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/skill/tool-skill/src/index.ts#L79-L91">本讲定位</a>，找到正文强调的分支或契约。遮住图中文字，解释左、中、右三格分别表示什么；指出图省略了哪一项实现细节。</p>
+<details>
+<summary>参考核对方式</summary>
+
+<p>源码应支持本讲讲解的机制，而不是声称原仓库有运费业务。左格是“能取得材料，但可能忘记业务约定与边界测试”，右格是“加载方法说明，并分清手册、工具和外部协议接入”。图中物件不是对象类的完整结构，也没有证明真实工具已执行；按正文的失败边界解释即可。若图无法表达这个区别，应修改图，不是给它增加一段英文标签。</p>
+</details>
+
+<p><a href="../previews/chapter-05.html#doc-2">← 第05讲：会话日志</a> · <a href="../previews/chapter-07.html#doc-2">第07讲：执行边界 →</a></p>
+</article>
+<article id="doc-4"><div class="doc-label">分享稿</div><h1>第06讲 · 有工具却总漏步骤，怎样带上排查手册</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<h2>用自己的话讲给同事</h2>
+<p>我们还在查同一个 Java 运费问题：满 100 元应免运费，恰好边界却收了 8 元。走到本讲，已有条件是：能取得材料，但可能忘记业务约定与边界测试。</p>
+<p>如果不补这一层，会遇到的问题是：加载排查手册以后，是否自动有写文件能力？ 没有。手册是指令，执行仍依赖工具、提供者和授权；它不能代替任何一层。 所以本讲新增的不是要背的名词，而是任务中一项明确的责任。</p>
+<p>现在能做到：加载方法说明，并分清手册、工具和外部协议接入。但还要守住反例：报告来自外部平台，应新增手册还是接入工具？ 若缺的是获取报告的动作，需要接入能力；手册改善方法。外部协议只是接入方式，结果仍需查验。</p>
+<p>请结合<a href="../previews/chapter-06.html#doc-1">本讲图</a>说出变化，再指向<a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/skill/tool-skill/src/index.ts#L79-L91">源码</a>；不要宣称这段教学推演就是实际模型日志。下一讲顺着“读错工作区或执行被拒绝怎么办”继续。</p>
+</article>
+<article id="doc-5"><div class="doc-label">术语词典</div><h1>第06讲 · 有工具却总漏步骤，怎样带上排查手册</h1>
+<blockquote>
+<p>源码基线：<code>cd5ef8148158c3a752a658978873241fdf8e2bbc</code>。业务案例为虚构 Java 运费服务；图与流程是教学推演，源码事实另有固定证据。</p>
+</blockquote>
+<p>词典用于回查，正文在首次使用处解释。代码、参数与路径保留原拼写；产品名称不逐字翻译。模型上下文和插件上下文不是一回事。</p>
+<h2>Skill（技能说明）</h2>
+<p>告诉助手怎样完成某类工作的技能说明，像排查手册。它可以提醒核对约定和边界测试；手册本身不会替你执行工具或授予写权限。</p>
+<h2>MCP（模型上下文协议）</h2>
+<p>供外部能力接入的模型上下文协议。本例可把远端报告查询接到工具体系，像使用共同插口接设备；协议兼容不表示远端内容可信或自动获准执行。</p>
+<h2>核对来源</h2>
+<p><a href="https://github.com/deepseek-ai/deepseek-harness/blob/cd5ef8148158c3a752a658978873241fdf8e2bbc/packages/skill/tool-skill/src/index.ts#L79-L91">本讲源码定位</a>与<a href="../previews/chapter-06.html#doc-2">完整正文</a>。本例报告和金额属于教学夹具，不来自这份上游源码。</p>
+</article></main>
+</body>
+</html>

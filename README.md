@@ -1,23 +1,36 @@
-# DeepSeek Harness · 图文源码教材
+# DeepSeek Harness 中文图文源码教材
 
-这是一套面向 Java 后端工程师的 DeepSeek Harness 中文图文源码教程，围绕 Agent Harness 原理、AI Agent 工程、TypeScript monorepo 与 Cordis 源码分析展开。先用模块化智能工作室等手绘比喻建立直觉，再沿真实源码确认比喻的边界。
+通过一次 Java 运费服务测试排查，学习智能体如何取证、受控行动、恢复任务并核验完成。
 
-**[在线阅读](https://jonestark12138.github.io/deepseek-harness-source-learning/) · [从第一讲进入主线](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/lesson-01.html) · [前九讲离线阅读包](https://github.com/jonestark12138/deepseek-harness-source-learning/releases/tag/lessons-01-09-v2.0.0)**
+[在线阅读](https://jonestark12138.github.io/deepseek-harness-source-learning/) · [完整离线包](https://github.com/jonestark12138/deepseek-harness-source-learning/releases/tag/complete-course-v3.0.0)
 
-现有九讲已按同一个测试排查故事重构：英文术语配中文说明，源码中的标识保留原拼写。主线建议 01 → 05 → 09 → 06 → 07 → 08，02–04 为语法和工程地图补课。第十至二十讲尚在计划中，后续课程持续建设中。本项目为个人学习教材，与 DeepSeek 官方无隶属或背书关系。
+## 按顺序阅读主线
 
-## 这是阅读版
+- 第 01 讲：[先别猜：从一条失败断言开始](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/chapter-01.html#doc-2)
+- 第 02 讲：[谁让助手读完报告后再读代码](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/chapter-02.html#doc-2)
+- 第 03 讲：[报告明明在磁盘，模型为什么仍不知道](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/chapter-03.html#doc-2)
+- 第 04 讲：[想改代码，不等于已经获准修改](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/chapter-04.html#doc-2)
+- 第 05 讲：[这次读到的证据，下次从哪里取](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/chapter-05.html#doc-2)
+- 第 06 讲：[有工具却总漏步骤，怎样带上排查手册](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/chapter-06.html#doc-2)
+- 第 07 讲：[读错工作区或执行被拒绝怎么办](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/chapter-07.html#doc-2)
+- 第 08 讲：[关掉后再打开，能从哪一步继续](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/chapter-08.html#doc-2)
+- 第 09 讲：[材料多到一次看不完，怎样留下关键证据](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/chapter-09.html#doc-2)
+- 第 10 讲：[一个查契约，一个查实现，结果怎样合回来](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/chapter-10.html#doc-2)
+- 第 11 讲：[哪些步骤可以固定，哪些要继续判断](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/chapter-11.html#doc-2)
+- 第 12 讲：[缺少执行器，为什么配置写了还不能开工](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/chapter-12.html#doc-2)
+- 第 13 讲：[切换执行环境后，旧定时器为何还在跑](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/chapter-13.html#doc-2)
+- 第 14 讲：[同名文件服务，怎样接到这次任务的工作区](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/chapter-14.html#doc-2)
+- 第 15 讲：[记录员、审批者和执行者，谁必须等待谁](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/chapter-15.html#doc-2)
+- 第 16 讲：[助手说修好了，怎样证明不是只说说](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/chapter-16.html#doc-2)
+- 第 17 讲：[拆掉框架名字，你还能解释这次排查吗](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/chapter-17.html#doc-2)
+- 补课 A：[类型、分支与异步：读源码的最小语法](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/appendix-a.html#doc-2)
+- 补课 B：[类型关系：插件协作中的防错工装](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/appendix-b.html#doc-2)
+- 补课 C：[工程地图：成员、检查与构建](https://jonestark12138.github.io/deepseek-harness-source-learning/previews/appendix-c.html#doc-2)
 
-提供每讲的正文、课件、练习与答案、分享稿、术语词典、源码事实矩阵和二十张完整场景插图。不提供独立物件素材、可编辑矢量、场景配方或教材制作工程。
+## 阅读说明
 
-离线 ZIP 完整解压后打开 index.html。下载本仓库时，入口是 reader/index.html。无需安装依赖或启动服务；源码、反馈和下载外链需联网。手机上的宽图可以在图片区域内左右滑动。
+主线 01–17 连续阅读；A/B/C 是独立补课，按需查阅。每讲包含导航、课件、讲解、练习、分享稿与术语词典。旧 9 讲链接仍跳转到对应新章节。
 
-## 发布与反馈
+本教材依据固定源码提交 `cd5ef8148158c3a752a658978873241fdf8e2bbc`。运费服务为教学案例，无密钥运行器为确定性替身；不把模拟测试等同于真实 Java 或模型评测。与 DeepSeek 官方无隶属或背书关系。
 
-推送到 main 后，GitHub Actions 校验阅读版文件并自动发布 reader/。本仓库不执行素材生成，也不接触制作库。
-
-发现错误或难懂的概念，请通过 [Issues](https://github.com/jonestark12138/deepseek-harness-source-learning/issues) 反馈。
-
-源码基线：[cd5ef8148158c3a752a658978873241fdf8e2bbc](https://github.com/deepseek-ai/deepseek-harness/tree/cd5ef8148158c3a752a658978873241fdf8e2bbc)。比喻不等于源码类型定义，图中的故事不代表实际执行记录。
-
-字体遵循 reader/assets/fonts/OFL.txt；正文与插图尚未指定统一开放许可。公开阅读不意味着已授予任意再分发权利。
+公开仓库仅有阅读成品，不包含独立源素材、场景配方或制作工程。成品图可被截图或下载。字体按 SIL OFL 1.1 分发；其他内容尚未指定开放许可。欢迎通过 Issues（问题反馈区）报告错误与难懂段落。
